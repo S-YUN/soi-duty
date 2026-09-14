@@ -122,3 +122,72 @@ WeekSummary weekSummary({
     isFirstWeekException: firstWeek,
   );
 }
+
+// ---- 오늘 목표 · 퇴근 예상 (CLAUDE.md "퇴근 예상 시각") ----
+
+/// 오늘 목표 = max(0, (주간 목표 − 오늘 제외 주간 실적) − 오늘 이후 평일 기준시간 합).
+/// 첫 주 예외·주말이면 null.
+int? todayTargetMinutes({
+  required List<WorkRecord> records,
+  required DateTime today,
+  required WorkRules rules,
+  required DateTime now,
+  required DateTime? firstRecordDate,
+}) {
+  final day = dateOnly(today);
+  if (isWeekend(day)) return null;
+  final monday = mondayOf(day);
+  if (isFirstWeekException(monday, firstRecordDate)) return null;
+
+  final byDate = recordsByDate(records);
+  var target = 0;
+  var workedExcludingToday = 0;
+  var remainingStandard = 0;
+
+  for (final weekday in weekdaysOf(monday)) {
+    final r = byDate[weekday];
+    final type = r?.type ?? WorkType.normal;
+    target += standardMinutes(type, rules);
+    if (weekday.isBefore(day)) {
+      if (r != null) workedExcludingToday += actualMinutes(r, rules) ?? 0;
+    } else if (weekday.isAfter(day)) {
+      remainingStandard += standardMinutes(type, rules);
+    }
+  }
+
+  return math.max(0, target - workedExcludingToday - remainingStandard);
+}
+
+/// 퇴근 예상 = 출근 + 오늘 목표 + 점심 공제(해당 시).
+DateTime? expectedClockOut(WorkRecord today, int todayTarget, WorkRules rules) {
+  final clockIn = today.clockIn;
+  if (clockIn == null) return null;
+  final lunch = deductsLunch(today) ? rules.lunchBreakMinutes : 0;
+  return clockIn.add(Duration(minutes: todayTarget + lunch));
+}
+
+// ---- 기록 누락 ----
+
+/// 첫 기록일 ~ 어제의 평일 중 기록이 없거나, 출퇴근이 필요한 유형인데 하나라도 빈 날. 최신순.
+List<DateTime> unrecordedWeekdays({
+  required List<WorkRecord> records,
+  required DateTime today,
+  required DateTime? firstRecordDate,
+}) {
+  if (firstRecordDate == null) return const [];
+  final byDate = recordsByDate(records);
+  final end = dateOnly(today);
+  final result = <DateTime>[];
+
+  var cursor = dateOnly(firstRecordDate);
+  while (cursor.isBefore(end)) {
+    if (!isWeekend(cursor)) {
+      final r = byDate[cursor];
+      final needsClock = r == null || r.type == WorkType.normal || r.type == WorkType.halfDay;
+      final incomplete = r == null || r.clockIn == null || r.clockOut == null;
+      if (needsClock && incomplete) result.add(cursor);
+    }
+    cursor = DateTime(cursor.year, cursor.month, cursor.day + 1);
+  }
+  return result.reversed.toList();
+}

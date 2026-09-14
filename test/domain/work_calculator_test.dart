@@ -186,4 +186,113 @@ void main() {
       expect(s.workedMinutes, 480);
     });
   });
+
+  group('todayTargetMinutes (CLAUDE.md 퇴근 예상 시각)', () {
+    int? target(List<WorkRecord> records, int day, {DateTime? first}) => todayTargetMinutes(
+          records: records,
+          today: d(day),
+          rules: rules,
+          now: d(day, 12),
+          firstRecordDate: first ?? d(7),
+        );
+
+    test('앞선 날이 정확히 8h씩이면 오늘 목표 8h', () {
+      expect(target([rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 480);
+    });
+
+    test('앞선 날 초과분만큼 오늘 목표가 줄어든다', () {
+      // 월 9h, 화 8h → 1h 초과 → 수 7h
+      expect(target([rec(14, inH: 9, outH: 19), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 420);
+    });
+
+    test('앞선 날 부족분만큼 오늘 목표가 늘어난다', () {
+      // 월 7h → 수 9h
+      expect(target([rec(14, inH: 9, outH: 17), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 540);
+    });
+
+    test('오늘이 반차면 목표가 4h 기준으로 줄고 남은 평일은 8h 유지', () {
+      final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9, type: WorkType.halfDay)];
+      // 목표 2160 − 960 − (목·금 960) = 240
+      expect(target(r, 16), 240);
+    });
+
+    test('남은 평일에 연차가 있으면 그날은 0으로 뺀다', () {
+      final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9), rec(17, type: WorkType.dayOff)];
+      // 목표 1920 − 960 − (금 480) = 480
+      expect(target(r, 16), 480);
+    });
+
+    test('마지막 평일(금)은 잔여 전부', () {
+      final r = [for (var day = 14; day <= 17; day++) rec(day, inH: 9, outH: 17, outM: 30), rec(18, inH: 9)];
+      // 월~목 각 7.5h = 1800 → 2400 − 1800 = 600
+      expect(target(r, 18), 600);
+    });
+
+    test('이미 채웠으면 0 (음수 없음)', () {
+      expect(target([rec(14, inH: 9, outH: 22), rec(15, inH: 9, outH: 22), rec(16, inH: 9)], 16), 0);
+    });
+
+    test('오늘의 진행분은 계산에서 제외 (오늘 목표를 구하는 중이므로)', () {
+      final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9)];
+      expect(
+        todayTargetMinutes(records: r, today: d(16), rules: rules, now: d(16, 15), firstRecordDate: d(7)),
+        480,
+      );
+    });
+
+    test('첫 주 예외면 null', () {
+      expect(target([rec(16, inH: 9)], 16, first: d(16)), isNull);
+    });
+
+    test('주말이면 null', () {
+      expect(target([rec(19, inH: 9)], 19), isNull);
+    });
+  });
+
+  group('expectedClockOut', () {
+    test('일반: 출근 + 오늘 목표 + 점심', () {
+      expect(expectedClockOut(rec(16, inH: 9, inM: 12), 420, rules), d(16, 17, 12));
+    });
+    test('반차: 점심 없음', () {
+      expect(expectedClockOut(rec(16, inH: 9, inM: 12, type: WorkType.halfDay), 240, rules), d(16, 13, 12));
+    });
+    test('출근 없으면 null', () {
+      expect(expectedClockOut(rec(16), 480, rules), isNull);
+    });
+  });
+
+  group('unrecordedWeekdays', () {
+    test('첫 기록일부터 어제까지의 평일 중 비거나 불완전한 날, 최신순', () {
+      final r = [
+        rec(7, inH: 9, outH: 18),
+        rec(8, inH: 9, outH: 18),
+        rec(10, inH: 9), // 퇴근 누락
+        rec(14, inH: 9, outH: 18),
+        rec(16, inH: 9), // 오늘, 대상 아님
+      ];
+      expect(
+        unrecordedWeekdays(records: r, today: d(16), firstRecordDate: d(7)),
+        [d(15), d(11), d(10), d(9)],
+      );
+    });
+
+    test('주말은 대상이 아니다', () {
+      final r = [rec(11, inH: 9, outH: 18), rec(14, inH: 9, outH: 18)];
+      expect(unrecordedWeekdays(records: r, today: d(15), firstRecordDate: d(11)), isEmpty);
+    });
+
+    test('연차·공휴일은 출퇴근이 없어도 누락이 아니다', () {
+      final r = [rec(14, type: WorkType.dayOff), rec(15, type: WorkType.holiday)];
+      expect(unrecordedWeekdays(records: r, today: d(16), firstRecordDate: d(14)), isEmpty);
+    });
+
+    test('첫 기록일 이전은 대상이 아니다', () {
+      // 첫 기록일이 16이면 14·15는 비어 있어도 대상이 아니다.
+      expect(unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)), isEmpty);
+    });
+
+    test('첫 기록일이 없으면 빈 리스트', () {
+      expect(unrecordedWeekdays(records: const [], today: d(16), firstRecordDate: null), isEmpty);
+    });
+  });
 }
