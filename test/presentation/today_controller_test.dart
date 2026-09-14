@@ -86,4 +86,12 @@ void main() {
     final s = await waitFor((s) => s.firstRecordDate != null);
     expect(s.firstRecordDate, d(16));
   });
+
+  test('연차인 날 clockIn하면 type이 normal로 정규화된다', () async {
+    await notifier().setDayType(WorkType.dayOff);
+    await waitFor((s) => s.screenState == TodayScreenState.dayType);
+    await notifier().clockIn();
+    final s = await waitFor((s) => s.phase == TodayPhase.working);
+    expect(s.record?.type, WorkType.normal);
+  });
 }

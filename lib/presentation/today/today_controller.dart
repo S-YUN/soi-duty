@@ -21,7 +21,10 @@ class TodayController extends _$TodayController {
     return buildTodayState(records: records, firstRecordDate: firstRecordDate, now: now, rules: rules);
   }
 
-  Future<void> clockIn() => _saveToday((r, now) => r.copyWith(clockIn: now));
+  Future<void> clockIn() => _saveToday((r, now) {
+        final type = (r.type == WorkType.dayOff || r.type == WorkType.holiday) ? WorkType.normal : r.type;
+        return r.copyWith(clockIn: now, type: type);
+      });
 
   Future<void> clockOut() => _saveToday((r, now) => r.copyWith(clockOut: now));
 
