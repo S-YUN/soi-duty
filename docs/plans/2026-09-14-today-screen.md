@@ -2248,7 +2248,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
   - `String formatSignedHm(int minutes)` → `"+10m"`, `"−7m"`, `"0m"`
   - `String formatClock(DateTime)` → `"09:12"`
   - `String formatDateTitle(DateTime)` → `"9월 11일 금요일"`, `String formatDateShort(DateTime)` → `"9월 4일 금"`
-  - `TodayTexts` (static): `heroLabel(TodayState)`, `heroValue(TodayState)`, `heroReason(TodayState)`, `double? progress(TodayState)`, `statusMain(TodayState)`, `statusSub(TodayState)`, `buttonLabel(TodayState)`, `dayTypeMessage(WorkType)`, `unrecordedTitle(int)`, 상수 문구들
+  - `TodayTexts` (static): `heroLabel(TodayState)`, `heroValue(TodayState)`, `heroReason(TodayState, WorkRules)`, `double? progress(TodayState)`, `statusMain(TodayState)`, `statusSub(TodayState)`, `buttonLabel(TodayState)`, `dayTypeMessage(WorkType)`, `unrecordedTitle(int)`, 상수 문구들
 
 - [ ] **Step 1: 테스트 작성**
 
