@@ -24,7 +24,10 @@ class SoiDutyApp extends ConsumerWidget {
       routerConfig: router,
       builder: (context, child) {
         SizeConfig.init(MediaQuery.sizeOf(context).width);
-        return child!;
+        return MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.0,
+          child: KeyedSubtree(key: ValueKey(SizeConfig.scale), child: child!),
+        );
       },
     );
   }

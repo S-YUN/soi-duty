@@ -16,7 +16,10 @@ Stream<DateTime> now(Ref ref) async* {
   while (true) {
     final t = clock();
     final nextMinute = DateTime(t.year, t.month, t.day, t.hour, t.minute + 1);
-    await Future<void>.delayed(nextMinute.difference(t));
+    // DST로 시계가 뒤로 감기는 시간대엔 nextMinute.difference(t)가 0 이하일 수 있다 — 그때는
+    // 1분 뒤에 재시도해 바쁜 루프(tight loop)를 막는다.
+    final wait = nextMinute.difference(t);
+    await Future<void>.delayed(wait > Duration.zero ? wait : const Duration(minutes: 1));
     yield clock();
   }
 }

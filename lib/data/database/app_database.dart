@@ -10,7 +10,7 @@ class WorkRecords extends Table {
   TextColumn get date => text()();
   DateTimeColumn get clockIn => dateTime().nullable()();
   DateTimeColumn get clockOut => dateTime().nullable()();
-  IntColumn get type => intEnum<WorkType>()();
+  TextColumn get type => textEnum<WorkType>()();
 
   @override
   Set<Column<Object>> get primaryKey => {date};

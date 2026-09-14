@@ -172,4 +172,32 @@ void main() {
     await tester.tapAt(tester.getCenter(find.text('오늘은 반차')) + Offset(0, AppSizes.minTapHeight / 2 - 1));
     expect(halfDay, isTrue);
   });
+
+  testWidgets('되돌리기 링크 히트 영역이 44 이상, 탭하면 콜백', (tester) async {
+    var reverted = false;
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: TodayView(
+        state: fixtures['연차']!,
+        rules: rules,
+        callbacks: TodayCallbacks(
+          onClockIn: () {},
+          onClockOut: () {},
+          onHalfDayChanged: (_) {},
+          onDayTypeChanged: (_) {},
+          onRevert: () => reverted = true,
+          onEditTime: () {},
+          onUnrecordedTap: (_) {},
+          onDateLongPress: null,
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final revertHitBox = find.ancestor(of: find.text('되돌리기'), matching: find.byType(GestureDetector)).first;
+    expect(tester.getSize(revertHitBox).height, greaterThanOrEqualTo(AppSizes.minTapHeight));
+
+    await tester.tap(find.text('되돌리기'));
+    expect(reverted, isTrue);
+  });
 }

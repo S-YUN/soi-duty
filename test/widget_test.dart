@@ -1,5 +1,6 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/providers/clock_provider.dart';
@@ -56,6 +57,32 @@ void main() {
       await tester.tap(find.text('출근하기'));
       await tester.pumpAndSettle();
       expect(find.text('퇴근하기'), findsOneWidget);
+    } finally {
+      await db.close();
+    }
+  });
+
+  testWidgets('OS 텍스트 확대는 1.0으로 클램프된다', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    try {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          nowProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+        ],
+        child: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+          child: const SoiDutyApp(),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('출근하기'), findsOneWidget);
+      expect(
+        MediaQuery.textScalerOf(tester.element(find.byType(PrimaryButton))).scale(10),
+        10,
+      );
     } finally {
       await db.close();
     }

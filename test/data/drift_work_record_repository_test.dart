@@ -28,8 +28,10 @@ void main() {
   test('save 후 watchAll이 방출하고 날짜·시각·유형이 왕복된다', () async {
     final r = rec(14, inH: 9, inM: 12, outH: 18, outM: 5, type: WorkType.halfDay);
     await repo.save(r);
+    final r2 = rec(15, type: WorkType.dayOff);
+    await repo.save(r2);
     final all = await repo.watchAll().first;
-    expect(all, [r]);
+    expect(all, containsAll([r, r2]));
   });
 
   test('같은 날짜에 두 번 save하면 갱신 (행 하나)', () async {

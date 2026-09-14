@@ -34,7 +34,10 @@ class TodayCallbacks {
   final VoidCallback? onDateLongPress;
 }
 
-/// 상태 블록(104) + 주 버튼(56) + 보조 슬롯(38, 위 12). 다섯 상태에서 높이가 같다.
+/// 상태 블록(104) + 주 버튼(56) + 보조 슬롯. 다섯 상태에서 높이가 같다.
+/// 보조 슬롯은 시각적으로는 높이 38·위 간격 12이지만, 링크형 상태(시간 수정하기·되돌리기)의
+/// 탭 영역을 44(minTapHeight)까지 확보하기 위해 레이아웃 박스 자체를 44로 잡고
+/// 위 간격을 9, 카드 하단 패딩을 −3만큼 줄여 총 높이는 그대로 유지한다.
 class StatusCard extends StatelessWidget {
   const StatusCard({super.key, required this.state, required this.callbacks});
 
@@ -101,18 +104,25 @@ class StatusCard extends StatelessWidget {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: callbacks.onEditTime,
-          child: Text(TodayTexts.editTime, style: AppTextStyles.link),
+          child: SizedBox(
+            height: AppSizes.minTapHeight,
+            child: Center(child: Text(TodayTexts.editTime, style: AppTextStyles.link)),
+          ),
         );
       case TodayScreenState.dayType:
         return Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(TodayTexts.revertPrefix, style: AppTextStyles.caption),
             SizedBox(width: AppSizes.linkGap),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: callbacks.onRevert,
-              child: Text(TodayTexts.revert, style: AppTextStyles.linkBrand),
+              child: SizedBox(
+                height: AppSizes.minTapHeight,
+                child: Center(child: Text(TodayTexts.revert, style: AppTextStyles.linkBrand)),
+              ),
             ),
           ],
         );

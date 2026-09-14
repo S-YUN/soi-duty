@@ -41,12 +41,12 @@ class $WorkRecordsTable extends WorkRecords
     requiredDuringInsert: false,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<WorkType, int> type =
-      GeneratedColumn<int>(
+  late final GeneratedColumnWithTypeConverter<WorkType, String> type =
+      GeneratedColumn<String>(
         'type',
         aliasedName,
         false,
-        type: DriftSqlType.int,
+        type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<WorkType>($WorkRecordsTable.$convertertype);
   @override
@@ -106,7 +106,7 @@ class $WorkRecordsTable extends WorkRecords
       ),
       type: $WorkRecordsTable.$convertertype.fromSql(
         attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
+          DriftSqlType.string,
           data['${effectivePrefix}type'],
         )!,
       ),
@@ -118,8 +118,8 @@ class $WorkRecordsTable extends WorkRecords
     return $WorkRecordsTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<WorkType, int, int> $convertertype =
-      const EnumIndexConverter<WorkType>(WorkType.values);
+  static JsonTypeConverter2<WorkType, String, String> $convertertype =
+      const EnumNameConverter<WorkType>(WorkType.values);
 }
 
 class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
@@ -145,7 +145,9 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
       map['clock_out'] = Variable<DateTime>(clockOut);
     }
     {
-      map['type'] = Variable<int>($WorkRecordsTable.$convertertype.toSql(type));
+      map['type'] = Variable<String>(
+        $WorkRecordsTable.$convertertype.toSql(type),
+      );
     }
     return map;
   }
@@ -173,7 +175,7 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
       clockIn: serializer.fromJson<DateTime?>(json['clockIn']),
       clockOut: serializer.fromJson<DateTime?>(json['clockOut']),
       type: $WorkRecordsTable.$convertertype.fromJson(
-        serializer.fromJson<int>(json['type']),
+        serializer.fromJson<String>(json['type']),
       ),
     );
   }
@@ -184,7 +186,7 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
       'date': serializer.toJson<String>(date),
       'clockIn': serializer.toJson<DateTime?>(clockIn),
       'clockOut': serializer.toJson<DateTime?>(clockOut),
-      'type': serializer.toJson<int>(
+      'type': serializer.toJson<String>(
         $WorkRecordsTable.$convertertype.toJson(type),
       ),
     };
@@ -258,7 +260,7 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     Expression<String>? date,
     Expression<DateTime>? clockIn,
     Expression<DateTime>? clockOut,
-    Expression<int>? type,
+    Expression<String>? type,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -299,7 +301,7 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
       map['clock_out'] = Variable<DateTime>(clockOut.value);
     }
     if (type.present) {
-      map['type'] = Variable<int>(
+      map['type'] = Variable<String>(
         $WorkRecordsTable.$convertertype.toSql(type.value),
       );
     }
@@ -583,7 +585,7 @@ class $$WorkRecordsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<WorkType, WorkType, int> get type =>
+  ColumnWithTypeConverterFilters<WorkType, WorkType, String> get type =>
       $composableBuilder(
         column: $table.type,
         builder: (column) => ColumnWithTypeConverterFilters(column),
@@ -614,7 +616,7 @@ class $$WorkRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get type => $composableBuilder(
+  ColumnOrderings<String> get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
   );
@@ -638,7 +640,7 @@ class $$WorkRecordsTableAnnotationComposer
   GeneratedColumn<DateTime> get clockOut =>
       $composableBuilder(column: $table.clockOut, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<WorkType, int> get type =>
+  GeneratedColumnWithTypeConverter<WorkType, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 }
 
