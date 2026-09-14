@@ -185,6 +185,18 @@ void main() {
       final s = week([rec(7, inH: 9, outH: 18), rec(14, inH: 9, outH: 18)]);
       expect(s.workedMinutes, 480);
     });
+
+    test('weeklyTargetMinutes가 기본값과 다르면 목표에 반영된다', () {
+      const customRules = WorkRules(weeklyTargetMinutes: 2100); // 35h
+      final s = weekSummary(
+        records: [for (var day = 14; day <= 18; day++) rec(day, inH: 9, outH: 18)],
+        monday: d(14),
+        rules: customRules,
+        now: d(18, 23),
+        firstRecordDate: d(7),
+      );
+      expect(s.targetMinutes, 2100);
+    });
   });
 
   group('todayTargetMinutes (CLAUDE.md 퇴근 예상 시각)', () {
@@ -192,7 +204,6 @@ void main() {
           records: records,
           today: d(day),
           rules: rules,
-          now: d(day, 12),
           firstRecordDate: first ?? d(7),
         );
 
@@ -235,7 +246,7 @@ void main() {
     test('오늘의 진행분은 계산에서 제외 (오늘 목표를 구하는 중이므로)', () {
       final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9)];
       expect(
-        todayTargetMinutes(records: r, today: d(16), rules: rules, now: d(16, 15), firstRecordDate: d(7)),
+        todayTargetMinutes(records: r, today: d(16), rules: rules, firstRecordDate: d(7)),
         480,
       );
     });

@@ -41,7 +41,7 @@ int? actualMinutes(WorkRecord r, WorkRules rules) {
 
 /// 근무 중인 오늘의 진행분. 오늘이 아니거나 출근·퇴근 조건이 안 맞으면 null.
 int? ongoingMinutes(WorkRecord r, DateTime now, WorkRules rules) {
-  if (dateOnly(now) != r.date) return null;
+  if (dateOnly(now) != dateOnly(r.date)) return null;
   final clockIn = r.clockIn;
   if (clockIn == null || r.clockOut != null) return null;
   final raw = now.difference(clockIn).inMinutes;
@@ -87,7 +87,7 @@ WeekSummary weekSummary({
   final byDate = recordsByDate(records);
   final firstWeek = isFirstWeekException(monday, firstRecordDate);
 
-  var target = 0;
+  var reduction = 0;
   var worked = 0;
   var halfDays = 0;
   var dayOffs = 0;
@@ -96,7 +96,7 @@ WeekSummary weekSummary({
   for (final day in weekdaysOf(monday)) {
     final r = byDate[day];
     final type = r?.type ?? WorkType.normal;
-    target += standardMinutes(type, rules);
+    reduction += rules.dailyStandardMinutes - standardMinutes(type, rules);
     switch (type) {
       case WorkType.halfDay:
         halfDays++;
@@ -111,6 +111,8 @@ WeekSummary weekSummary({
       worked += actualMinutes(r, rules) ?? ongoingMinutes(r, now, rules) ?? 0;
     }
   }
+
+  final target = rules.weeklyTargetMinutes - reduction;
 
   return WeekSummary(
     targetMinutes: firstWeek ? null : target,
@@ -131,7 +133,6 @@ int? todayTargetMinutes({
   required List<WorkRecord> records,
   required DateTime today,
   required WorkRules rules,
-  required DateTime now,
   required DateTime? firstRecordDate,
 }) {
   final day = dateOnly(today);
@@ -140,14 +141,14 @@ int? todayTargetMinutes({
   if (isFirstWeekException(monday, firstRecordDate)) return null;
 
   final byDate = recordsByDate(records);
-  var target = 0;
+  var reduction = 0;
   var workedExcludingToday = 0;
   var remainingStandard = 0;
 
   for (final weekday in weekdaysOf(monday)) {
     final r = byDate[weekday];
     final type = r?.type ?? WorkType.normal;
-    target += standardMinutes(type, rules);
+    reduction += rules.dailyStandardMinutes - standardMinutes(type, rules);
     if (weekday.isBefore(day)) {
       if (r != null) workedExcludingToday += actualMinutes(r, rules) ?? 0;
     } else if (weekday.isAfter(day)) {
@@ -155,6 +156,7 @@ int? todayTargetMinutes({
     }
   }
 
+  final target = rules.weeklyTargetMinutes - reduction;
   return math.max(0, target - workedExcludingToday - remainingStandard);
 }
 
