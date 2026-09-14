@@ -1191,7 +1191,8 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
     });
 
     test('첫 기록일 이전은 대상이 아니다', () {
-      expect(unrecordedWeekdays(records: [rec(16, inH: 9)], today: d(17), firstRecordDate: d(16)), isEmpty);
+      // 첫 기록일이 16이면 14·15는 비어 있어도 대상이 아니다.
+      expect(unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)), isEmpty);
     });
 
     test('첫 기록일이 없으면 빈 리스트', () {
@@ -2935,6 +2936,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 `test/presentation/today_view_test.dart`:
 ```dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/domain/model/work_record.dart';
@@ -2966,6 +2968,16 @@ TodayCallbacks noop() => TodayCallbacks(
 TodayState stateOf(List<WorkRecord> records, {DateTime? now, DateTime? first}) =>
     buildTodayState(records: records, firstRecordDate: first ?? d(7), now: now ?? d(16, 12), rules: rules);
 
+/// 테스트 기본 폰트는 글자마다 1em 폭이라 한 줄짜리 문구가 줄바꿈된다.
+/// 실제 Pretendard를 로드해야 레이아웃 불변 테스트가 의미 있다.
+Future<void> loadPretendard() async {
+  final loader = FontLoader('Pretendard')
+    ..addFont(rootBundle.load('assets/fonts/Pretendard-Regular.otf'))
+    ..addFont(rootBundle.load('assets/fonts/Pretendard-Medium.otf'))
+    ..addFont(rootBundle.load('assets/fonts/Pretendard-SemiBold.otf'));
+  await loader.load();
+}
+
 Future<void> pumpView(WidgetTester tester, TodayState state) async {
   await tester.pumpWidget(MaterialApp(
     theme: AppTheme.light,
@@ -2976,6 +2988,11 @@ Future<void> pumpView(WidgetTester tester, TodayState state) async {
 
 void main() {
   final past = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18)];
+
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await loadPretendard();
+  });
 
   setUp(() {
     SizeConfig.init(402);
@@ -3097,11 +3114,18 @@ class HeroCard extends StatelessWidget {
       decoration: AppDecorations.card,
       child: Column(
         children: [
-          Text(TodayTexts.heroLabel(state), style: AppTextStyles.label, textAlign: TextAlign.center),
+          // 히어로 카드 높이가 문구 길이에 따라 변하면 아래 버튼이 움직인다. 전부 한 줄로 고정.
+          Text(TodayTexts.heroLabel(state), style: AppTextStyles.label, textAlign: TextAlign.center, maxLines: 1),
           SizedBox(height: AppSizes.heroValueTop),
-          Text(TodayTexts.heroValue(state), style: AppTextStyles.heroValue, textAlign: TextAlign.center),
+          Text(TodayTexts.heroValue(state), style: AppTextStyles.heroValue, textAlign: TextAlign.center, maxLines: 1),
           SizedBox(height: AppSizes.heroReasonTop),
-          Text(TodayTexts.heroReason(state, rules), style: AppTextStyles.reason, textAlign: TextAlign.center),
+          Text(
+            TodayTexts.heroReason(state, rules),
+            style: AppTextStyles.reason,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           SizedBox(height: AppSizes.progressBarTop),
           // 첫 주 예외에서는 바를 그리지 않지만 같은 높이를 유지한다 — 아래 버튼이 움직이지 않도록.
           SizedBox(
@@ -3603,6 +3627,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:soi_duty/core/providers/clock_provider.dart';
 import 'package:soi_duty/core/providers/database_providers.dart';
 import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/main.dart';
@@ -3616,8 +3641,12 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
+    // nowProvider의 1분 타이머가 테스트 종료 시 pending timer로 잡히지 않게 고정 스트림으로 바꾼다.
     await tester.pumpWidget(ProviderScope(
-      overrides: [appDatabaseProvider.overrideWithValue(db)],
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        nowProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+      ],
       child: const SoiDutyApp(),
     ));
     await tester.pumpAndSettle();
@@ -3631,8 +3660,12 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
+    // nowProvider의 1분 타이머가 테스트 종료 시 pending timer로 잡히지 않게 고정 스트림으로 바꾼다.
     await tester.pumpWidget(ProviderScope(
-      overrides: [appDatabaseProvider.overrideWithValue(db)],
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        nowProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+      ],
       child: const SoiDutyApp(),
     ));
     await tester.pumpAndSettle();
