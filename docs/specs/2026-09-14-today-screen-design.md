@@ -97,12 +97,13 @@ class WorkRules {
 | `int? ongoingMinutes(WorkRecord r, DateTime now, WorkRules rules)` | `clockIn` 있고 `clockOut` 없을 때 `max(0, now − clockIn − (deductsLunch ? lunch : 0))`. 그 외 `null` |
 | `int standardMinutes(WorkType type, WorkRules rules)` | `normal` 8h, `halfDay` 4h, `dayOff`/`holiday` 0 |
 | `int? deltaMinutes(WorkRecord r, WorkRules rules)` | `actualMinutes − standardMinutes`. actual이 null이면 null. 주말이면 null (기준 대비 없음) |
-| `DateTime? firstRecordDate(List<WorkRecord>)` | 가장 이른 `date`. 기록 없으면 null. **저장하지 않고 항상 파생** |
 | `bool isFirstWeekException(DateTime monday, DateTime? firstRecordDate)` | `firstRecordDate != null && mondayOf(firstRecordDate) == monday && firstRecordDate.weekday != Monday` |
-| `WeekSummary weekSummary({records, monday, rules, now})` | 아래 |
-| `int? todayTargetMinutes({records, today, rules, now})` | 아래. 첫 주 예외면 null |
+| `WeekSummary weekSummary({records, monday, rules, now, firstRecordDate})` | 아래 |
+| `int? todayTargetMinutes({records, today, rules, now, firstRecordDate})` | 아래. 첫 주 예외면 null |
 | `DateTime? expectedClockOut(WorkRecord today, int todayTarget, WorkRules rules)` | `clockIn + todayTarget + (deductsLunch ? lunch : 0)`. clockIn 없으면 null |
-| `List<DateTime> unrecordedWeekdays({records, today})` | 아래 |
+| `List<DateTime> unrecordedWeekdays({records, today, firstRecordDate})` | 아래 |
+
+`firstRecordDate`는 계산하지 않는다. 리포지토리가 별도 저장한 값을 인자로 받는다 (§1.4, §2.1).
 
 **`WeekSummary`** (freezed, domain):
 
@@ -120,17 +121,18 @@ firstRecordDate: DateTime?
 실적: 월~금 기록의 `actualMinutes ?? ongoingMinutes ?? 0` 합. **주말 기록은 실적에도 목표에도 넣지 않는다.**
 첫 주 예외면 `targetMinutes`·`remainingMinutes`는 null, `workedMinutes`만 채운다.
 
-**오늘 목표 (`todayTargetMinutes`)** — 사용자 합의 규칙:
+**오늘 목표 (`todayTargetMinutes`)** — 2026-09-14 사용자 확정 (CLAUDE.md에 추가):
 
 ```
 남은 평일 기준 = Σ(오늘 이후 이번 주 평일의 기준시간)   // 기록 없으면 normal 8h
 오늘 목표     = (주간 목표 − 오늘을 제외한 주간 실적) − 남은 평일 기준
              = max(0, 오늘 목표)
+퇴근 예상     = 출근 + 오늘 목표 + 점심 공제(해당 시)
 ```
 
-예) 금요일, 목표 36h, 월~목 실적 28h38m → 오늘 목표 7h22m → 09:12 출근이면 17:34 퇴근 (목업과 일치).
-반차 체크 시 목표 32h, 오늘 목표 3h22m, 점심 공제 없음 → **12:34** (README 예시의 13:34는 CLAUDE.md 규칙과 맞지 않아 12:34로 확정).
+앞선 날에 많이 했으면 오늘 목표가 줄고, 모자라면 는다. 반차인 날은 점심 공제가 없으므로 퇴근 예상도 그만큼 앞당겨진다.
 첫 주 예외인 주에는 오늘 목표를 계산하지 않는다 (`null`) — 퇴근 예상 문구를 띄우지 않는다.
+**퇴근 예상은 근무 중 상태에서만 계산한다.** 출근 전에는 출근 시각을 가정하지 않고 문구도 띄우지 않는다.
 
 **기록 누락 (`unrecordedWeekdays`)**: `firstRecordDate`부터 **어제**까지의 평일 중
 기록이 없거나, `type ∈ {normal, halfDay}`인데 `clockIn`·`clockOut` 중 하나라도 없는 날. 최신 날짜가 앞. 첫 기록일이 없으면 빈 리스트.
@@ -140,12 +142,14 @@ firstRecordDate: DateTime?
 ```dart
 abstract interface class WorkRecordRepository {
   Stream<List<WorkRecord>> watchAll();
-  Future<void> save(WorkRecord record);   // upsert, date 기준
+  Stream<DateTime?> watchFirstRecordDate();
+  Future<void> save(WorkRecord record);   // upsert, date 기준. 첫 기록일이 비어 있으면 record.date로 채운다
   Future<void> delete(DateTime date);
 }
 ```
 
-이게 전부다. 주간/오늘/누락 필터는 도메인 함수가 한다.
+주간/오늘/누락 필터는 도메인 함수가 한다.
+**첫 기록일은 최초 `save()` 시점에 별도 저장한다** (2026-09-14 사용자 확정). 이후 기록을 지워도 바뀌지 않는다. 디버그 시드가 초기화할 때만 함께 지운다.
 
 ---
 
@@ -161,6 +165,13 @@ class WorkRecords extends Table {
   IntColumn get type => intEnum<WorkType>()();
   @override Set<Column> get primaryKey => {date};
 }
+
+class Settings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+  @override Set<Column> get primaryKey => {key};
+}
+// key = 'first_record_date', value = 'yyyy-MM-dd'
 ```
 
 - `date`를 **문자열 PK**로 두는 이유: `DateTime` 컬럼은 UTC로 저장되어 자정 근처에서 날짜가 밀릴 수 있다. 날짜는 시각이 아니라 키다.
@@ -171,7 +182,8 @@ class WorkRecords extends Table {
 ### 2.2 리포지토리 구현 (`repository/drift_work_record_repository.dart`)
 
 - `watchAll()` = `select(workRecords).watch()` → Row → `WorkRecord` 매핑 (`date` 문자열 ↔ `DateTime(y,m,d)`).
-- `save` = `insertOnConflictUpdate`. `delete` = `deleteWhere(date == key)`.
+- `watchFirstRecordDate()` = `settings` 테이블의 `first_record_date` 행 watch.
+- `save` = 트랜잭션 안에서 `insertOnConflictUpdate` + 첫 기록일이 없으면 `settings`에 기록. `delete` = `deleteWhere(date == key)`.
 - 매핑은 이 파일 안의 private 확장으로 둔다. DTO 파일을 따로 만들지 않는다 (서버 응답이 아니다).
 
 ### 2.3 디버그 시드 (`seed/debug_seed.dart`)
@@ -181,7 +193,7 @@ enum SeedScenario { beforeWork, working, done, dayOff, holiday, firstWeek, withG
 Future<void> applySeed(WorkRecordRepository repo, SeedScenario s, {required DateTime today});
 ```
 
-- 기존 기록을 전부 지우고 시나리오를 넣는다. `today` 기준 상대 날짜로 생성.
+- 기존 기록과 첫 기록일을 전부 지우고 시나리오를 넣는다. `today` 기준 상대 날짜로 생성.
 - `withGaps`는 이번 주 이전 평일 2일을 비운다. `firstWeek`는 첫 기록일을 이번 주 수요일로 둔다.
 - 트리거: `kDebugMode`에서 **날짜 헤더 길게 누르기** → 시나리오 목록 바텀시트. 릴리즈에는 `GestureDetector.onLongPress` 자체가 null.
 
@@ -197,6 +209,7 @@ Future<void> applySeed(WorkRecordRepository repo, SeedScenario s, {required Date
 | `workRecordRepository` | keepAlive | `DriftWorkRecordRepository(db)` |
 | `workRules` | keepAlive | `const WorkRules()`. 나중에 설정 화면이 여기를 바꾼다 |
 | `allRecords` | `Stream<List<WorkRecord>>` | `repo.watchAll()` |
+| `firstRecordDate` | `Stream<DateTime?>` | `repo.watchFirstRecordDate()` |
 | `now` | keepAlive `Stream<DateTime>` | 즉시 1회 + 매 분 정각 틱. 자정 넘김·"n분째"·퇴근 예상 갱신은 전부 이걸로 |
 
 테스트에서는 `appDatabase`를 `NativeDatabase.memory()`로, `now`를 고정값으로 오버라이드한다.
@@ -209,9 +222,10 @@ class TodayController extends _$TodayController {
   @override
   Future<TodayState> build() async {
     final records = await ref.watch(allRecordsProvider.future);
+    final firstRecordDate = await ref.watch(firstRecordDateProvider.future);
     final now = await ref.watch(nowProvider.future);
     final rules = ref.watch(workRulesProvider);
-    return buildTodayState(records: records, now: now, rules: rules); // 순수 함수
+    return buildTodayState(records: records, firstRecordDate: firstRecordDate, now: now, rules: rules); // 순수 함수
   }
   Future<void> clockIn();                 // 오늘 record.clockIn = now
   Future<void> clockOut();                // clockOut = now
@@ -233,7 +247,7 @@ dayType: WorkType?           // dayOff | holiday | null. phase == before일 때�
 isHalfDay: bool
 clockIn, clockOut: DateTime?
 elapsedMinutes: int?         // working일 때 now − clockIn (점심 미공제, "7h 15m째")
-expectedClockOut: DateTime?  // before면 09:00 출근 가정, working이면 실제 출근 기준. 첫 주 예외면 null
+expectedClockOut: DateTime?  // working일 때만. before/done/첫 주 예외면 null
 todayDelta: int?             // done일 때 기준 대비
 todayActual: int?            // done일 때 실근무
 week: WeekSummary
@@ -257,7 +271,7 @@ today_screen.dart            ConsumerWidget. AsyncValue 분기, 로딩 중엔 �
 widgets/pill_tabs.dart       알약 탭 3개, "오늘"만 선택
 widgets/hero_card.dart       라벨 / 54px 값 / 근거 / 진행 바(첫 주 예외면 같은 높이 빈 공간)
 widgets/status_card.dart     상태 블록(104) + 주 버튼(56) + 보조 슬롯(38, margin 12)
-widgets/status_block.dart    5상태별 내용 (점+문구 / 배지+2줄 / 4칸 요약)
+widgets/status_block.dart    5상태별 내용 (점+문구 / 배지+2줄 / 4칸 요약). 출근 전은 "아직 출근 전" 한 줄만 — 출근 가정 안내는 없음
 widgets/primary_button.dart  활성/비활성, pressed 색·scale(.985) 애니메이션 .2s/.1s
 widgets/soi_checkbox.dart    반차(사각 19, r6) / 연차·공휴일(원형 18) 공용, 히트 영역 세로 44 보장
 widgets/type_badge.dart      연차·공휴일 배지
@@ -308,8 +322,8 @@ widgets/unrecorded_card.dart 기록 안 된 날 리스트. 0개면 위젯 자체
 
 | 대상 | 파일 | 내용 |
 |---|---|---|
-| 계산 함수 | `test/domain/work_calculator_test.dart` | 일반/반차/주말 점심 공제 · 반차·연차·공휴일 섞인 주의 목표 · 기록 없는 평일 8h · 주말 근무 집계 제외 · 첫 주 예외 판정 · 오늘 목표/퇴근 예상(금요일 17:34, 반차 12:34, 수요일 앞당김) · 기록 누락 범위(첫 기록일~어제, 주말 제외) |
-| Drift 리포지토리 | `test/data/drift_work_record_repository_test.dart` | 인메모리 DB. save→watch 방출, upsert, delete, 날짜 키 왕복 |
+| 계산 함수 | `test/domain/work_calculator_test.dart` | 일반/반차/주말 점심 공제 · 반차·연차·공휴일 섞인 주의 목표 · 기록 없는 평일 8h · 주말 근무 집계 제외 · 첫 주 예외 판정 · 오늘 목표/퇴근 예상(앞선 날 초과·부족 시 가감, 반차 시 점심 미가산, 마지막 평일이면 잔여 전부) · 근무 중 진행분 포함 · 기록 누락 범위(첫 기록일~어제, 주말 제외) |
+| Drift 리포지토리 | `test/data/drift_work_record_repository_test.dart` | 인메모리 DB. save→watch 방출, upsert, delete, 날짜 키 왕복, 첫 save가 첫 기록일을 기록하고 이후 save·delete로 안 바뀜 |
 | 상태 빌더 | `test/presentation/today_state_builder_test.dart` | 기록 조합 → 5개 화면 상태 판정 |
 | 컨트롤러 | `test/presentation/today_controller_test.dart` | `ProviderContainer` + 인메모리 DB + 고정 `now`. 출근→working, 퇴근→done, 연차→되돌리기 |
 | 위젯 | `test/presentation/today_screen_test.dart` | **5개 상태에서 주 버튼의 `globalToLocal` Y가 전부 동일**. 누락 0개면 카드 없음 |
@@ -328,7 +342,7 @@ lib/domain/repository/work_record_repository.dart
 lib/data/database/app_database.dart
 lib/data/repository/drift_work_record_repository.dart
 lib/data/seed/debug_seed.dart
-lib/core/providers/database_providers.dart      appDatabase, workRecordRepository, workRules, allRecords
+lib/core/providers/database_providers.dart      appDatabase, workRecordRepository, workRules, allRecords, firstRecordDate
 lib/core/providers/clock_provider.dart          now
 lib/core/presentation/size_config.dart
 lib/core/presentation/format/time_format.dart
@@ -345,9 +359,14 @@ assets/images/{logo,mark}-transparent.png
 
 변경: `pubspec.yaml`(fonts), `lib/main.dart`(테마·SizeConfig), `lib/core/routing/router.dart`(플레이스홀더 → `TodayScreen`).
 
-## 6. 확정된 판단들
+## 6. CLAUDE.md에 없어서 사용자에게 확정받은 규칙 (2026-09-14)
 
-- 반차 체크 시 퇴근 예상은 **12:34** (점심 공제 없음). README의 13:34는 채택하지 않음.
-- 근무 중인 오늘의 진행분은 주간 실적에 **포함**한다 (히어로가 실시간으로 줄어든다).
-- 첫 기록일은 저장하지 않고 항상 DB 최소 날짜로 파생한다. 첫 기록을 지우면 첫 주 판정도 따라 바뀐다 — 의도된 동작.
-- 기록 입력 시트가 없는 동안 누락일 행과 "시간 수정하기"는 무반응.
+규칙의 출처는 CLAUDE.md뿐이다. 목업의 숫자나 핸드오프 README의 "계산 규칙" 문단은 규칙의 근거로 쓰지 않는다.
+아래는 CLAUDE.md에 없어 사용자에게 물어 확정한 것이고, CLAUDE.md에도 추가한다.
+
+1. **퇴근 예상 시각**: 주간 잔여를 남은 평일에 배분 (§1.3). 근무 중 상태에서만 계산한다.
+2. **근무 중인 오늘의 진행분**은 주간 실적에 실시간 포함한다. 1분 틱, 계산 비용은 무시할 수준.
+3. **첫 기록일**은 최초 기록 시점에 별도 저장한다. 파생하지 않는다.
+4. **출근 전 상태**에는 출근 시각을 가정한 안내 문구를 띄우지 않는다.
+
+기타: 기록 입력 시트가 없는 동안 누락일 행과 "시간 수정하기"는 무반응.
