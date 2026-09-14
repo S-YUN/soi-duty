@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../model/work_record.dart';
 import '../model/work_type.dart';
+import 'week_summary.dart';
 import 'work_rules.dart';
 
 // ---- 날짜 유틸 ----
@@ -54,4 +55,70 @@ int? deltaMinutes(WorkRecord r, WorkRules rules) {
   final actual = actualMinutes(r, rules);
   if (actual == null) return null;
   return actual - standardMinutes(r.type, rules);
+}
+
+// ---- 주간 ----
+
+/// 첫 기록일이 그 주의 월요일이 아니면, 그 주만 잔여 계산을 하지 않는다.
+bool isFirstWeekException(DateTime monday, DateTime? firstRecordDate) {
+  if (firstRecordDate == null) return false;
+  final first = dateOnly(firstRecordDate);
+  return mondayOf(first) == dateOnly(monday) && first.weekday != DateTime.monday;
+}
+
+/// 월~금 5일을 순회한다. 기록이 없는 평일은 normal(8h)로 간주한다.
+Iterable<DateTime> weekdaysOf(DateTime monday) sync* {
+  final start = dateOnly(monday);
+  for (var i = 0; i < 5; i++) {
+    yield DateTime(start.year, start.month, start.day + i);
+  }
+}
+
+Map<DateTime, WorkRecord> recordsByDate(List<WorkRecord> records) =>
+    {for (final r in records) dateOnly(r.date): r};
+
+WeekSummary weekSummary({
+  required List<WorkRecord> records,
+  required DateTime monday,
+  required WorkRules rules,
+  required DateTime now,
+  required DateTime? firstRecordDate,
+}) {
+  final byDate = recordsByDate(records);
+  final firstWeek = isFirstWeekException(monday, firstRecordDate);
+
+  var target = 0;
+  var worked = 0;
+  var halfDays = 0;
+  var dayOffs = 0;
+  var holidays = 0;
+
+  for (final day in weekdaysOf(monday)) {
+    final r = byDate[day];
+    final type = r?.type ?? WorkType.normal;
+    target += standardMinutes(type, rules);
+    switch (type) {
+      case WorkType.halfDay:
+        halfDays++;
+      case WorkType.dayOff:
+        dayOffs++;
+      case WorkType.holiday:
+        holidays++;
+      case WorkType.normal:
+        break;
+    }
+    if (r != null) {
+      worked += actualMinutes(r, rules) ?? ongoingMinutes(r, now, rules) ?? 0;
+    }
+  }
+
+  return WeekSummary(
+    targetMinutes: firstWeek ? null : target,
+    workedMinutes: worked,
+    remainingMinutes: firstWeek ? null : target - worked,
+    halfDayCount: halfDays,
+    dayOffCount: dayOffs,
+    holidayCount: holidays,
+    isFirstWeekException: firstWeek,
+  );
 }

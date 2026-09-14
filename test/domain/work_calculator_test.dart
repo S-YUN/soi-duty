@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:soi_duty/domain/model/work_record.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
+import 'package:soi_duty/domain/rules/week_summary.dart';
 import 'package:soi_duty/domain/rules/work_calculator.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 
@@ -98,6 +100,90 @@ void main() {
     });
     test('실근무 없으면 null', () {
       expect(deltaMinutes(rec(14, inH: 9), rules), isNull);
+    });
+  });
+
+  group('isFirstWeekException', () {
+    test('첫 기록일이 이번 주 수요일이면 예외', () {
+      expect(isFirstWeekException(d(14), d(16)), isTrue);
+    });
+    test('첫 기록일이 이번 주 월요일이면 정상', () {
+      expect(isFirstWeekException(d(14), d(14)), isFalse);
+    });
+    test('첫 기록일이 지난 주면 정상 (예외는 그 주만)', () {
+      expect(isFirstWeekException(d(14), d(9)), isFalse);
+    });
+    test('첫 기록일이 없으면 정상', () {
+      expect(isFirstWeekException(d(14), null), isFalse);
+    });
+  });
+
+  group('weekSummary', () {
+    WeekSummary week(List<WorkRecord> records, {DateTime? now, DateTime? first}) => weekSummary(
+          records: records,
+          monday: d(14),
+          rules: rules,
+          now: now ?? d(18, 23),
+          firstRecordDate: first ?? d(7),
+        );
+
+    test('평일 5일 전부 일반이면 목표 40h', () {
+      final s = week([for (var day = 14; day <= 18; day++) rec(day, inH: 9, outH: 18)]);
+      expect(s.targetMinutes, 2400);
+      expect(s.workedMinutes, 2400);
+      expect(s.remainingMinutes, 0);
+    });
+
+    test('반차·연차·공휴일이 섞이면 목표에서 차감', () {
+      final s = week([
+        rec(14, inH: 9, outH: 18),
+        rec(15, inH: 9, outH: 13, type: WorkType.halfDay),
+        rec(16, type: WorkType.dayOff),
+        rec(17, type: WorkType.holiday),
+        rec(18, inH: 9, outH: 18),
+      ]);
+      expect(s.targetMinutes, 2400 - 240 - 480 - 480);
+      expect(s.halfDayCount, 1);
+      expect(s.dayOffCount, 1);
+      expect(s.holidayCount, 1);
+      expect(s.workedMinutes, 480 + 240 + 0 + 0 + 480);
+    });
+
+    test('기록이 없는 평일은 normal로 간주해 목표 8h 유지', () {
+      final s = week([rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18)]);
+      expect(s.targetMinutes, 2400);
+      expect(s.workedMinutes, 960);
+      expect(s.remainingMinutes, 1440);
+    });
+
+    test('주말 근무는 실적에도 목표에도 안 들어감', () {
+      final s = week([rec(14, inH: 9, outH: 18), rec(19, inH: 10, outH: 14)]);
+      expect(s.targetMinutes, 2400);
+      expect(s.workedMinutes, 480);
+    });
+
+    test('근무 중인 오늘의 진행분 포함', () {
+      final s = week([rec(14, inH: 9, outH: 18), rec(15, inH: 9)], now: d(15, 12));
+      expect(s.workedMinutes, 480 + 120);
+    });
+
+    test('출퇴근이 빈 과거 기록은 0으로 집계 (목표는 그대로 8h)', () {
+      final s = week([rec(14, inH: 9)], now: d(18, 23));
+      expect(s.workedMinutes, 0);
+      expect(s.targetMinutes, 2400);
+    });
+
+    test('첫 주 예외면 목표·잔여 없이 실적만', () {
+      final s = week([rec(16, inH: 9, outH: 18), rec(17, inH: 9, outH: 18)], first: d(16));
+      expect(s.isFirstWeekException, isTrue);
+      expect(s.targetMinutes, isNull);
+      expect(s.remainingMinutes, isNull);
+      expect(s.workedMinutes, 960);
+    });
+
+    test('다른 주의 기록은 무시', () {
+      final s = week([rec(7, inH: 9, outH: 18), rec(14, inH: 9, outH: 18)]);
+      expect(s.workedMinutes, 480);
     });
   });
 }
