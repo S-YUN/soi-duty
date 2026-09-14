@@ -169,3 +169,29 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
 
 - 색상, 텍스트 스타일, 사이즈 등을 하드코딩 하지  않는다. 
 
+
+---
+
+## 디렉터리
+
+Clean Architecture, 단일 패키지. DI는 Riverpod 프로바이더가 겸한다 (`core/di/` 없음).
+
+```
+lib/
+├─ main.dart                 ProviderScope + MaterialApp.router
+├─ core/routing/             router.dart(@riverpod GoRouter), route_paths.dart
+├─ core/presentation/        SizeConfig, 공용 위젯
+├─ ui/                       색상·타이포 토큰
+├─ domain/model/             WorkRecord, WorkType (freezed)
+├─ domain/rules/             WorkRules + 계산 함수 (순수 Dart, 테스트 1순위)
+├─ domain/repository/        Repository 인터페이스
+├─ data/database/            Drift 테이블·AppDatabase
+├─ data/repository/          Drift 구현체
+├─ data/seed/                디버그 시드 (kDebugMode 가드)
+└─ presentation/<feature>/   @riverpod Notifier + Screen
+assets/images/, assets/fonts/
+```
+
+- `domain/`에는 `package:flutter` import 금지.
+- 코드젠: `dart run build_runner build --delete-conflicting-outputs`
+- `riverpod_lint`는 pubspec이 아니라 `analysis_options.yaml`의 `plugins:`로 설치한다.
