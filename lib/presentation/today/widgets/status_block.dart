@@ -54,13 +54,13 @@ class StatusBlock extends StatelessWidget {
               state.todayActual == null ? '' : formatHm(state.todayActual!),
               delta == null ? '—' : formatSignedHm(delta),
             ],
-            valueColor: (i) => i != 3 || delta == null
+            valueColor: (i) => i != 3
                 ? null
-                : delta < 0
-                    ? AppColors.minus
-                    : delta > 0
-                        ? AppColors.brand
-                        : AppColors.subtle,
+                : delta == null || delta == 0
+                    ? AppColors.subtle
+                    : delta < 0
+                        ? AppColors.minus
+                        : AppColors.brand,
           ),
         ];
       case TodayScreenState.dayType:

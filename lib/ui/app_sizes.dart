@@ -34,6 +34,8 @@ abstract final class AppSizes {
   static double get primaryButton => 56.w;
   static double get secondarySlot => 38.w;
   static double get secondarySlotGap => 12.w;
+  /// 보조 슬롯의 실제 히트 영역(44)을 확보하기 위해 위아래로 파고드는 여백.
+  static double get secondarySlotHitInset => (minTapHeight - secondarySlot) / 2;
   static double get statusBlockGap => 10.w;
   static double get buttonRadius => 14.w;
 

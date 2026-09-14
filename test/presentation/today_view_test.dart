@@ -10,7 +10,9 @@ import 'package:soi_duty/presentation/today/today_state_builder.dart';
 import 'package:soi_duty/presentation/today/today_view.dart';
 import 'package:soi_duty/presentation/today/widgets/first_week_card.dart';
 import 'package:soi_duty/presentation/today/widgets/primary_button.dart';
+import 'package:soi_duty/presentation/today/widgets/soi_checkbox.dart';
 import 'package:soi_duty/presentation/today/widgets/unrecorded_card.dart';
+import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/records.dart';
@@ -142,5 +144,32 @@ void main() {
     ));
     await tester.tap(find.text('출근하기'));
     expect(clockedIn, isTrue);
+  });
+
+  testWidgets('보조 슬롯 히트 영역이 44 이상, 가장자리도 탭된다', (tester) async {
+    bool? halfDay;
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: TodayView(
+        state: fixtures['근무 중']!,
+        rules: rules,
+        callbacks: TodayCallbacks(
+          onClockIn: () {},
+          onClockOut: () {},
+          onHalfDayChanged: (v) => halfDay = v,
+          onDayTypeChanged: (_) {},
+          onRevert: () {},
+          onEditTime: () {},
+          onUnrecordedTap: (_) {},
+          onDateLongPress: null,
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(tester.getSize(find.byType(SoiCheckbox)).height, greaterThanOrEqualTo(AppSizes.minTapHeight));
+
+    await tester.tapAt(tester.getCenter(find.text('오늘은 반차')) + Offset(0, AppSizes.minTapHeight / 2 - 1));
+    expect(halfDay, isTrue);
   });
 }

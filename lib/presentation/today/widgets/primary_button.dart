@@ -21,7 +21,8 @@ class _PrimaryButtonState extends State<PrimaryButton> {
   bool get _enabled => widget.onPressed != null;
 
   void _setPressed(bool v) {
-    if (_enabled && _pressed != v) setState(() => _pressed = v);
+    if ((v && !_enabled) || _pressed == v) return;
+    setState(() => _pressed = v);
   }
 
   @override

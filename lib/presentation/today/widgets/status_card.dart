@@ -44,21 +44,18 @@ class StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: AppSizes.statusCardPadding,
+      padding: AppSizes.statusCardPadding.copyWith(
+        bottom: AppSizes.statusCardPadding.bottom - AppSizes.secondarySlotHitInset,
+      ),
       decoration: AppDecorations.card,
       child: Column(
         children: [
           StatusBlock(state: state),
           PrimaryButton(label: TodayTexts.buttonLabel(state), onPressed: _primaryAction),
-          SizedBox(height: AppSizes.secondarySlotGap),
-          SizedBox(
-            height: AppSizes.secondarySlot,
-            child: OverflowBox(
-              // 체크박스 히트 영역(44)이 슬롯(38)보다 커도 레이아웃 높이는 38로 유지한다.
-              maxHeight: AppSizes.minTapHeight,
-              child: Center(child: _secondary()),
-            ),
-          ),
+          SizedBox(height: AppSizes.secondarySlotGap - AppSizes.secondarySlotHitInset),
+          // 레이아웃 높이 자체를 44(minTapHeight)로 잡아 히트 영역을 진짜로 확보한다.
+          // 위 gap과 아래 카드 패딩에서 각각 인셋만큼 빼서 슬롯의 시각적 중심은 그대로 둔다.
+          SizedBox(height: AppSizes.minTapHeight, child: Center(child: _secondary())),
         ],
       ),
     );
