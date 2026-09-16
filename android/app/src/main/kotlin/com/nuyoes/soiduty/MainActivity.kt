@@ -1,4 +1,4 @@
-package com.example.soi_duty
+package com.nuyoes.soiduty
 
 import io.flutter.embedding.android.FlutterActivity
 

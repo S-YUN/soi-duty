@@ -39,6 +39,9 @@ dev_dependencies:
   json_serializable: ^6.14.1
   drift_dev: ^2.35.0
 
+  # 앱 아이콘 생성: dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.14.4
+
 flutter:
   uses-material-design: true
 
@@ -54,3 +57,13 @@ flutter:
           weight: 500
         - asset: assets/fonts/Pretendard-SemiBold.otf
           weight: 600
+
+# 아이콘 원본은 assets/icon/ (핸드오프 규칙: #1B473A 배경 + 투명 로고 78%).
+# Android adaptive 전경은 원형 마스크 안전 영역 때문에 62%로 따로 합성했다.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/icon.png
+  adaptive_icon_background: "#1B473A"
+  adaptive_icon_foreground: assets/icon/icon_adaptive_fg.png
+  remove_alpha_ios: true
