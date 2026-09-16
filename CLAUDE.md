@@ -89,6 +89,16 @@
 
 최초 기록을 저장하는 시점에 별도로 저장한다. DB에서 파생하지 않는다.
 이후 기록을 지워도 첫 기록일은 바뀌지 않는다.
+단, **첫 기록일보다 이른 날짜를 저장하면 첫 기록일을 그 날짜로 당긴다.**
+수요일에 설치하고 월·화를 나중에 채우면 첫 주 예외가 풀려 정상 계산된다.
+
+### 기록 수정 (시간 수정 시트)
+
+- **미래 날짜는 유형만.** 반차·연차·공휴일은 미리 찍을 수 있지만 출퇴근 시각은 넣을 수 없다.
+  미리 찍은 연차·공휴일은 그 주 목표와 퇴근 예상에 바로 반영된다.
+- **연차·공휴일은 시각을 비운다.** 유형을 연차/공휴일로 저장하면 `clockIn`·`clockOut`은 `null`.
+- **자정 넘김 미지원.** 퇴근 < 출근이면 저장하지 않는다. 하루 기록은 그날 안에서 끝난다.
+- 저장 결과가 빈 일반 기록(시각 둘 다 없고 `normal`)이면 행을 남기지 않고 지운다.
 
 ### 설정 가능성
 
@@ -183,6 +193,7 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
 - **크래시 리포팅.** 출시를 결정할 때 다시 판단한다.
 - **자동 위치 기반 출퇴근.** 버튼으로만 찍는다.
 - **월간 초과/부족 합계.** 주 단위 리셋 구조와 맞지 않는다.
+- **월간 리포트 (하루 패턴·휴가 사용 등 통계).** 보류. 데이터가 쌓인 뒤 실사용 경험으로 결정한다 (2026-09-17).
 - **파생값 저장.** 언제나 계산.
 
 ---
@@ -201,7 +212,7 @@ Clean Architecture, 단일 패키지. DI는 Riverpod 프로바이더가 겸한�
 ```
 lib/
 ├─ main.dart                 ProviderScope + MaterialApp.router
-├─ core/routing/             router.dart(@riverpod GoRouter), route_paths.dart
+├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치), route_paths.dart
 ├─ core/presentation/        SizeConfig, 공용 위젯
 ├─ ui/                       색상·타이포 토큰
 ├─ domain/model/             WorkRecord, WorkType (freezed)
@@ -210,7 +221,10 @@ lib/
 ├─ data/database/            Drift 테이블·AppDatabase
 ├─ data/repository/          Drift 구현체
 ├─ data/seed/                디버그 시드 (kDebugMode 가드)
-└─ presentation/<feature>/   @riverpod Notifier + Screen
+├─ presentation/shell/       탭 셸 (알약 탭 + 브랜치)
+├─ presentation/shared/      기간 네비게이터 등 탭 공용 위젯
+├─ presentation/record_edit/ 시간 수정 시트 (오늘·주간·월간·누락 리스트가 공유)
+└─ presentation/<feature>/   @riverpod Notifier + Screen (today / week / month)
 assets/images/, assets/fonts/
 ```
 
