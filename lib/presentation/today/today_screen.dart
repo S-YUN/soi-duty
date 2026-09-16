@@ -21,11 +21,8 @@ class TodayScreen extends ConsumerWidget {
 
     return async.when(
       // Drift는 로컬이라 첫 프레임 직후 바로 도착한다. 배경색만 보여준다.
-      loading: () => const Scaffold(backgroundColor: AppColors.screenBackground),
-      error: (e, _) => Scaffold(
-        backgroundColor: AppColors.screenBackground,
-        body: Center(child: Text('$e', style: AppTextStyles.caption)),
-      ),
+      loading: () => const ColoredBox(color: AppColors.screenBackground, child: SizedBox.expand()),
+      error: (e, _) => Center(child: Text('$e', style: AppTextStyles.caption)),
       data: (state) => TodayView(
         state: state,
         rules: rules,

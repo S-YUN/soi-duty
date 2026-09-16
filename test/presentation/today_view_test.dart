@@ -20,29 +20,41 @@ import '../helpers/records.dart';
 const rules = WorkRules();
 
 TodayCallbacks noop() => TodayCallbacks(
-      onClockIn: () {},
-      onClockOut: () {},
-      onHalfDayChanged: (_) {},
-      onDayTypeChanged: (_) {},
-      onRevert: () {},
-      onEditTime: () {},
-      onCancelClockIn: () {},
-      onCancelClockOut: () {},
-      onUnrecordedTap: (_) {},
-      onDateLongPress: null,
-    );
+  onClockIn: () {},
+  onClockOut: () {},
+  onHalfDayChanged: (_) {},
+  onDayTypeChanged: (_) {},
+  onRevert: () {},
+  onEditTime: () {},
+  onCancelClockIn: () {},
+  onCancelClockOut: () {},
+  onUnrecordedTap: (_) {},
+  onDateLongPress: null,
+);
 
 // 기본 firstRecordDate는 `past`의 첫 기록일(14, 월)과 맞춘다. d(7)(전주 월요일)을 쓰면
 // 7~11일이 기록 없는 평일로 잡혀 기록 누락 카드가 의도치 않게 뜬다 — 그 시나리오는
 // 아래 '기록 누락' 테스트에서 별도로 first를 넘겨 명시적으로 검증한다.
-TodayState stateOf(List<WorkRecord> records, {DateTime? now, DateTime? first}) =>
-    buildTodayState(records: records, firstRecordDate: first ?? d(14), now: now ?? d(16, 12), rules: rules);
+TodayState stateOf(
+  List<WorkRecord> records, {
+  DateTime? now,
+  DateTime? first,
+}) => buildTodayState(
+  records: records,
+  firstRecordDate: first ?? d(14),
+  now: now ?? d(16, 12),
+  rules: rules,
+);
 
 Future<void> pumpView(WidgetTester tester, TodayState state) async {
-  await tester.pumpWidget(MaterialApp(
-    theme: AppTheme.light,
-    home: TodayView(state: state, rules: rules, callbacks: noop()),
-  ));
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: TodayView(state: state, rules: rules, callbacks: noop()),
+      ),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 500));
 }
 
@@ -61,7 +73,10 @@ void main() {
   final fixtures = <String, TodayState>{
     '출근 전': stateOf(past),
     '근무 중': stateOf([...past, rec(16, inH: 9, inM: 12)]),
-    '퇴근 완료': stateOf([...past, rec(16, inH: 9, inM: 12, outH: 18, outM: 5)], now: d(16, 19)),
+    '퇴근 완료': stateOf([
+      ...past,
+      rec(16, inH: 9, inM: 12, outH: 18, outM: 5),
+    ], now: d(16, 19)),
     '연차': stateOf([...past, rec(16, type: WorkType.dayOff)]),
     '첫 주 예외': stateOf([rec(16, inH: 9, inM: 12)], first: d(16)),
   };
@@ -120,83 +135,106 @@ void main() {
 
   testWidgets('콜백 연결: 출근하기 탭', (tester) async {
     var clockedIn = false;
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
-      home: TodayView(
-        state: fixtures['출근 전']!,
-        rules: rules,
-        callbacks: TodayCallbacks(
-          onClockIn: () => clockedIn = true,
-          onClockOut: () {},
-          onHalfDayChanged: (_) {},
-          onDayTypeChanged: (_) {},
-          onRevert: () {},
-          onEditTime: () {},
-          onCancelClockIn: () {},
-          onCancelClockOut: () {},
-          onUnrecordedTap: (_) {},
-          onDateLongPress: null,
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: TodayView(
+            state: fixtures['출근 전']!,
+            rules: rules,
+            callbacks: TodayCallbacks(
+              onClockIn: () => clockedIn = true,
+              onClockOut: () {},
+              onHalfDayChanged: (_) {},
+              onDayTypeChanged: (_) {},
+              onRevert: () {},
+              onEditTime: () {},
+              onCancelClockIn: () {},
+              onCancelClockOut: () {},
+              onUnrecordedTap: (_) {},
+              onDateLongPress: null,
+            ),
+          ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('출근하기'));
     expect(clockedIn, isTrue);
   });
 
   testWidgets('보조 슬롯 히트 영역이 44 이상, 가장자리도 탭된다', (tester) async {
     bool? halfDay;
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
-      home: TodayView(
-        state: fixtures['근무 중']!,
-        rules: rules,
-        callbacks: TodayCallbacks(
-          onClockIn: () {},
-          onClockOut: () {},
-          onHalfDayChanged: (v) => halfDay = v,
-          onDayTypeChanged: (_) {},
-          onRevert: () {},
-          onEditTime: () {},
-          onCancelClockIn: () {},
-          onCancelClockOut: () {},
-          onUnrecordedTap: (_) {},
-          onDateLongPress: null,
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: TodayView(
+            state: fixtures['근무 중']!,
+            rules: rules,
+            callbacks: TodayCallbacks(
+              onClockIn: () {},
+              onClockOut: () {},
+              onHalfDayChanged: (v) => halfDay = v,
+              onDayTypeChanged: (_) {},
+              onRevert: () {},
+              onEditTime: () {},
+              onCancelClockIn: () {},
+              onCancelClockOut: () {},
+              onUnrecordedTap: (_) {},
+              onDateLongPress: null,
+            ),
+          ),
         ),
       ),
-    ));
+    );
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(tester.getSize(find.byType(SoiCheckbox)).height, greaterThanOrEqualTo(AppSizes.minTapHeight));
+    expect(
+      tester.getSize(find.byType(SoiCheckbox)).height,
+      greaterThanOrEqualTo(AppSizes.minTapHeight),
+    );
 
-    await tester.tapAt(tester.getCenter(find.text('오늘은 반차')) + Offset(0, AppSizes.minTapHeight / 2 - 1));
+    await tester.tapAt(
+      tester.getCenter(find.text('오늘은 반차')) +
+          Offset(0, AppSizes.minTapHeight / 2 - 1),
+    );
     expect(halfDay, isTrue);
   });
 
   testWidgets('되돌리기 링크 히트 영역이 44 이상, 탭하면 콜백', (tester) async {
     var reverted = false;
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
-      home: TodayView(
-        state: fixtures['연차']!,
-        rules: rules,
-        callbacks: TodayCallbacks(
-          onClockIn: () {},
-          onClockOut: () {},
-          onHalfDayChanged: (_) {},
-          onDayTypeChanged: (_) {},
-          onRevert: () => reverted = true,
-          onEditTime: () {},
-          onCancelClockIn: () {},
-          onCancelClockOut: () {},
-          onUnrecordedTap: (_) {},
-          onDateLongPress: null,
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: TodayView(
+            state: fixtures['연차']!,
+            rules: rules,
+            callbacks: TodayCallbacks(
+              onClockIn: () {},
+              onClockOut: () {},
+              onHalfDayChanged: (_) {},
+              onDayTypeChanged: (_) {},
+              onRevert: () => reverted = true,
+              onEditTime: () {},
+              onCancelClockIn: () {},
+              onCancelClockOut: () {},
+              onUnrecordedTap: (_) {},
+              onDateLongPress: null,
+            ),
+          ),
         ),
       ),
-    ));
+    );
     await tester.pump(const Duration(milliseconds: 500));
 
-    final revertHitBox = find.ancestor(of: find.text('되돌리기'), matching: find.byType(GestureDetector)).first;
-    expect(tester.getSize(revertHitBox).height, greaterThanOrEqualTo(AppSizes.minTapHeight));
+    final revertHitBox = find
+        .ancestor(of: find.text('되돌리기'), matching: find.byType(GestureDetector))
+        .first;
+    expect(
+      tester.getSize(revertHitBox).height,
+      greaterThanOrEqualTo(AppSizes.minTapHeight),
+    );
 
     await tester.tap(find.text('되돌리기'));
     expect(reverted, isTrue);
