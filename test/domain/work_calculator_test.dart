@@ -306,4 +306,48 @@ void main() {
       expect(unrecordedWeekdays(records: const [], today: d(16), firstRecordDate: null), isEmpty);
     });
   });
+
+  group('isValidClockRange', () {
+    test('둘 중 하나라도 없으면 유효', () {
+      expect(isValidClockRange(null, null), isTrue);
+      expect(isValidClockRange(d(14, 9), null), isTrue);
+    });
+    test('퇴근 < 출근이면 무효, 같으면 유효', () {
+      expect(isValidClockRange(d(14, 22), d(14, 2)), isFalse);
+      expect(isValidClockRange(d(14, 9), d(14, 9)), isTrue);
+    });
+  });
+
+  group('weekendMinutes', () {
+    test('그 주 토·일 실근무 합, 점심 공제 없음', () {
+      final records = [
+        rec(14, inH: 9, outH: 18),
+        rec(19, inH: 10, outH: 14, outM: 30), // 토
+        rec(20, inH: 10, outH: 11), // 일
+        rec(12, inH: 10, outH: 12), // 지난주 토
+      ];
+      expect(weekendMinutes(records, d(14), rules), 270 + 60);
+    });
+  });
+
+  group('calendarDays', () {
+    test('2026-09: 8/31(월)부터 10/4(일)까지 5주', () {
+      final days = calendarDays(DateTime(2026, 9));
+      expect(days.length, 35);
+      expect(days.first, DateTime(2026, 8, 31));
+      expect(days.last, DateTime(2026, 10, 4));
+    });
+    test('2026-02: 2/1이 일요일 → 1/26부터, 5주', () {
+      final days = calendarDays(DateTime(2026, 2));
+      expect(days.first, DateTime(2026, 1, 26));
+      expect(days.length, 35);
+    });
+    test('2026-08: 6주', () => expect(calendarDays(DateTime(2026, 8)).length, 42));
+    test('2027-02: 2/1 월요일, 28일 → 딱 4주', () => expect(calendarDays(DateTime(2027, 2)).length, 28));
+  });
+
+  test('addMonths는 해를 넘긴다', () {
+    expect(addMonths(DateTime(2026, 12), 1), DateTime(2027, 1));
+    expect(addMonths(DateTime(2026, 1), -1), DateTime(2025, 12));
+  });
 }

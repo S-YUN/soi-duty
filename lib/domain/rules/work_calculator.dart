@@ -16,6 +16,21 @@ DateTime mondayOf(DateTime d) {
   return DateTime(day.year, day.month, day.day - (day.weekday - DateTime.monday));
 }
 
+DateTime addDays(DateTime d, int n) => DateTime(d.year, d.month, d.day + n);
+
+DateTime firstOfMonth(DateTime d) => DateTime(d.year, d.month);
+
+DateTime addMonths(DateTime month, int n) => DateTime(month.year, month.month + n);
+
+/// 월요일 시작, 앞뒤를 채운 완전한 주 단위 (4~6주 × 7일).
+List<DateTime> calendarDays(DateTime month) {
+  final first = firstOfMonth(month);
+  final last = DateTime(first.year, first.month + 1, 0);
+  final start = mondayOf(first);
+  final end = addDays(mondayOf(last), 6);
+  return [for (var d = start; !d.isAfter(end); d = addDays(d, 1)) d];
+}
+
 // ---- 하루 단위 ----
 
 /// 점심 공제 조건: 반차가 아니고, 주말이 아닐 것.
@@ -55,6 +70,12 @@ int? deltaMinutes(WorkRecord r, WorkRules rules) {
   final actual = actualMinutes(r, rules);
   if (actual == null) return null;
   return actual - standardMinutes(r.type, rules);
+}
+
+/// 둘 다 있을 때 퇴근이 출근보다 이르면 무효. 자정 넘김은 지원하지 않는다.
+bool isValidClockRange(DateTime? clockIn, DateTime? clockOut) {
+  if (clockIn == null || clockOut == null) return true;
+  return !clockOut.isBefore(clockIn);
 }
 
 // ---- 주간 ----
@@ -123,6 +144,18 @@ WeekSummary weekSummary({
     holidayCount: holidays,
     isFirstWeekException: firstWeek,
   );
+}
+
+/// 그 주 토·일 실근무 합. 주 40시간 집계에는 안 들어가고 근거 문구("주말 4h 30m 제외")에만 쓴다.
+int weekendMinutes(List<WorkRecord> records, DateTime monday, WorkRules rules) {
+  final start = dateOnly(monday);
+  var sum = 0;
+  for (final r in records) {
+    final day = dateOnly(r.date);
+    if (!isWeekend(day) || mondayOf(day) != start) continue;
+    sum += actualMinutes(r, rules) ?? 0;
+  }
+  return sum;
 }
 
 // ---- 오늘 목표 · 퇴근 예상 (CLAUDE.md "퇴근 예상 시각") ----
