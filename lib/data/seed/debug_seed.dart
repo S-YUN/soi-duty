@@ -4,7 +4,7 @@ import '../../domain/rules/work_calculator.dart';
 import '../database/app_database.dart';
 import '../repository/drift_work_record_repository.dart';
 
-/// 오늘 화면의 상태들을 손으로 만들지 않고 바로 확인하기 위한 시드.
+/// 오늘 화면의 상태들과 주간·월간 탭을 손으로 만들지 않고 바로 확인하기 위한 시드.
 /// 릴리즈 빌드에서는 호출 경로 자체가 없다 (kDebugMode 가드는 호출부 책임).
 enum SeedScenario {
   empty('비우기'),
@@ -14,7 +14,8 @@ enum SeedScenario {
   dayOff('연차'),
   holiday('공휴일'),
   firstWeek('첫 주 예외'),
-  withGaps('기록 누락 있는 주');
+  withGaps('기록 누락 있는 주'),
+  history('두 달치 기록');
 
   const SeedScenario(this.label);
   final String label;
@@ -90,5 +91,35 @@ List<WorkRecord> _records(SeedScenario scenario, DateTime today) {
           if (d.isBefore(today)) full(d),
         WorkRecord(date: today, clockIn: DateTime(today.year, today.month, today.day, 9, 12)),
       ];
+    case SeedScenario.history:
+      // −8주 월요일부터 어제까지. 날짜로 결정되는 변동이라 ±가 골고루 나온다.
+      final start = addDays(monday, -56);
+      final records = <WorkRecord>[full(start)]; // 첫 기록일이 월요일이 되도록 시작일은 무조건 채운다
+      for (var d = addDays(start, 1); d.isBefore(today); d = addDays(d, 1)) {
+        final n = d.day;
+        if (isWeekend(d)) {
+          if (n % 9 == 0) records.add(full(d, inH: 10, outH: 14, outM: 30)); // 가끔 주말 근무
+          continue;
+        }
+        if (n % 11 == 0) continue; // 누락
+        if (n % 13 == 0) {
+          records.add(WorkRecord(date: d, type: WorkType.dayOff));
+        } else if (n % 17 == 0) {
+          records.add(WorkRecord(date: d, type: WorkType.holiday));
+        } else if (n % 7 == 0) {
+          records.add(WorkRecord(
+            date: d,
+            type: WorkType.halfDay,
+            clockIn: DateTime(d.year, d.month, d.day, 13, 30),
+            clockOut: DateTime(d.year, d.month, d.day, 17, 40 + (n % 3) * 10),
+          ));
+        } else {
+          records.add(full(d, inH: 9, inM: (n % 4) * 7, outH: 18, outM: (n % 5) * 9));
+        }
+      }
+      // 오늘 근무 중 + 다음 주 수요일에 미리 찍은 연차
+      records.add(WorkRecord(date: today, clockIn: DateTime(today.year, today.month, today.day, 9, 12)));
+      records.add(WorkRecord(date: addDays(monday, 9), type: WorkType.dayOff));
+      return records;
   }
 }

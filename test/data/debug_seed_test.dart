@@ -73,4 +73,17 @@ void main() {
     final all = await repo.watchAll().first;
     expect(all.any((r) => r.date == today), isFalse);
   });
+
+  test('history: 8주치 기록, 유형이 섞이고 누락·주말 근무·미래 연차가 있다', () async {
+    await applySeed(db, SeedScenario.history, today: today);
+    final records = await repo.watchAll().first;
+    final types = records.map((r) => r.type).toSet();
+    expect(types, containsAll([WorkType.normal, WorkType.halfDay, WorkType.dayOff, WorkType.holiday]));
+    expect(records.any((r) => r.date.isAfter(today) && r.type == WorkType.dayOff), isTrue);
+    expect(records.any((r) => isWeekend(r.date) && r.clockOut != null), isTrue);
+    final todayRec = records.singleWhere((r) => r.date == today);
+    expect(todayRec.clockOut, isNull);
+    final first = await repo.watchFirstRecordDate().first;
+    expect(first, addDays(mondayOf(today), -56));
+  });
 }
