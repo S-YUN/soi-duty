@@ -33,7 +33,7 @@ final class TodayControllerProvider
   TodayController create() => TodayController();
 }
 
-String _$todayControllerHash() => r'ea5a5447cd61db3f252cdfdc39576c2165b64981';
+String _$todayControllerHash() => r'98555ae9478970b0a19ceeab5f80932c5c1ee37e';
 
 abstract class _$TodayController extends $AsyncNotifier<TodayState> {
   FutureOr<TodayState> build();

@@ -6,6 +6,7 @@ import '../../core/providers/database_providers.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_text_styles.dart';
 import '../debug/seed_picker_sheet.dart';
+import '../record_edit/record_edit_sheet.dart';
 import 'today_controller.dart';
 import 'today_view.dart';
 
@@ -36,9 +37,8 @@ class TodayScreen extends ConsumerWidget {
           onRevert: controller.revert,
           onCancelClockIn: controller.cancelClockIn,
           onCancelClockOut: controller.cancelClockOut,
-          // TODO: 기록 입력 시트 (다음 라운드)
-          onEditTime: () {},
-          onUnrecordedTap: (_) {},
+          onEditTime: () => showRecordEditSheet(context, state.date),
+          onUnrecordedTap: (date) => showRecordEditSheet(context, date),
           onDateLongPress: kDebugMode ? () => showSeedPicker(context, ref) : null,
         ),
       ),
