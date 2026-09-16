@@ -41,6 +41,8 @@ dev_dependencies:
 
   # 앱 아이콘 생성: dart run flutter_launcher_icons
   flutter_launcher_icons: ^0.14.4
+  # flavor 생성: dart run flutter_flavorizr (dev/prod 번들 ID·앱 이름만 분리)
+  flutter_flavorizr: ^2.6.0
 
 flutter:
   uses-material-design: true
@@ -67,3 +69,33 @@ flutter_launcher_icons:
   adaptive_icon_background: "#1B473A"
   adaptive_icon_foreground: assets/icon/icon_adaptive_fg.png
   remove_alpha_ios: true
+
+# 실사용(prod)과 테스트(dev) 앱을 폰에 나란히 설치하기 위한 flavor. 코드는 동일, ID·이름만 다르다.
+flavorizr:
+  app:
+    android:
+      flavorDimensions: "env"
+    ios: {}
+  flavors:
+    dev:
+      app:
+        name: "소이듀티 dev"
+      android:
+        applicationId: "com.nuyoes.soiduty.dev"
+      ios:
+        bundleId: "com.nuyoes.soiduty.dev"
+    prod:
+      app:
+        name: "소이듀티"
+      android:
+        applicationId: "com.nuyoes.soiduty"
+      ios:
+        bundleId: "com.nuyoes.soiduty"
+  instructions:
+    - android:androidManifest
+    - android:buildGradle
+    - android:flavorizrGradle
+    - ios:xcconfig
+    - ios:buildTargets
+    - ios:schema
+    - ios:plist

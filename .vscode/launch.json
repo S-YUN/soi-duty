@@ -2,24 +2,26 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "소이듀티 (debug)",
-      "request": "launch",
-      "type": "dart",
-      "program": "lib/main.dart"
-    },
-    {
-      "name": "소이듀티 (profile)",
+      "name": "소이듀티 dev (debug)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "flutterMode": "profile"
+      "args": ["--flavor", "dev"]
     },
     {
-      "name": "소이듀티 (release)",
+      "name": "소이듀티 prod (debug)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "flutterMode": "release"
+      "args": ["--flavor", "prod"]
+    },
+    {
+      "name": "소이듀티 prod (release)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "release",
+      "args": ["--flavor", "prod"]
     }
   ]
 }

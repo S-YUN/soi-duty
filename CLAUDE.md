@@ -217,3 +217,11 @@ assets/images/, assets/fonts/
 - `domain/`에는 `package:flutter` import 금지.
 - 코드젠: `dart run build_runner build --delete-conflicting-outputs`
 - `riverpod_lint`는 pubspec이 아니라 `analysis_options.yaml`의 `plugins:`로 설치한다.
+
+## Flavor
+
+`dev` / `prod` 두 개. 코드는 같고 번들 ID·앱 이름만 다르다 (`com.nuyoes.soiduty.dev` "소이듀티 dev" / `com.nuyoes.soiduty` "소이듀티").
+실사용 앱과 시드 테스트용 앱을 폰에 나란히 설치하기 위한 것이지, 서버 환경 분리가 아니다.
+**flavor 없이 `flutter run`/`flutter build` 하면 실패한다.** 항상 `--flavor dev` 또는 `--flavor prod`.
+flavor 설정은 `pubspec.yaml`의 `flavorizr:` 블록이 정본이고 `dart run flutter_flavorizr -f`로 재생성한다
+(재생성 후 iOS `ASSETCATALOG_COMPILER_APPICON_NAME`은 `AppIcon`으로 되돌린다 — 아이콘은 flavor 공용).
