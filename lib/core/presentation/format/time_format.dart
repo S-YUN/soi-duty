@@ -18,3 +18,6 @@ String formatSignedHm(int minutes) {
 
 String formatClock(DateTime t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+/// "09:05 – 18:36" (en dash)
+String formatClockRange(DateTime clockIn, DateTime clockOut) => '${formatClock(clockIn)} – ${formatClock(clockOut)}';

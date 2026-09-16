@@ -28,4 +28,13 @@ void main() {
     expect(formatDateShort(DateTime(2026, 9, 4)), '9월 4일 금');
     expect(formatDateShort(DateTime(2026, 9, 20)), '9월 20일 일');
   });
+
+  group('formatWeekRange', () {
+    test('같은 달', () => expect(formatWeekRange(DateTime(2026, 9, 7)), '9월 7일 – 13일'));
+    test('다른 달', () => expect(formatWeekRange(DateTime(2026, 8, 31)), '8월 31일 – 9월 6일'));
+    test('해 넘김', () => expect(formatWeekRange(DateTime(2026, 12, 28)), '12월 28일 – 1월 3일'));
+  });
+  test('formatMonthTitle', () => expect(formatMonthTitle(DateTime(2026, 9)), '2026년 9월'));
+  test('formatClockRange', () =>
+      expect(formatClockRange(DateTime(2026, 9, 7, 9, 5), DateTime(2026, 9, 7, 18, 36)), '09:05 – 18:36'));
 }

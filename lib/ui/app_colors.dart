@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import '../domain/model/work_type.dart';
+
 /// 디자인 핸드오프 Design Tokens > Colors. 역할 기반 이름.
 abstract final class AppColors {
   static const screenBackground = Color(0xFFE9EBE6);
@@ -28,9 +30,26 @@ abstract final class AppColors {
   static const halfDayText = Color(0xFF6A5C2E);
   static const checkboxBorder = Color(0xFFCFD3CA);
   static const dotInactive = Color(0xFFC3C7BE);
+  static const hairline = Color(0xFFDCDFD8);
+  static const rowDivider = Color(0xFFE7E9E3);
+  static const faint = Color(0xFF8B9184);
+  static const weekendNone = Color(0xFFC9CDC4);
+  static const todayRow = Color(0xFFF3F5F1);
+  static const chipNeutral = Color(0xFFF0F2ED);
+  static const wheelUnselected = Color(0xFF9DA296);
+  static const scrim = Color(0x6B16191A); // rgba(22,25,26,.42)
+  static const sheetShadow = Color(0x2E16191A); // rgba(22,25,26,.18)
 
   // 그림자·글로우 (알파 포함)
   static const cardShadow = Color(0x0D16191A); // rgba(22,25,26,.05)
   static const tabShadow = Color(0x1716191A); // rgba(22,25,26,.09)
   static const dotGlow = Color(0x242C5A4C); // rgba(44,90,76,.14)
+
+  /// 유형 배지·칩·범례의 (배경, 글자). 주간 행·캘린더·시트가 같은 매핑을 쓴다.
+  static (Color, Color) typeColors(WorkType t) => switch (t) {
+        WorkType.halfDay => (halfDayBackground, halfDayText),
+        WorkType.dayOff => (dayOffBackground, dayOffText),
+        WorkType.holiday => (holidayBackground, holidayText),
+        WorkType.normal => (chipNeutral, subtle),
+      };
 }
