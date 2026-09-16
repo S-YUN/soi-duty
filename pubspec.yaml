@@ -43,6 +43,9 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   # flavor 생성: dart run flutter_flavorizr (dev/prod 번들 ID·앱 이름만 분리)
   flutter_flavorizr: ^2.6.0
+  flutter_driver:
+    sdk: flutter
+  test: ^1.31.1
 
 flutter:
   uses-material-design: true

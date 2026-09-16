@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
@@ -51,7 +53,8 @@ TodayState buildTodayState({
     isHalfDay: type == WorkType.halfDay,
     clockIn: record?.clockIn,
     clockOut: record?.clockOut,
-    elapsedMinutes: phase == TodayPhase.working ? now.difference(record!.clockIn!).inMinutes : null,
+    // 시트로 출근 시각을 미래로 잡을 수 있으므로 음수는 0으로.
+    elapsedMinutes: phase == TodayPhase.working ? math.max(0, now.difference(record!.clockIn!).inMinutes) : null,
     expectedClockOut: expected,
     todayActual: phase == TodayPhase.done ? actualMinutes(record!, rules) : null,
     todayDelta: phase == TodayPhase.done ? deltaMinutes(record!, rules) : null,

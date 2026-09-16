@@ -64,6 +64,7 @@ class MonthView extends StatelessWidget {
           child: SingleChildScrollView(
             padding: AppSizes.bodyPadding.copyWith(bottom: AppSizes.bodyPadding.bottom + bottomInset),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 CalendarCard(state: state, onCellTap: onCellTap),
                 SizedBox(height: AppSizes.cardGap),

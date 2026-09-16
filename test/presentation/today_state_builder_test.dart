@@ -79,4 +79,9 @@ void main() {
     expect(s.phase, TodayPhase.working);
     expect(s.expectedClockOut, isNull);
   });
+
+  test('출근 시각이 미래면 경과는 0', () {
+    final s = buildTodayState(records: [rec(16, inH: 15)], firstRecordDate: d(14), now: d(16, 12), rules: rules);
+    expect(s.elapsedMinutes, 0);
+  });
 }

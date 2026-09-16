@@ -58,6 +58,14 @@ CLAUDE.md에도 반영한다.
 - **행 구분선 색은 README 값(`#E7E9E3`)**. 목업 스크립트의 `#EFF1EC`는 무시.
 - **연차·공휴일·반차 배지 글자색은 README 토큰** (목업 스크립트의 미세하게 다른 값은 무시).
 
+구현하면서 추가로 정한 것:
+- **시트는 `allRecords` 스트림의 첫 값으로 초안을 한 번만 만든다.** `initState`에서 `ref.read`하면 스트림이 아직 안 온 경우가 있다(테스트에서 드러남). 초안이 생긴 뒤에는 스트림이 다시 방출돼도 편집 중인 값을 건드리지 않는다.
+- **근무 중 경과 시간은 0 미만으로 내려가지 않는다.** 시트로 오늘 출근을 미래 시각으로 잡을 수 있어서.
+- 진행 바(`shared/progress_bar.dart`)와 유형 태그(`shared/type_tag.dart`)를 공용 위젯으로 뽑았다. 유형 색 매핑은 `AppColors.typeColors`.
+- 위젯 테스트에서 `ProviderScope`를 쓰면 종료 시 Drift 스트림 정리 타이머(0ms)가 남는다. 각 테스트 끝에 트리를 비우고 1ms pump한다 (`record_edit_sheet_test.dart`의 `unmount`).
+- **스모크 드라이브** `test_driver/` — 앱 코드 없이 드라이버 진입점에서 '두 달치 기록' 시드를 앱과 같은 DB 인스턴스에 넣고, 오늘 → 주간 → 월간 → 시트를 눌러 `docs/screenshots/`에 남긴다. `flutter drive --flavor dev --target test_driver/app.dart -d <시뮬레이터>`.
+- 월간 캘린더의 다른 달 날짜(예: 8/31)도 값을 보여준다. 숫자만 흐리게.
+
 ---
 
 ## 1. 오늘 화면 변경분

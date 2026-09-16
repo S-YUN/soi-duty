@@ -183,6 +183,9 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
 - 주말 근무가 주간 집계에서 빠지는지
 - 첫 주 예외 판정 (월요일 시작 여부)
 
+스모크 드라이브: `flutter drive --flavor dev --target test_driver/app.dart -d <시뮬레이터 ID>` —
+드라이버 진입점이 '두 달치 기록' 시드를 넣고 오늘/주간/월간/시트를 눌러 `docs/screenshots/`에 스크린샷을 남긴다.
+
 ---
 
 ## 하지 않는 것
