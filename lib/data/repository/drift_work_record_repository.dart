@@ -34,8 +34,9 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
         await _db.into(_db.workRecords).insertOnConflictUpdate(_toCompanion(record));
         final first = await (_db.select(_db.settings)..where((s) => s.key.equals(firstRecordDateKey)))
             .getSingleOrNull();
-        if (first == null) {
-          await _db.into(_db.settings).insert(
+        final current = first == null ? null : parseDateKey(first.value);
+        if (current == null || record.date.isBefore(current)) {
+          await _db.into(_db.settings).insertOnConflictUpdate(
                 SettingsCompanion.insert(key: firstRecordDateKey, value: dateKey(record.date)),
               );
         }

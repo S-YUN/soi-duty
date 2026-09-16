@@ -48,15 +48,27 @@ void main() {
     expect(await repo.watchAll().first, isEmpty);
   });
 
-  test('첫 save가 첫 기록일을 기록하고, 이후 save·delete로 바뀌지 않는다', () async {
+  test('첫 save가 첫 기록일을 기록하고, 이후 늦은 save·delete로 바뀌지 않는다', () async {
     await repo.save(rec(16, inH: 9));
     expect(await repo.watchFirstRecordDate().first, d(16));
 
-    await repo.save(rec(14, inH: 9)); // 더 이른 날짜를 저장해도
+    await repo.save(rec(17, inH: 9)); // 더 늦은 날짜를 저장해도
     expect(await repo.watchFirstRecordDate().first, d(16));
 
     await repo.delete(d(16)); // 첫 기록을 지워도
     expect(await repo.watchFirstRecordDate().first, d(16));
+  });
+
+  test('첫 기록일보다 이른 날짜를 저장하면 당겨진다', () async {
+    await repo.save(rec(16, inH: 9, outH: 18));
+    await repo.save(rec(14, inH: 9, outH: 18));
+    expect(await repo.watchFirstRecordDate().first, d(14));
+  });
+
+  test('첫 기록일보다 늦은 날짜는 영향 없다', () async {
+    await repo.save(rec(14, inH: 9, outH: 18));
+    await repo.save(rec(16, inH: 9, outH: 18));
+    expect(await repo.watchFirstRecordDate().first, d(14));
   });
 
   test('watchAll은 변경마다 다시 방출한다', () async {
