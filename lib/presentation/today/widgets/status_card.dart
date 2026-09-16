@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../domain/model/work_type.dart';
 import '../../../ui/app_decorations.dart';
 import '../../../ui/app_sizes.dart';
-import '../../../ui/app_text_styles.dart';
 import '../today_state.dart';
 import '../today_texts.dart';
+import '../../shared/quiet_text_button.dart';
 import 'primary_button.dart';
 import 'soi_checkbox.dart';
 import 'status_block.dart';
@@ -19,6 +19,8 @@ class TodayCallbacks {
     required this.onDayTypeChanged,
     required this.onRevert,
     required this.onEditTime,
+    required this.onCancelClockIn,
+    required this.onCancelClockOut,
     required this.onUnrecordedTap,
     required this.onDateLongPress,
   });
@@ -29,15 +31,17 @@ class TodayCallbacks {
   final ValueChanged<WorkType?> onDayTypeChanged;
   final VoidCallback onRevert;
   final VoidCallback onEditTime;
+  final VoidCallback onCancelClockIn;
+  final VoidCallback onCancelClockOut;
   final ValueChanged<DateTime> onUnrecordedTap;
   /// 디버그 시드 트리거. 릴리즈에서는 null.
   final VoidCallback? onDateLongPress;
 }
 
 /// 상태 블록(104) + 주 버튼(56) + 보조 슬롯. 다섯 상태에서 높이가 같다.
-/// 보조 슬롯은 시각적으로는 높이 38·위 간격 12이지만, 링크형 상태(시간 수정하기·되돌리기)의
+/// 보조 슬롯은 시각적으로는 높이 40·위 간격 10이지만, 텍스트 버튼(시간 수정·되돌리기 등)의
 /// 탭 영역을 44(minTapHeight)까지 확보하기 위해 레이아웃 박스 자체를 44로 잡고
-/// 위 간격을 9, 카드 하단 패딩을 −3만큼 줄여 총 높이는 그대로 유지한다.
+/// 위 간격과 카드 하단 패딩을 각각 2씩 줄여 총 높이는 그대로 유지한다.
 class StatusCard extends StatelessWidget {
   const StatusCard({super.key, required this.state, required this.callbacks});
 
@@ -93,39 +97,35 @@ class StatusCard extends StatelessWidget {
           ],
         );
       case TodayScreenState.working:
-        if (state.isWeekend) return const SizedBox.shrink();
-        return SoiCheckbox(
-          label: TodayTexts.halfDay,
-          checked: state.isHalfDay,
-          onChanged: callbacks.onHalfDayChanged,
-          shape: SoiCheckShape.square,
+        final cancel = QuietTextButton(label: TodayTexts.cancelClockIn, onTap: callbacks.onCancelClockIn);
+        if (state.isWeekend) return cancel;
+        return _pair(
+          SoiCheckbox(
+            label: TodayTexts.halfDay,
+            checked: state.isHalfDay,
+            onChanged: callbacks.onHalfDayChanged,
+            shape: SoiCheckShape.square,
+          ),
+          cancel,
         );
       case TodayScreenState.done:
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: callbacks.onEditTime,
-          child: SizedBox(
-            height: AppSizes.minTapHeight,
-            child: Center(child: Text(TodayTexts.editTime, style: AppTextStyles.link)),
-          ),
+        return _pair(
+          QuietTextButton(label: TodayTexts.editTime, onTap: callbacks.onEditTime),
+          QuietTextButton(label: TodayTexts.cancelClockOut, onTap: callbacks.onCancelClockOut),
         );
       case TodayScreenState.dayType:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(TodayTexts.revertPrefix, style: AppTextStyles.caption),
-            SizedBox(width: AppSizes.linkGap),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: callbacks.onRevert,
-              child: SizedBox(
-                height: AppSizes.minTapHeight,
-                child: Center(child: Text(TodayTexts.revert, style: AppTextStyles.linkBrand)),
-              ),
-            ),
-          ],
-        );
+        return QuietTextButton(label: TodayTexts.revert, onTap: callbacks.onRevert);
     }
   }
+
+  Widget _pair(Widget left, Widget right) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          left,
+          SizedBox(width: AppSizes.slotItemGap),
+          const SlotDivider(),
+          SizedBox(width: AppSizes.slotItemGap),
+          right,
+        ],
+      );
 }

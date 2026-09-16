@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -93,5 +93,29 @@ void main() {
     await notifier().clockIn();
     final s = await waitFor((s) => s.phase == TodayPhase.working);
     expect(s.record?.type, WorkType.normal);
+  });
+
+  test('cancelClockIn → 기록이 지워지고 출근 전, 반차도 풀린다', () async {
+    await notifier().clockIn();
+    await waitFor((s) => s.phase == TodayPhase.working);
+    await notifier().setHalfDay(true);
+    await waitFor((s) => s.isHalfDay);
+    await notifier().cancelClockIn();
+    final s = await waitFor((s) => s.phase == TodayPhase.before);
+    expect(s.record, isNull);
+    expect(s.isHalfDay, isFalse);
+  });
+
+  test('cancelClockOut → 근무 중으로 돌아가고 type은 유지', () async {
+    await notifier().clockIn();
+    await waitFor((s) => s.phase == TodayPhase.working);
+    await notifier().setHalfDay(true);
+    await waitFor((s) => s.isHalfDay);
+    await notifier().clockOut();
+    await waitFor((s) => s.phase == TodayPhase.done);
+    await notifier().cancelClockOut();
+    final s = await waitFor((s) => s.phase == TodayPhase.working);
+    expect(s.clockOut, isNull);
+    expect(s.isHalfDay, isTrue);
   });
 }

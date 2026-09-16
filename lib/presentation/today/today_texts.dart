@@ -12,8 +12,9 @@ abstract final class TodayTexts {
   static const halfDay = '오늘은 반차';
   static const dayOff = '오늘은 연차';
   static const holiday = '오늘은 공휴일';
-  static const editTime = '시간 수정하기';
-  static const revertPrefix = '기록하려면';
+  static const editTime = '시간 수정';
+  static const cancelClockIn = '출근 취소';
+  static const cancelClockOut = '퇴근 취소';
   static const revert = '되돌리기';
   static const record = '기록하기 →';
   static const firstWeekNotice =

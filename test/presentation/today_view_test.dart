@@ -26,6 +26,8 @@ TodayCallbacks noop() => TodayCallbacks(
       onDayTypeChanged: (_) {},
       onRevert: () {},
       onEditTime: () {},
+      onCancelClockIn: () {},
+      onCancelClockOut: () {},
       onUnrecordedTap: (_) {},
       onDateLongPress: null,
     );
@@ -113,13 +115,16 @@ void main() {
     await pumpView(tester, fixtures['근무 중']!);
     expect(find.text('퇴근하기'), findsOneWidget);
     expect(find.text('오늘은 반차'), findsOneWidget);
+    expect(find.text('출근 취소'), findsOneWidget);
 
     await pumpView(tester, fixtures['퇴근 완료']!);
     expect(find.text('오늘 퇴근 완료'), findsOneWidget);
-    expect(find.text('시간 수정하기'), findsOneWidget);
+    expect(find.text('시간 수정'), findsOneWidget);
+    expect(find.text('퇴근 취소'), findsOneWidget);
 
     await pumpView(tester, fixtures['연차']!);
     expect(find.text('되돌리기'), findsOneWidget);
+    expect(find.text('기록하려면'), findsNothing);
     expect(find.text('연차'), findsOneWidget);
   });
 
@@ -137,6 +142,8 @@ void main() {
           onDayTypeChanged: (_) {},
           onRevert: () {},
           onEditTime: () {},
+          onCancelClockIn: () {},
+          onCancelClockOut: () {},
           onUnrecordedTap: (_) {},
           onDateLongPress: null,
         ),
@@ -160,6 +167,8 @@ void main() {
           onDayTypeChanged: (_) {},
           onRevert: () {},
           onEditTime: () {},
+          onCancelClockIn: () {},
+          onCancelClockOut: () {},
           onUnrecordedTap: (_) {},
           onDateLongPress: null,
         ),
@@ -187,6 +196,8 @@ void main() {
           onDayTypeChanged: (_) {},
           onRevert: () => reverted = true,
           onEditTime: () {},
+          onCancelClockIn: () {},
+          onCancelClockOut: () {},
           onUnrecordedTap: (_) {},
           onDateLongPress: null,
         ),

@@ -34,6 +34,8 @@ class TodayScreen extends ConsumerWidget {
           onHalfDayChanged: controller.setHalfDay,
           onDayTypeChanged: controller.setDayType,
           onRevert: controller.revert,
+          onCancelClockIn: controller.cancelClockIn,
+          onCancelClockOut: controller.cancelClockOut,
           // TODO: 기록 입력 시트 (다음 라운드)
           onEditTime: () {},
           onUnrecordedTap: (_) {},

@@ -36,6 +36,15 @@ class TodayController extends _$TodayController {
 
   Future<void> revert() => setDayType(null);
 
+  /// 근무 중 → 출근 전. 실수로 찍은 출근을 없던 일로 — 반차 체크도 함께 풀린다 (기록 삭제).
+  Future<void> cancelClockIn() async {
+    final today = dateOnly(ref.read(clockProvider)());
+    await ref.read(workRecordRepositoryProvider).delete(today);
+  }
+
+  /// 퇴근 완료 → 근무 중. type은 유지.
+  Future<void> cancelClockOut() => _saveToday((r, _) => r.copyWith(clockOut: null));
+
   Future<void> _saveToday(WorkRecord Function(WorkRecord record, DateTime now) update) async {
     final now = ref.read(clockProvider)();
     final current = await future;
