@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/clock_provider.dart';
 import '../../core/providers/database_providers.dart';
 import '../../domain/model/work_record.dart';
+import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
@@ -61,6 +62,23 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   Future<void> _saveDraft(RecordDraft draft) async {
     await ref.read(recordEditControllerProvider.notifier).save(draft);
     if (mounted) _close();
+  }
+
+  /// 칩 탭. 연차·공휴일은 시각 입력이 없으니 그 자리에서 저장하고 닫는다 — 시각이 있던 날은 지워진다고 한 번 묻는다.
+  /// 반차 선택·유형 해제는 시각 입력이 이어지므로 초안만 바꾼다. 미래 날짜는 저장 버튼이 없어 어느 칩이든 바로 저장.
+  Future<void> _onTypeChanged(RecordDraft draft, WorkType? type) async {
+    final next = draft.withType(type);
+    if (!draft.isFuture && !next.isOff) return _update(next);
+    if (next.isOff && draft.hasAnyTime) {
+      final ok = await showConfirmDialog(
+        context,
+        title: RecordEditTexts.replaceTimesTitle(next.type),
+        message: RecordEditTexts.replaceTimesMessage,
+        confirmLabel: RecordEditTexts.replaceTimesConfirm,
+      );
+      if (!ok || !mounted) return;
+    }
+    await _saveDraft(next);
   }
 
   Future<void> _delete() async {
@@ -155,10 +173,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                   padding: AppSizes.chipsMargin,
                   child: TypeChips(
                     selected: draft.type,
-                    // 미래 날짜는 칩 탭 한 번으로 저장하고 닫는다 (유형만 찍는 자리라 저장 버튼이 군더더기).
-                    onChanged: (t) => draft.isFuture
-                        ? _saveDraft(draft.withType(t))
-                        : _update(draft.withType(t)),
+                    onChanged: (t) => _onTypeChanged(draft, t),
                   ),
                 ),
               ),
@@ -220,27 +235,14 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                 ),
               ),
             ],
-            if (!draft.isFuture) ...[
+            // 저장은 시각 행이 있을 때만 — 연차·공휴일·미래는 칩 탭이 곧 저장이다. 닫기는 아래로 내리기·바깥 탭.
+            if (draft.showsTimeRows) ...[
               SizedBox(height: AppSizes.sheetButtonsTop),
               _inset(
-                Row(
-                  children: [
-                    Expanded(
-                      child: SheetButton(
-                        label: RecordEditTexts.cancel,
-                        primary: false,
-                        onTap: _close,
-                      ),
-                    ),
-                    SizedBox(width: AppSizes.sheetButtonGap),
-                    Expanded(
-                      child: SheetButton(
-                        label: RecordEditTexts.save,
-                        primary: true,
-                        onTap: draft.isValid ? _save : null,
-                      ),
-                    ),
-                  ],
+                SheetButton(
+                  label: RecordEditTexts.save,
+                  primary: true,
+                  onTap: draft.isValid ? _save : null,
                 ),
               ),
             ],

@@ -48,6 +48,7 @@ class RecordDraft {
   bool get showsTypeChips => !isWeekend;
   bool get showsTimeRows => !isFuture && !isOff;
   bool get isValid => calc.isValidClockRange(clockIn, clockOut);
+  bool get hasAnyTime => clockIn != null || clockOut != null;
 
   DateTime? timeOf(EditingRow row) => row == EditingRow.clockIn ? clockIn : clockOut;
 

@@ -23,12 +23,15 @@ abstract final class RecordEditTexts {
   static const clockOutTitle = '퇴근 시각';
   static const empty = '--:--';
   static const invalidRange = '퇴근이 출근보다 빨라요';
-  static const cancel = '취소';
   static const save = '저장';
   static const deleteLink = '이 날 기록 지우기';
   static const deleteTitle = '이 날 기록을 지울까요?';
   static const deleteMessage = '출퇴근 시각과 유형이 모두 사라져요.';
   static const deleteConfirm = '지우기';
+  static const replaceTimesMessage = '입력한 출퇴근 시각이 지워져요.';
+  static const replaceTimesConfirm = '바꾸기';
+  static const am = '오전';
+  static const pm = '오후';
   static const dash = '—';
 
   static String title(RecordDraft d) => formatDateTitle(d.date);
@@ -41,6 +44,9 @@ abstract final class RecordEditTexts {
       };
 
   static String time(DateTime? t) => t == null ? empty : formatClock(t);
+
+  /// "연차로 바꿀까요?" / "공휴일로 바꿀까요?"
+  static String replaceTimesTitle(WorkType t) => '${chipLabel(t)}로 바꿀까요?';
 
   static String wheelTitle(EditingRow row) => row == EditingRow.clockIn ? clockInTitle : clockOutTitle;
 }

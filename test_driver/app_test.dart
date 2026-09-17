@@ -50,9 +50,13 @@ void main() {
     await driver.tap(find.text('출근'));
     await driver.waitFor(find.text('출근 시각'));
     await shot('sheet-wheel');
+    // 시각 있는 날의 연차는 확인 팝업 → 취소하면 시트 유지 → 저장으로 닫기
     await driver.tap(find.text('연차'));
-    await shot('sheet-dayoff');
+    await driver.waitFor(find.text('연차로 바꿀까요?'));
+    await shot('sheet-dayoff-confirm');
     await driver.tap(find.text('취소'));
+    await driver.waitForAbsent(find.text('연차로 바꿀까요?'));
+    await driver.tap(find.text('저장'));
 
     // 미래 날짜: 칩 탭 한 번으로 저장·닫힘 → 배지가 생기고, 다시 열어 지우기
     await driver.tap(find.text('24'));

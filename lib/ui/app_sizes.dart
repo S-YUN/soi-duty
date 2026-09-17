@@ -154,6 +154,7 @@ abstract final class AppSizes {
   static double get wheelItem => 44.w;
   static double get wheelBandRadius => 11.w;
   static double get wheelColonPadding => 2.w;
+  static double get wheelPeriodGap => 8.w;
   static double get calcTop => 16.w;
   static double get sheetButtonsTop => 20.w;
   static double get sheetButton => 52.w;
