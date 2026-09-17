@@ -4,6 +4,7 @@ import '../core/presentation/size_config.dart';
 import 'app_colors.dart';
 
 /// 디자인 핸드오프 Typography 표. letter-spacing은 em → px 환산.
+/// 오늘 요약 라벨·안내, 시트 안내·계산 내역, 확인 다이얼로그는 실기기에서 작게 느껴져 핸드오프보다 1~1.5 키웠다.
 abstract final class AppTextStyles {
   static const fontFamily = 'Pretendard';
 
@@ -35,20 +36,20 @@ abstract final class AppTextStyles {
   /// 근무 중 "09:12 출근"
   static TextStyle get statusClock => _style(20, FontWeight.w600, letterSpacingEm: -0.02);
   static TextStyle get summaryValue => _style(14.5, FontWeight.w600, letterSpacingEm: -0.01);
-  static TextStyle get summaryLabel => _style(11, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get summaryLabel => _style(12.5, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get tabSelected => _style(13, FontWeight.w600);
   static TextStyle get tabUnselected => _style(13, FontWeight.w500, color: AppColors.subtle);
-  static TextStyle get body => _style(13.5, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle get bodyInk => _style(13.5, FontWeight.w400);
-  static TextStyle get bodyParagraph => _style(13.5, FontWeight.w400, height: 1.55, color: AppColors.subtle);
+  static TextStyle get body => _style(14.5, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get bodyInk => _style(14.5, FontWeight.w400);
+  static TextStyle get bodyParagraph => _style(14.5, FontWeight.w400, height: 1.55, color: AppColors.subtle);
   static TextStyle get label => _style(13, FontWeight.w500, color: AppColors.subtle);
-  static TextStyle get reason => _style(13, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle get caption => _style(12.5, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle get captionMedium => _style(12.5, FontWeight.w500, color: AppColors.subtle);
-  static TextStyle get captionParagraph => _style(12.5, FontWeight.w400, height: 1.55, color: AppColors.subtle);
-  static TextStyle get link => _style(12.5, FontWeight.w400, color: AppColors.subtle,)
+  static TextStyle get reason => _style(13.5, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get caption => _style(13.5, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get captionMedium => _style(13.5, FontWeight.w500, color: AppColors.subtle);
+  static TextStyle get captionParagraph => _style(13.5, FontWeight.w400, height: 1.55, color: AppColors.subtle);
+  static TextStyle get link => _style(13.5, FontWeight.w400, color: AppColors.subtle,)
       .copyWith(decoration: TextDecoration.underline, decorationColor: AppColors.subtle);
-  static TextStyle get linkBrand => _style(12.5, FontWeight.w600, color: AppColors.brand)
+  static TextStyle get linkBrand => _style(13.5, FontWeight.w600, color: AppColors.brand)
       .copyWith(decoration: TextDecoration.underline, decorationColor: AppColors.brand);
   static TextStyle get badge => _style(12.5, FontWeight.w600);
 
@@ -86,7 +87,7 @@ abstract final class AppTextStyles {
 
   // 시간 수정 시트
   static TextStyle get sheetTitle => _style(16, FontWeight.w600, letterSpacingEm: -0.01);
-  static TextStyle get sheetNote => _style(11.5, FontWeight.w400, height: 1.5, color: AppColors.subtle);
+  static TextStyle get sheetNote => _style(12.5, FontWeight.w400, height: 1.5, color: AppColors.subtle);
   static TextStyle chip({required bool selected, required Color selectedColor}) =>
       _style(12.5, selected ? FontWeight.w600 : FontWeight.w500, color: selected ? selectedColor : AppColors.subtle);
   static TextStyle get timeLabel => _style(13, FontWeight.w400, color: AppColors.subtle);
@@ -101,18 +102,18 @@ abstract final class AppTextStyles {
   static TextStyle get wheelItem =>
       _style(20, FontWeight.w500, letterSpacingEm: -0.02, color: AppColors.wheelUnselected);
   static TextStyle get wheelColon => _style(20, FontWeight.w600);
-  static TextStyle get calcRow => _style(12.5, FontWeight.w400, height: 1.9);
-  static TextStyle get calcValue => _style(12.5, FontWeight.w500, height: 1.9);
-  static TextStyle get calcNote => _style(11.5, FontWeight.w400, height: 1.9, color: AppColors.subtle);
-  static TextStyle get calcSum => _style(12.5, FontWeight.w500, height: 1.9, color: AppColors.brand);
-  static TextStyle get calcError => _style(12.5, FontWeight.w500, height: 1.9, color: AppColors.minus);
+  static TextStyle get calcRow => _style(13.5, FontWeight.w400, height: 1.9);
+  static TextStyle get calcValue => _style(13.5, FontWeight.w500, height: 1.9);
+  static TextStyle get calcNote => _style(12.5, FontWeight.w400, height: 1.9, color: AppColors.subtle);
+  static TextStyle get calcSum => _style(13.5, FontWeight.w500, height: 1.9, color: AppColors.brand);
+  static TextStyle get calcError => _style(13.5, FontWeight.w500, height: 1.9, color: AppColors.minus);
   static TextStyle get sheetButtonPrimary => _style(15, FontWeight.w600, color: AppColors.onBrand);
   static TextStyle get sheetButtonSecondary => _style(15, FontWeight.w600, color: AppColors.subtle);
-  static TextStyle get deleteLink => _style(12.5, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get deleteLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
 
   // 확인 다이얼로그
-  static TextStyle get dialogTitle => _style(15, FontWeight.w600);
-  static TextStyle get dialogMessage => _style(13, FontWeight.w400, height: 1.5, color: AppColors.subtle);
+  static TextStyle get dialogTitle => _style(16, FontWeight.w600);
+  static TextStyle get dialogMessage => _style(14, FontWeight.w400, height: 1.5, color: AppColors.subtle);
 
   /// 반차 체크박스 라벨 (13.5)
   static TextStyle checkLabel({required bool checked}) => _style(

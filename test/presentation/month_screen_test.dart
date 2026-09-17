@@ -24,7 +24,11 @@ void main() {
     addTearDown(tester.view.reset);
 
     final state = buildMonthState(
-      records: [rec(14, inH: 9, inM: 5, outH: 18, outM: 36), rec(15, type: WorkType.holiday)],
+      records: [
+        rec(14, inH: 9, inM: 5, outH: 18, outM: 36),
+        rec(15, type: WorkType.holiday),
+        rec(16, inH: 9, outH: 13, outM: 10, type: WorkType.halfDay),
+      ],
       firstRecordDate: DateTime(2026, 8, 20),
       now: d(16, 12),
       rules: rules,
@@ -50,6 +54,8 @@ void main() {
     expect(find.text('2026년 9월'), findsOneWidget);
     expect(find.text('+31m'), findsOneWidget);
     expect(find.text('공휴일'), findsNWidgets(2)); // 셀 배지 + 범례
+    // 반차는 값이 먼저(일반 날과 같은 자리), 배지가 그 아래
+    expect(tester.getTopLeft(find.text('+10m')).dy, lessThan(tester.getTopLeft(find.text('반차').first).dy));
     await tester.tap(find.text('+31m'));
     expect(tapped, d(14));
   });

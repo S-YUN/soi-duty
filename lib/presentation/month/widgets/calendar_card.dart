@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../domain/model/work_type.dart';
 import '../../../ui/app_colors.dart';
 import '../../../ui/app_decorations.dart';
 import '../../../ui/app_sizes.dart';
@@ -71,6 +72,22 @@ class _Cell extends StatefulWidget {
 class _CellState extends State<_Cell> {
   var _pressed = false;
 
+  Widget _badge(WorkType type) => Padding(
+        padding: EdgeInsets.only(top: AppSizes.calendarCellGap),
+        child: TypeTag(
+          type: type,
+          label: MonthTexts.badge(type),
+          padding: AppSizes.calendarBadgePadding,
+          radius: AppSizes.calendarBadgeRadius,
+          style: AppTextStyles.calendarBadge,
+        ),
+      );
+
+  Widget _value(String text, TextStyle style) => Padding(
+        padding: EdgeInsets.only(top: AppSizes.calendarCellGap),
+        child: Text(text, style: style, maxLines: 1, overflow: TextOverflow.clip, softWrap: false),
+      );
+
   @override
   Widget build(BuildContext context) {
     final cell = widget.cell;
@@ -107,22 +124,16 @@ class _CellState extends State<_Cell> {
             borderRadius: BorderRadius.circular(AppSizes.calendarCellRadius),
           ),
           // 세로 중앙 정렬 금지 — 값이 없는 날의 숫자가 내려와 같은 행과 어긋난다. 위 고정.
+          // 반차는 값이 일반 날과 같은 자리에 오고 배지가 그 아래. 연차·공휴일은 값이 없어 배지가 바로 온다.
           child: Column(
             children: [
               Text('${cell.date.day}', style: AppTextStyles.calendarNum(dim: dim)),
-              if (cell.type != null) ...[
-                SizedBox(height: AppSizes.calendarCellGap),
-                TypeTag(
-                  type: cell.type!,
-                  label: MonthTexts.badge(cell.type!),
-                  padding: AppSizes.calendarBadgePadding,
-                  radius: AppSizes.calendarBadgeRadius,
-                  style: AppTextStyles.calendarBadge,
-                ),
-              ],
-              if (text.isNotEmpty) ...[
-                SizedBox(height: AppSizes.calendarCellGap),
-                Text(text, style: valueStyle, maxLines: 1, overflow: TextOverflow.clip, softWrap: false),
+              if (cell.type == WorkType.halfDay) ...[
+                if (text.isNotEmpty) _value(text, valueStyle),
+                _badge(cell.type!),
+              ] else ...[
+                if (cell.type != null) _badge(cell.type!),
+                if (text.isNotEmpty) _value(text, valueStyle),
               ],
             ],
           ),
