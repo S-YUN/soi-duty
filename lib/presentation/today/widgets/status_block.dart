@@ -8,18 +8,15 @@ import '../../../ui/app_text_styles.dart';
 import '../today_state.dart';
 import '../today_texts.dart';
 import 'summary_row.dart';
-import 'soi_checkbox.dart';
 import 'type_badge.dart';
 
 /// 상태 카드 상단 블록. 높이 104 고정, 내용만 상태별로 바뀐다.
 class StatusBlock extends StatelessWidget {
-  const StatusBlock({super.key, required this.state, required this.rules, this.onHalfDayChanged});
+  const StatusBlock({super.key, required this.state, required this.rules});
 
   final TodayState state;
   final WorkRules rules;
 
-  /// 근무 중 평일에 출근 시각 아래 놓이는 "오늘은 반차" 체크. null이면 그리지 않는다.
-  final ValueChanged<bool>? onHalfDayChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -47,19 +44,6 @@ class StatusBlock extends StatelessWidget {
           _DotLine(active: true, text: TodayTexts.clockInLine(state), style: AppTextStyles.statusClock),
           gap,
           Text(TodayTexts.workingLine(state), style: AppTextStyles.body, textAlign: TextAlign.center, maxLines: 1),
-          // 블록 높이(104) 안에 들어간다 — 탭 영역 44를 그대로 쓰고 위 간격은 두지 않는다.
-          if (onHalfDayChanged != null && !state.isWeekend)
-            SizedBox(
-              height: AppSizes.minTapHeight,
-              child: Center(
-                child: SoiCheckbox(
-                  label: TodayTexts.halfDay,
-                  checked: state.isHalfDay,
-                  onChanged: onHalfDayChanged!,
-                  shape: SoiCheckShape.square,
-                ),
-              ),
-            ),
         ];
       case TodayScreenState.done:
         // 제목 없이 요약만 — "오늘 퇴근 완료"는 아래 버튼이 이미 말한다.

@@ -120,7 +120,7 @@ void main() {
 
     await pumpView(tester, fixtures['근무 중']!);
     expect(find.text('퇴근하기'), findsOneWidget);
-    expect(find.text('오늘은 반차'), findsOneWidget);
+    expect(find.text('오늘 반차'), findsOneWidget);
     expect(find.text('출근 취소'), findsOneWidget);
 
     await pumpView(tester, fixtures['퇴근 완료']!);
@@ -198,7 +198,7 @@ void main() {
     );
 
     await tester.tapAt(
-      tester.getCenter(find.text('오늘은 반차')) +
+      tester.getCenter(find.text('오늘 반차')) +
           Offset(0, AppSizes.minTapHeight / 2 - 1),
     );
     expect(halfDay, isTrue);

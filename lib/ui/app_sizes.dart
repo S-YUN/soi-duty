@@ -77,6 +77,7 @@ abstract final class AppSizes {
   static double get slotDividerWidth => 1.w;
   static double get slotDividerHeight => 11.w;
   static double get slotItemGap => 16.w;
+  static double get slotItemGapTight => 12.w;
 
   // 기간 네비게이터
   static EdgeInsets get navPadding => EdgeInsets.fromLTRB(20.w, 16.w, 20.w, 14.w);

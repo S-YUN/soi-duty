@@ -7,7 +7,7 @@ import 'today_state.dart';
 abstract final class TodayTexts {
   static const tabs = ['오늘', '주간', '월간'];
   static const beforeWork = '아직 출근 전';
-  static const halfDay = '오늘은 반차';
+  static const halfDay = '오늘 반차';
   static const dayOff = '오늘은 연차';
   static const holiday = '오늘은 공휴일';
   static const editTime = '시간 수정';

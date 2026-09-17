@@ -62,7 +62,7 @@ class StatusCard extends StatelessWidget {
       decoration: AppDecorations.card,
       child: Column(
         children: [
-          StatusBlock(state: state, rules: rules, onHalfDayChanged: callbacks.onHalfDayChanged),
+          StatusBlock(state: state, rules: rules),
           PrimaryButton(label: TodayTexts.buttonLabel(state), onPressed: _primaryAction),
           SizedBox(height: AppSizes.secondarySlotGap - AppSizes.secondarySlotHitInset),
           // 레이아웃 높이 자체를 44(minTapHeight)로 잡아 히트 영역을 진짜로 확보한다.
@@ -102,11 +102,19 @@ class StatusCard extends StatelessWidget {
           ],
         );
       case TodayScreenState.working:
-        // 반차 체크는 상태 블록(출근 시각 아래)으로 올라갔다. 여기는 출근 시각 손보기 둘.
-        return _pair(
-          QuietTextButton(label: TodayTexts.editClockIn, onTap: callbacks.onEditClockIn),
-          QuietTextButton(label: TodayTexts.cancelClockIn, onTap: callbacks.onCancelClockIn),
-        );
+        final edit = QuietTextButton(label: TodayTexts.editClockIn, onTap: callbacks.onEditClockIn);
+        final cancel = QuietTextButton(label: TodayTexts.cancelClockIn, onTap: callbacks.onCancelClockIn);
+        if (state.isWeekend) return _pair(edit, cancel);
+        return _row([
+          SoiCheckbox(
+            label: TodayTexts.halfDay,
+            checked: state.isHalfDay,
+            onChanged: callbacks.onHalfDayChanged,
+            shape: SoiCheckShape.square,
+          ),
+          edit,
+          cancel,
+        ]);
       case TodayScreenState.done:
         return _pair(
           QuietTextButton(label: TodayTexts.editTime, onTap: callbacks.onEditTime),
@@ -117,14 +125,19 @@ class StatusCard extends StatelessWidget {
     }
   }
 
-  Widget _pair(Widget left, Widget right) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          left,
-          SizedBox(width: AppSizes.slotItemGap),
-          const SlotDivider(),
-          SizedBox(width: AppSizes.slotItemGap),
-          right,
+  Widget _pair(Widget left, Widget right) => _row([left, right]);
+
+  /// 구분선으로 나눈 슬롯 항목들. 셋일 때는 간격을 조금 좁힌다.
+  Widget _row(List<Widget> items) {
+    final gap = items.length > 2 ? AppSizes.slotItemGapTight : AppSizes.slotItemGap;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          if (i > 0) ...[SizedBox(width: gap), const SlotDivider(), SizedBox(width: gap)],
+          items[i],
         ],
-      );
+      ],
+    );
+  }
 }

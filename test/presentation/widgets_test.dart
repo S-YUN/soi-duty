@@ -30,13 +30,13 @@ void main() {
   testWidgets('SoiCheckbox 탭하면 반전값 콜백, 히트 영역 44 이상', (tester) async {
     bool? received;
     await tester.pumpWidget(wrap(SoiCheckbox(
-      label: '오늘은 반차',
+      label: '오늘 반차',
       checked: false,
       onChanged: (v) => received = v,
       shape: SoiCheckShape.square,
     )));
     expect(tester.getSize(find.byType(SoiCheckbox)).height, greaterThanOrEqualTo(AppSizes.minTapHeight));
-    await tester.tap(find.text('오늘은 반차'));
+    await tester.tap(find.text('오늘 반차'));
     expect(received, isTrue);
   });
 
