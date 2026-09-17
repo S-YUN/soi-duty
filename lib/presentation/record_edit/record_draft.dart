@@ -1,6 +1,7 @@
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart' as calc;
+import '../../domain/rules/work_rules.dart';
 
 enum EditingRow { clockIn, clockOut }
 
@@ -68,15 +69,11 @@ class RecordDraft {
 
   RecordDraft withType(WorkType? next) => _copy(type: next ?? WorkType.normal);
 
-  /// 빈 행을 펼 때 휠이 시작하는 시각. 시트 안에서만 쓰이고 행 표시(--:--)나 저장값에는 관여하지 않는다.
-  static const defaultClockInHour = 8;
-  static const defaultClockOutHour = 17;
-
-  /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 펼 때 값이 없으면 기본 시각(출근 08:00 · 퇴근 17:00).
-  RecordDraft toggleEditing(EditingRow row) {
+  /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 펼 때 값이 없으면 [WorkRules]의 기본 시각(출근 08:00 · 퇴근 17:00).
+  RecordDraft toggleEditing(EditingRow row, WorkRules rules) {
     if (editing == row) return _copy(editing: null);
-    final defaultHour = row == EditingRow.clockIn ? defaultClockInHour : defaultClockOutHour;
-    final current = timeOf(row) ?? DateTime(date.year, date.month, date.day, defaultHour);
+    final defaultMinutes = row == EditingRow.clockIn ? rules.defaultClockInMinutes : rules.defaultClockOutMinutes;
+    final current = timeOf(row) ?? DateTime(date.year, date.month, date.day, 0, defaultMinutes);
     return _copy(
       editing: row,
       clockIn: row == EditingRow.clockIn ? current : _Keep.time,

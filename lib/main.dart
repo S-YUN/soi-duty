@@ -28,6 +28,8 @@ class SoiDutyApp extends ConsumerWidget {
       routerConfig: router,
       builder: (context, child) {
         SizeConfig.init(MediaQuery.sizeOf(context).width);
+        // 시스템 글자 크기는 1.0으로 고정 — 히어로·행·캘린더 셀이 한 줄/고정 높이라 배율을 열면 잘린다.
+        // 대신 기본 크기 자체를 실기기에서 키워 왔다 (app_text_styles.dart). 접근성 요구가 생기면 SizeConfig와 함께 다시 본다.
         return MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.0,
           child: KeyedSubtree(key: ValueKey(SizeConfig.scale), child: NativeSplashHold(child: child!)),

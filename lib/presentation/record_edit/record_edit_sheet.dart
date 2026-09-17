@@ -196,7 +196,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                             : RecordEditTexts.clockOut,
                         value: RecordEditTexts.time(draft.timeOf(row)),
                         selected: editing == row,
-                        onTap: () => _update(draft.toggleEditing(row)),
+                        onTap: () => _update(draft.toggleEditing(row, rules)),
                       ),
                   ],
                 ),

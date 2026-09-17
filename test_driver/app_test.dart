@@ -7,13 +7,13 @@ import 'package:test/test.dart';
 /// 실행: `flutter drive --flavor dev --target test_driver/app.dart -d 시뮬레이터ID`
 void main() {
   late FlutterDriver driver;
+  // 고정 이름으로 덮어쓴다 (git 추적 안 함). 날짜를 붙이면 매일 쌓이고 커밋마다 PNG diff가 생긴다.
   final dir = Directory('docs/screenshots')..createSync(recursive: true);
-  final stamp = DateTime.now().toIso8601String().substring(0, 10);
 
   Future<void> shot(String name) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     final png = await driver.screenshot();
-    File('${dir.path}/$stamp-$name.png').writeAsBytesSync(png);
+    File('${dir.path}/$name.png').writeAsBytesSync(png);
   }
 
   setUpAll(() async => driver = await FlutterDriver.connect());

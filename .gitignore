@@ -46,3 +46,6 @@ app.*.map.json
 
 # superpowers SDD scratch
 .superpowers/
+
+# 스모크 드라이브 스크린샷 — 확인용 산출물
+docs/screenshots/*.png

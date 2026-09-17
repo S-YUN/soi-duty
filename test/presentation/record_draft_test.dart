@@ -60,18 +60,18 @@ void main() {
 
   test('휠을 열면 null이던 값이 기본 시각(출근 08:00·퇴근 17:00)으로 채워지고, 다시 탭하면 접힌다', () {
     var draft = RecordDraft.fromRecord(date: d(14), today: today, record: null);
-    draft = draft.toggleEditing(EditingRow.clockIn);
+    draft = draft.toggleEditing(EditingRow.clockIn, rules);
     expect(draft.editing, EditingRow.clockIn);
     expect(draft.clockIn, d(14, 8, 0));
-    draft = draft.toggleEditing(EditingRow.clockIn);
+    draft = draft.toggleEditing(EditingRow.clockIn, rules);
     expect(draft.editing, isNull);
     expect(draft.clockIn, d(14, 8, 0));
-    expect(draft.toggleEditing(EditingRow.clockOut).clockOut, d(14, 17, 0));
+    expect(draft.toggleEditing(EditingRow.clockOut, rules).clockOut, d(14, 17, 0));
   });
 
   test('값이 있으면 기본 시각 대신 그 값으로 연다', () {
     final draft = RecordDraft.fromRecord(date: d(14), today: today, record: rec(14, inH: 9, inM: 12, outH: 18));
-    expect(draft.toggleEditing(EditingRow.clockIn).clockIn, d(14, 9, 12));
+    expect(draft.toggleEditing(EditingRow.clockIn, rules).clockIn, d(14, 9, 12));
   });
 
   test('withTime은 날짜를 유지하고 시분만 바꾼다', () {

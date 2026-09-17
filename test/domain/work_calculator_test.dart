@@ -313,8 +313,8 @@ void main() {
     });
 
     test('주말은 대상이 아니다', () {
-      final r = [rec(11, inH: 9, outH: 18), rec(14, inH: 9, outH: 18)];
-      expect(unrecordedWeekdays(records: r, today: d(15), firstRecordDate: d(11)), isEmpty);
+      final r = [for (var day = 7; day <= 11; day++) rec(day, inH: 9, outH: 18), rec(14, inH: 9, outH: 18)];
+      expect(unrecordedWeekdays(records: r, today: d(15), firstRecordDate: d(11)), isEmpty); // 12·13 제외
     });
 
     test('연차·공휴일은 출퇴근이 없어도 누락이 아니다', () {
@@ -322,9 +322,15 @@ void main() {
       expect(unrecordedWeekdays(records: r, today: d(16), firstRecordDate: d(14)), isEmpty);
     });
 
-    test('첫 기록일 이전은 대상이 아니다', () {
-      // 첫 기록일이 16이면 14·15는 비어 있어도 대상이 아니다.
-      expect(unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)), isEmpty);
+    test('첫 기록 주는 월요일부터 — 첫 기록일이 수요일이면 월·화가 누락으로 잡힌다', () {
+      expect(
+        unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)),
+        [d(15), d(14)],
+      );
+    });
+
+    test('첫 기록 주 이전 주는 대상이 아니다', () {
+      expect(unrecordedWeekdays(records: [rec(14, inH: 9, outH: 18)], today: d(15), firstRecordDate: d(14)), isEmpty);
     });
 
     test('첫 기록일이 없으면 빈 리스트', () {
