@@ -24,10 +24,7 @@ class Legend extends StatelessWidget {
                 Container(
                   width: AppSizes.legendChip,
                   height: AppSizes.legendChip,
-                  decoration: BoxDecoration(
-                    color: AppColors.typeColors(type).$1,
-                    borderRadius: BorderRadius.circular(AppSizes.legendChipRadius),
-                  ),
+                  decoration: BoxDecoration(color: AppColors.typeColors(type).$1, shape: BoxShape.circle),
                 ),
                 SizedBox(width: AppSizes.legendChipGap),
                 Text(label, style: AppTextStyles.legend),

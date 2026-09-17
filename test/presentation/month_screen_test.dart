@@ -5,6 +5,7 @@ import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/month/month_screen.dart';
 import 'package:soi_duty/presentation/month/month_state_builder.dart';
+import 'package:soi_duty/ui/app_colors.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/fonts.dart';
@@ -52,9 +53,17 @@ void main() {
 
     expect(find.text('2026년 9월'), findsOneWidget);
     expect(find.text('+31m'), findsOneWidget);
-    expect(find.text('공휴일'), findsNWidgets(2)); // 셀 배지 + 범례
-    // 반차는 값이 먼저(일반 날과 같은 자리), 배지가 그 아래
-    expect(tester.getTopLeft(find.text('+10m')).dy, lessThan(tester.getTopLeft(find.text('반차').first).dy));
+    expect(find.text('공휴일'), findsOneWidget); // 범례만 — 셀은 원 색으로 구분
+    expect(find.text('+10m'), findsOneWidget); // 반차도 값은 그대로
+    BoxDecoration circleOf(String day) => tester
+        .widget<Container>(find.ancestor(of: find.text(day), matching: find.byType(Container)).first)
+        .decoration! as BoxDecoration;
+    expect(circleOf('15').color, AppColors.typeColors(WorkType.holiday).$1);
+    expect(circleOf('16').color, AppColors.typeColors(WorkType.halfDay).$1);
+    expect(circleOf('14').color, AppColors.calendarWorked);
+    expect(circleOf('18').color, isNull); // 미래 — 원 없음
+    expect(circleOf('16').border, isNotNull); // 오늘(16)은 테두리
+    expect(circleOf('14').border, isNull);
     await tester.tap(find.text('+31m'));
     expect(tapped, d(14));
   });

@@ -66,7 +66,5 @@ MonthCell _cell(
     isBeforeFirstWeek: beforeFirstWeek,
     type: type,
     value: value,
-    // 평일은 지난 날 전부, 주말은 근무 기록이 있는 날만.
-    hasBackground: isCurrentMonth && !future && !beforeFirstWeek && (!weekend || hasBoth),
   );
 }

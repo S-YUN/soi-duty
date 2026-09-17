@@ -50,16 +50,6 @@ void main() {
     expect(cell(s, d(23)).type, WorkType.dayOff);
   });
 
-  test('배경: 이번 달 과거·오늘 평일 + 근무한 주말', () {
-    final s = build([rec(12, inH: 10, outH: 14)]);
-    expect(cell(s, d(14)).hasBackground, isTrue);
-    expect(cell(s, d(16)).hasBackground, isTrue);
-    expect(cell(s, d(17)).hasBackground, isFalse);
-    expect(cell(s, d(12)).hasBackground, isTrue);
-    expect(cell(s, d(13)).hasBackground, isFalse);
-    expect(cell(s, DateTime(2026, 8, 31)).hasBackground, isFalse);
-  });
-
   test('문구', () {
     expect(MonthTexts.value(const MonthCellValue.delta(-15)), '−15m');
     expect(MonthTexts.value(const MonthCellValue.working()), '···');
@@ -68,12 +58,11 @@ void main() {
     expect(MonthTexts.value(const MonthCellValue.none()), '');
   });
 
-  test('첫 기록 주 이전은 앱 설치 전 — 값 없음, 배경 없음, 편집 불가', () {
+  test('첫 기록 주 이전은 앱 설치 전 — 값 없음, 편집 불가', () {
     // 첫 기록일 9/17(목) → 편집 가능 범위는 9/14(월)부터
     final s = build([rec(10, inH: 9, outH: 18)], first: d(17));
     expect(cell(s, d(10)).isBeforeFirstWeek, isTrue);
     expect(cell(s, d(10)).value, const MonthCellValue.none()); // 기록이 있어도 안 보여준다
-    expect(cell(s, d(10)).hasBackground, isFalse);
     expect(cell(s, d(14)).isBeforeFirstWeek, isFalse);
     expect(cell(s, d(15)).value, const MonthCellValue.unrecorded());
   });

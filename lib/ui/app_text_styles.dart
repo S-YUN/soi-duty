@@ -80,9 +80,10 @@ abstract final class AppTextStyles {
 
   // 월간
   static TextStyle get calendarHeader => _style(10.5, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle calendarNum({required bool dim}) =>
-      _style(10.5, FontWeight.w400, color: dim ? AppColors.dotInactive : AppColors.subtle);
-  static TextStyle calendarBadge(Color color) => _style(10, FontWeight.w700, color: color);
+  /// 원 안의 날짜 숫자. 원이 있으면 유형색/잉크로 진하게, 없으면 subtle, 미래·다른 달은 dim.
+  static TextStyle calendarNum(Color color, {required bool onCircle}) =>
+      _style(12, onCircle ? FontWeight.w600 : FontWeight.w400, color: color);
+  static TextStyle get calendarHeaderWeekend => _style(10.5, FontWeight.w400, color: AppColors.calendarWeekendNum);
   static TextStyle calendarValue(Color color) => _style(11.5, FontWeight.w500, color: color);
   static TextStyle get calendarWeekendValue => _style(11, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get legend => _style(11.5, FontWeight.w400, color: AppColors.subtle);

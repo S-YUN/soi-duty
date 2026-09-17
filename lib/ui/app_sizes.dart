@@ -109,19 +109,16 @@ abstract final class AppSizes {
   static EdgeInsets get calendarPadding => EdgeInsets.fromLTRB(14.w, 16.w, 14.w, 16.w);
   static EdgeInsets get calendarHeaderPadding => EdgeInsets.fromLTRB(2.w, 14.w, 2.w, 6.w);
   static EdgeInsets get calendarGridPadding => EdgeInsets.symmetric(horizontal: 2.w);
-  /// 숫자 + 값 + 배지(반차) = 55가 위 9·아래 6 여백과 함께 들어가는 높이.
-  static double get calendarCell => 72.w;
-  static double get calendarCellRadius => 10.w;
-  static double get calendarCellTop => 9.w;
-  static double get calendarCellBottom => 6.w;
-  static double get calendarCellGap => 4.w;
+  /// 원(30) + 간격 + 값 한 줄이 위아래 여백과 함께 들어가는 높이.
+  static double get calendarCell => 60.w;
+  static double get calendarCellTop => 6.w;
+  static double get calendarCircle => 30.w;
+  static double get calendarTodayRing => 1.5.w;
+  static double get calendarCellGap => 5.w;
   static double get calendarRowGap => 4.w;
   static double get calendarColGap => 3.w;
-  static EdgeInsets get calendarBadgePadding => EdgeInsets.symmetric(vertical: 1.w, horizontal: 5.w);
-  static double get calendarBadgeRadius => 4.w;
   static EdgeInsets get legendPadding => EdgeInsets.fromLTRB(6.w, 2.w, 6.w, 0);
   static double get legendChip => 13.w;
-  static double get legendChipRadius => 4.w;
   static double get legendChipGap => 6.w;
   static double get legendRunGap => 8.w;
   static double get legendItemGap => 14.w;
@@ -197,4 +194,6 @@ abstract final class AppCurves {
 abstract final class AppOpacities {
   static const quietPressed = 0.55;
   static const cellPressed = 0.6;
+  /// 앞뒤 달·설치 전 날짜 — 원·숫자·값을 통째로 흐리게.
+  static const calendarOtherMonth = 0.4;
 }

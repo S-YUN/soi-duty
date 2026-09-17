@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../domain/model/work_type.dart';
 import '../../../ui/app_colors.dart';
 import '../../../ui/app_decorations.dart';
 import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
-import '../../shared/type_tag.dart';
 import '../month_state.dart';
 import '../month_texts.dart';
 
-/// 카드 A — 캘린더. 월요일 시작 7열, 셀 높이 58 위 정렬.
+/// 카드 A — 캘린더. 월요일 시작 7열. 날짜 숫자 뒤 원 색이 곧 유형(범례와 같은 색), 오늘은 원에 테두리.
 class CalendarCard extends StatelessWidget {
   const CalendarCard({super.key, required this.state, required this.onCellTap});
 
@@ -28,8 +26,14 @@ class CalendarCard extends StatelessWidget {
             padding: AppSizes.calendarHeaderPadding,
             child: Row(
               children: [
-                for (final w in MonthTexts.weekdays)
-                  Expanded(child: Text(w, style: AppTextStyles.calendarHeader, textAlign: TextAlign.center)),
+                for (var i = 0; i < MonthTexts.weekdays.length; i++)
+                  Expanded(
+                    child: Text(
+                      MonthTexts.weekdays[i],
+                      style: i >= DateTime.saturday - 1 ? AppTextStyles.calendarHeaderWeekend : AppTextStyles.calendarHeader,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -72,27 +76,31 @@ class _Cell extends StatefulWidget {
 class _CellState extends State<_Cell> {
   var _pressed = false;
 
-  Widget _badge(WorkType type) => Padding(
-        padding: EdgeInsets.only(top: AppSizes.calendarCellGap),
-        child: TypeTag(
-          type: type,
-          label: MonthTexts.badge(type),
-          padding: AppSizes.calendarBadgePadding,
-          radius: AppSizes.calendarBadgeRadius,
-          style: AppTextStyles.calendarBadge,
-        ),
-      );
+  /// 원 색. 유형이 있으면 그 색, 일반 근무일(주말 포함)은 하나로, 나머지는 없음.
+  Color? _circleColor(MonthCell cell) {
+    if (cell.type != null) return AppColors.typeColors(cell.type!).$1;
+    return switch (cell.value) {
+      MonthCellDelta() || MonthCellWeekendActual() || MonthCellWorking() => AppColors.calendarWorked,
+      MonthCellNone() || MonthCellUnrecorded() => null,
+    };
+  }
 
-  Widget _value(String text, TextStyle style) => Padding(
-        padding: EdgeInsets.only(top: AppSizes.calendarCellGap),
-        child: Text(text, style: style, maxLines: 1, overflow: TextOverflow.clip, softWrap: false),
-      );
+  /// 숫자 색. 원 위에서는 유형 글자색/잉크, 아니면 평일 subtle · 주말 적갈색, 미래·다른 달·설치 전은 흐리게.
+  Color _numColor(MonthCell cell, {required bool onCircle}) {
+    if (onCircle && cell.type != null) return AppColors.typeColors(cell.type!).$2;
+    if (onCircle) return AppColors.ink;
+    final dim = cell.isFuture; // 다른 달·설치 전은 셀 전체 투명도로 흐려진다
+    if (cell.isWeekend) return dim ? AppColors.calendarWeekendNumDim : AppColors.calendarWeekendNum;
+    return dim ? AppColors.dotInactive : AppColors.subtle;
+  }
 
   @override
   Widget build(BuildContext context) {
     final cell = widget.cell;
-    final dim = !cell.isCurrentMonth || cell.isWeekend || cell.isFuture || cell.isBeforeFirstWeek;
     final enabled = !cell.isBeforeFirstWeek;
+    final faded = !cell.isCurrentMonth || cell.isBeforeFirstWeek;
+    final circle = _circleColor(cell);
+    final onCircle = circle != null;
     final text = MonthTexts.value(cell.value);
     final valueStyle = switch (cell.value) {
       MonthCellDelta(:final minutes) => AppTextStyles.calendarValue(
@@ -114,26 +122,34 @@ class _CellState extends State<_Cell> {
       onTap: enabled ? widget.onTap : null,
       child: AnimatedOpacity(
         duration: AppDurations.pressedOpacity,
-        opacity: _pressed ? AppOpacities.cellPressed : 1,
-        child: Container(
+        opacity: _pressed
+            ? AppOpacities.cellPressed
+            : faded
+                ? AppOpacities.calendarOtherMonth
+                : 1,
+        child: SizedBox(
           height: AppSizes.calendarCell,
-          padding: EdgeInsets.only(top: AppSizes.calendarCellTop, bottom: AppSizes.calendarCellBottom),
-          clipBehavior: Clip.hardEdge,
-          decoration: BoxDecoration(
-            color: cell.hasBackground ? AppColors.cardInner : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppSizes.calendarCellRadius),
-          ),
-          // 세로 중앙 정렬 금지 — 값이 없는 날의 숫자가 내려와 같은 행과 어긋난다. 위 고정.
-          // 반차는 값이 일반 날과 같은 자리에 오고 배지가 그 아래. 연차·공휴일은 값이 없어 배지가 바로 온다.
+          // 세로 중앙 정렬 금지 — 값이 없는 날의 원이 내려와 같은 행과 어긋난다. 위 고정.
           child: Column(
             children: [
-              Text('${cell.date.day}', style: AppTextStyles.calendarNum(dim: dim)),
-              if (cell.type == WorkType.halfDay) ...[
-                if (text.isNotEmpty) _value(text, valueStyle),
-                _badge(cell.type!),
-              ] else ...[
-                if (cell.type != null) _badge(cell.type!),
-                if (text.isNotEmpty) _value(text, valueStyle),
+              SizedBox(height: AppSizes.calendarCellTop),
+              Container(
+                width: AppSizes.calendarCircle,
+                height: AppSizes.calendarCircle,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: circle,
+                  border: cell.isToday ? Border.all(color: AppColors.brand, width: AppSizes.calendarTodayRing) : null,
+                ),
+                child: Text(
+                  '${cell.date.day}',
+                  style: AppTextStyles.calendarNum(_numColor(cell, onCircle: onCircle), onCircle: onCircle),
+                ),
+              ),
+              if (text.isNotEmpty) ...[
+                SizedBox(height: AppSizes.calendarCellGap),
+                Text(text, style: valueStyle, maxLines: 1, overflow: TextOverflow.clip, softWrap: false),
               ],
             ],
           ),

@@ -26,7 +26,6 @@ abstract class MonthCell with _$MonthCell {
     /// 배지. normal이면 null
     WorkType? type,
     required MonthCellValue value,
-    required bool hasBackground,
   }) = _MonthCell;
 }
 

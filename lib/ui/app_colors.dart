@@ -37,6 +37,11 @@ abstract final class AppColors {
   static const todayRow = Color(0xFFF3F5F1);
   static const chipNeutral = Color(0xFFF0F2ED);
   static const wheelUnselected = Color(0xFF9DA296);
+
+  // 월간 캘린더 — 숫자 뒤 원. 유형이 있으면 typeColors, 없으면 아래.
+  static const calendarWorked = Color(0xFFEFF1EC); // 일반 근무일 (주말 포함)
+  static const calendarWeekendNum = Color(0xFF9C5F50); // 토·일 헤더·숫자
+  static const calendarWeekendNumDim = Color(0xFFD4B9B2); // 미래·다른 달의 토·일
   static const scrim = Color(0x6B16191A); // rgba(22,25,26,.42)
   static const sheetShadow = Color(0x2E16191A); // rgba(22,25,26,.18)
 

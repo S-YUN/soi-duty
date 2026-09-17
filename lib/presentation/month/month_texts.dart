@@ -17,11 +17,4 @@ abstract final class MonthTexts {
         MonthCellWorking() => '···',
         MonthCellUnrecorded() => '—',
       };
-
-  static String badge(WorkType t) => switch (t) {
-        WorkType.halfDay => '반차',
-        WorkType.dayOff => '연차',
-        WorkType.holiday => '공휴일',
-        WorkType.normal => '',
-      };
 }
