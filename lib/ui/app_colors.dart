@@ -36,7 +36,7 @@ abstract final class AppColors {
   static const weekendNone = Color(0xFFC9CDC4);
   static const todayRow = Color(0xFFF3F5F1);
   static const chipNeutral = Color(0xFFF0F2ED);
-  static const typeRowSelected = Color(0xFFEDF2EF); // 미래 날짜 시트의 선택된 유형 행
+  static const typeRowSelected = Color(0xFFDDE8E1); // 미래 날짜 시트의 선택된 유형 행 — 미선택(F1F3EE)과 확실히 구분되는 연초록
   static const wheelUnselected = Color(0xFF9DA296);
 
   // 월간 캘린더 — 숫자 뒤 원. 유형이 있으면 typeColors, 없으면 아래.

@@ -92,8 +92,8 @@ abstract final class AppTextStyles {
   static TextStyle get sheetTitle => _style(16, FontWeight.w600, letterSpacingEm: -0.01);
   static TextStyle get sheetNote => _style(12.5, FontWeight.w400, height: 1.5, color: AppColors.subtle);
   static TextStyle get sheetSubtitle => _style(13, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle typeRowLabel({required bool selected}) =>
-      _style(15.5, selected ? FontWeight.w600 : FontWeight.w500, color: selected ? AppColors.brand : AppColors.ink);
+  /// 선택 여부와 무관 — 상태는 행 배경과 체크가 말한다.
+  static TextStyle get typeRowLabel => _style(15.5, FontWeight.w500);
   static TextStyle chip({required bool selected, required Color selectedColor}) =>
       _style(12.5, selected ? FontWeight.w600 : FontWeight.w500, color: selected ? selectedColor : AppColors.subtle);
   static TextStyle get timeLabel => _style(13, FontWeight.w400, color: AppColors.subtle);

@@ -60,13 +60,7 @@ class _Row extends StatelessWidget {
               decoration: BoxDecoration(color: AppColors.typeColors(type).$1, shape: BoxShape.circle),
             ),
             SizedBox(width: AppSizes.typeRowDotGap),
-            Expanded(
-              child: AnimatedDefaultTextStyle(
-                duration: AppDurations.checkbox,
-                style: AppTextStyles.typeRowLabel(selected: selected),
-                child: Text(RecordEditTexts.chipLabel(type)),
-              ),
-            ),
+            Expanded(child: Text(RecordEditTexts.chipLabel(type), style: AppTextStyles.typeRowLabel)),
             // 자리를 유지한 채 켜고 끈다 — 라벨이 움직이지 않도록.
             AnimatedOpacity(
               duration: AppDurations.checkbox,
