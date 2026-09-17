@@ -15,6 +15,7 @@ WeekState buildWeekState({
 }) {
   final today = dateOnly(now);
   final start = dateOnly(monday);
+  firstRecordDate = effectiveFirstRecordDate(firstRecordDate, now);
   final thisMonday = mondayOf(today);
   final byDate = recordsByDate(records);
 

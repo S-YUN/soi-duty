@@ -15,6 +15,7 @@ TodayState buildTodayState({
 }) {
   final today = dateOnly(now);
   final record = recordsByDate(records)[today];
+  firstRecordDate = effectiveFirstRecordDate(firstRecordDate, now);
 
   final phase = switch (record) {
     null => TodayPhase.before,

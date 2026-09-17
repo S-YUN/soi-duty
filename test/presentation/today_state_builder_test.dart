@@ -87,4 +87,14 @@ void main() {
     final s = buildTodayState(records: [rec(16, inH: 15)], firstRecordDate: d(14), now: d(16, 12), rules: rules);
     expect(s.elapsedMinutes, 0);
   });
+
+  test('첫 기록일이 없으면 오늘을 첫 기록일로 간주 — 목요일 설치는 첫 주 예외, 월요일은 정상', () {
+    final thu = buildTodayState(records: [], firstRecordDate: null, now: d(17, 10), rules: rules);
+    expect(thu.isFirstWeek, isTrue);
+    expect(thu.week.targetMinutes, isNull);
+    expect(thu.unrecordedDays, isEmpty);
+    final mon = buildTodayState(records: [], firstRecordDate: null, now: d(14, 10), rules: rules);
+    expect(mon.isFirstWeek, isFalse);
+    expect(mon.week.remainingMinutes, 2400);
+  });
 }

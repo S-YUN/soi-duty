@@ -80,6 +80,10 @@ bool isValidClockRange(DateTime? clockIn, DateTime? clockOut) {
 
 // ---- 주간 ----
 
+/// 첫 기록일이 아직 없으면 오늘을 첫 기록일로 간주한다. 설치 직후 목요일에 "남은 40h"가 뜨지 않도록 —
+/// 첫 기록을 찍는 순간 어차피 첫 주 예외가 되므로 그 전부터 같은 모양이어야 한다.
+DateTime effectiveFirstRecordDate(DateTime? firstRecordDate, DateTime now) => firstRecordDate ?? dateOnly(now);
+
 /// 첫 기록일이 그 주의 월요일이 아니면, 그 주만 잔여 계산을 하지 않는다.
 bool isFirstWeekException(DateTime monday, DateTime? firstRecordDate) {
   if (firstRecordDate == null) return false;

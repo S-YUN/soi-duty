@@ -15,6 +15,7 @@ MonthState buildMonthState({
 }) {
   final today = dateOnly(now);
   final start = firstOfMonth(month);
+  firstRecordDate = effectiveFirstRecordDate(firstRecordDate, now);
   final thisMonth = firstOfMonth(today);
   final byDate = recordsByDate(records);
 
