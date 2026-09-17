@@ -29,10 +29,15 @@ void main() {
     expect(formatDateShort(DateTime(2026, 9, 20)), '9월 20일 일');
   });
 
-  group('formatWeekRange', () {
-    test('같은 달', () => expect(formatWeekRange(DateTime(2026, 9, 7)), '9월 7일 – 13일'));
-    test('다른 달', () => expect(formatWeekRange(DateTime(2026, 8, 31)), '8월 31일 – 9월 6일'));
-    test('해 넘김', () => expect(formatWeekRange(DateTime(2026, 12, 28)), '12월 28일 – 1월 3일'));
+  group('formatWeekTitle — 목요일이 속한 달 기준', () {
+    test('달 첫 주', () => expect(formatWeekTitle(DateTime(2026, 9, 7)), '9월 2째주'));
+    test('달 중간', () => expect(formatWeekTitle(DateTime(2026, 9, 14)), '9월 3째주'));
+    test('월요일은 전달, 목요일은 이번 달 → 이번 달 1째주',
+        () => expect(formatWeekTitle(DateTime(2026, 8, 31)), '9월 1째주'));
+    test('월요일은 이번 달, 목요일은 다음 달 → 다음 달 1째주',
+        () => expect(formatWeekTitle(DateTime(2026, 9, 28)), '10월 1째주'));
+    test('해 넘김', () => expect(formatWeekTitle(DateTime(2026, 12, 28)), '12월 5째주'));
+    test('1월 1일이 목요일이면 1월 1째주', () => expect(formatWeekTitle(DateTime(2025, 12, 29)), '1월 1째주'));
   });
   test('formatMonthTitle', () => expect(formatMonthTitle(DateTime(2026, 9)), '2026년 9월'));
   test('formatClockRange', () =>

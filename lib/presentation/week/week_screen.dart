@@ -61,7 +61,7 @@ class WeekView extends StatelessWidget {
     return Column(
       children: [
         PeriodNavigator(
-          label: formatWeekRange(state.monday),
+          label: formatWeekTitle(state.monday),
           canGoPrev: state.canGoPrev,
           canGoNext: state.canGoNext,
           onPrev: onPrev,

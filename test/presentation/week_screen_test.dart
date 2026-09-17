@@ -47,7 +47,7 @@ void main() {
 
     final heights = tester.widgetList(find.byType(WeekDayRow)).map((w) => tester.getSize(find.byWidget(w)).height).toSet();
     expect(heights.length, 1, reason: '행 높이: $heights');
-    expect(find.text('9월 14일 – 20일'), findsOneWidget);
+    expect(find.text('9월 3째주'), findsOneWidget);
 
     await tester.tap(find.text('근무 중'));
     expect(tapped, d(16));
