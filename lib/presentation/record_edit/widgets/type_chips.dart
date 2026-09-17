@@ -59,9 +59,18 @@ class _Chip extends StatelessWidget {
               color: selected ? bg : AppColors.chipNeutral,
               borderRadius: BorderRadius.circular(AppSizes.chipRadius),
             ),
-            child: Text(
-              RecordEditTexts.chipLabel(type),
-              style: AppTextStyles.chip(selected: selected, selectedColor: fg),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (selected) ...[
+                  Icon(Icons.check_rounded, size: AppSizes.chipCheck, color: fg),
+                  SizedBox(width: AppSizes.chipCheckGap),
+                ],
+                Text(
+                  RecordEditTexts.chipLabel(type),
+                  style: AppTextStyles.chip(selected: selected, selectedColor: fg),
+                ),
+              ],
             ),
           ),
         ),

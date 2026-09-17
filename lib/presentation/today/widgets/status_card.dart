@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../domain/model/work_type.dart';
+import '../../../domain/rules/work_rules.dart';
 import '../../../ui/app_decorations.dart';
 import '../../../ui/app_sizes.dart';
 import '../today_state.dart';
@@ -43,9 +44,10 @@ class TodayCallbacks {
 /// 탭 영역을 44(minTapHeight)까지 확보하기 위해 레이아웃 박스 자체를 44로 잡고
 /// 위 간격과 카드 하단 패딩을 각각 2씩 줄여 총 높이는 그대로 유지한다.
 class StatusCard extends StatelessWidget {
-  const StatusCard({super.key, required this.state, required this.callbacks});
+  const StatusCard({super.key, required this.state, required this.rules, required this.callbacks});
 
   final TodayState state;
+  final WorkRules rules;
   final TodayCallbacks callbacks;
 
   @override
@@ -57,7 +59,7 @@ class StatusCard extends StatelessWidget {
       decoration: AppDecorations.card,
       child: Column(
         children: [
-          StatusBlock(state: state),
+          StatusBlock(state: state, rules: rules),
           PrimaryButton(label: TodayTexts.buttonLabel(state), onPressed: _primaryAction),
           SizedBox(height: AppSizes.secondarySlotGap - AppSizes.secondarySlotHitInset),
           // 레이아웃 높이 자체를 44(minTapHeight)로 잡아 히트 영역을 진짜로 확보한다.

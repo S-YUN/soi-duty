@@ -40,7 +40,7 @@ class TodayView extends StatelessWidget {
               children: [
                 HeroCard(state: state, rules: rules),
                 SizedBox(height: AppSizes.cardGap),
-                StatusCard(state: state, callbacks: callbacks),
+                StatusCard(state: state, rules: rules, callbacks: callbacks),
                 if (state.isFirstWeek) ...[
                   SizedBox(height: AppSizes.cardGap),
                   const FirstWeekCard(),

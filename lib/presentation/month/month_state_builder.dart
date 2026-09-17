@@ -36,7 +36,7 @@ MonthCell _cell(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime month,
   final hasBoth = r?.clockIn != null && r?.clockOut != null;
 
   final MonthCellValue value;
-  if (type != null) {
+  if (type == WorkType.dayOff || type == WorkType.holiday) {
     value = const MonthCellValue.none();
   } else if (weekend) {
     value = hasBoth ? MonthCellValue.weekendActual(actualMinutes(r!, rules) ?? 0) : const MonthCellValue.none();
@@ -58,6 +58,7 @@ MonthCell _cell(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime month,
     isFuture: future,
     type: type,
     value: value,
-    hasBackground: isCurrentMonth && !weekend && !future,
+    // 평일은 지난 날 전부, 주말은 근무 기록이 있는 날만.
+    hasBackground: isCurrentMonth && !future && (!weekend || hasBoth),
   );
 }

@@ -25,7 +25,10 @@ Future<void> showRecordEditSheet(BuildContext context, DateTime date) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.scrim,
-    sheetAnimationStyle: AnimationStyle(duration: AppDurations.sheetSlide, curve: AppCurves.sheet),
+    sheetAnimationStyle: AnimationStyle(
+      duration: AppDurations.sheetSlide,
+      curve: AppCurves.sheet,
+    ),
     builder: (_) => RecordEditSheet(date: date),
   );
 }
@@ -44,17 +47,19 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   RecordDraft? _draft;
 
   RecordDraft _initialDraft(List<WorkRecord> records) => RecordDraft.fromRecord(
-        date: widget.date,
-        today: ref.read(clockProvider)(),
-        record: recordsByDate(records)[dateOnly(widget.date)],
-      );
+    date: widget.date,
+    today: ref.read(clockProvider)(),
+    record: recordsByDate(records)[dateOnly(widget.date)],
+  );
 
   void _update(RecordDraft next) => setState(() => _draft = next);
 
   void _close() => Navigator.of(context, rootNavigator: true).pop();
 
-  Future<void> _save() async {
-    await ref.read(recordEditControllerProvider.notifier).save(_draft!);
+  Future<void> _save() => _saveDraft(_draft!);
+
+  Future<void> _saveDraft(RecordDraft draft) async {
+    await ref.read(recordEditControllerProvider.notifier).save(draft);
     if (mounted) _close();
   }
 
@@ -72,9 +77,11 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
 
   /// 시트 좌우 패딩. 시각 행은 outdent만큼 바깥으로 나간다 (목업 margin 0 −12).
   Widget _inset(Widget child, {double outdent = 0}) => Padding(
-        padding: EdgeInsets.symmetric(horizontal: AppSizes.sheetPadding.left - outdent),
-        child: child,
-      );
+    padding: EdgeInsets.symmetric(
+      horizontal: AppSizes.sheetPadding.left - outdent,
+    ),
+    child: child,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +95,9 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.sheetRadius)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizes.sheetRadius),
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.sheetShadow,
@@ -98,7 +107,10 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
         ],
       ),
       child: SingleChildScrollView(
-        padding: EdgeInsets.only(top: AppSizes.sheetPadding.top, bottom: AppSizes.sheetPadding.bottom + bottomInset),
+        padding: EdgeInsets.only(
+          top: AppSizes.sheetPadding.top,
+          bottom: AppSizes.sheetPadding.bottom + bottomInset,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
@@ -108,10 +120,18 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                 width: AppSizes.sheetHandleWidth,
                 height: AppSizes.sheetHandleHeight,
                 margin: EdgeInsets.only(bottom: AppSizes.sheetHandleBottom),
-                decoration: BoxDecoration(color: AppColors.hairline, borderRadius: BorderRadius.circular(AppSizes.pill)),
+                decoration: BoxDecoration(
+                  color: AppColors.hairline,
+                  borderRadius: BorderRadius.circular(AppSizes.pill),
+                ),
               ),
             ),
-            _inset(Text(RecordEditTexts.title(draft), style: AppTextStyles.sheetTitle)),
+            _inset(
+              Text(
+                RecordEditTexts.title(draft),
+                style: AppTextStyles.sheetTitle,
+              ),
+            ),
             if (draft.isWeekend)
               _inset(
                 Container(
@@ -119,16 +139,27 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                   padding: AppSizes.sheetNotePadding,
                   decoration: BoxDecoration(
                     color: AppColors.chipNeutral,
-                    borderRadius: BorderRadius.circular(AppSizes.sheetNoteRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.sheetNoteRadius,
+                    ),
                   ),
-                  child: Text(RecordEditTexts.weekendNote, style: AppTextStyles.sheetNote),
+                  child: Text(
+                    RecordEditTexts.weekendNote,
+                    style: AppTextStyles.sheetNote,
+                  ),
                 ),
               ),
             if (draft.showsTypeChips)
               _inset(
                 Padding(
                   padding: AppSizes.chipsMargin,
-                  child: TypeChips(selected: draft.type, onChanged: (t) => _update(draft.withType(t))),
+                  child: TypeChips(
+                    selected: draft.type,
+                    // 미래 날짜는 칩 탭 한 번으로 저장하고 닫는다 (유형만 찍는 자리라 저장 버튼이 군더더기).
+                    onChanged: (t) => draft.isFuture
+                        ? _saveDraft(draft.withType(t))
+                        : _update(draft.withType(t)),
+                  ),
                 ),
               ),
             if (draft.showsTimeRows) ...[
@@ -138,7 +169,9 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                   children: [
                     for (final row in EditingRow.values)
                       TimeRow(
-                        label: row == EditingRow.clockIn ? RecordEditTexts.clockIn : RecordEditTexts.clockOut,
+                        label: row == EditingRow.clockIn
+                            ? RecordEditTexts.clockIn
+                            : RecordEditTexts.clockOut,
                         value: RecordEditTexts.time(draft.timeOf(row)),
                         selected: editing == row,
                         onTap: () => _update(draft.toggleEditing(row)),
@@ -153,17 +186,23 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                     padding: AppSizes.wheelBoxPadding,
                     decoration: BoxDecoration(
                       color: AppColors.cardInner,
-                      borderRadius: BorderRadius.circular(AppSizes.wheelBoxRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.wheelBoxRadius,
+                      ),
                     ),
                     child: Column(
                       children: [
-                        Text(RecordEditTexts.wheelTitle(editing), style: AppTextStyles.wheelTitle),
+                        Text(
+                          RecordEditTexts.wheelTitle(editing),
+                          style: AppTextStyles.wheelTitle,
+                        ),
                         SizedBox(height: AppSizes.wheelTitleBottom),
                         TimeWheel(
                           key: ValueKey(editing),
                           hour: draft.timeOf(editing)!.hour,
                           minute: draft.timeOf(editing)!.minute,
-                          onChanged: (h, m) => _update(draft.withTime(editing, h, m)),
+                          onChanged: (h, m) =>
+                              _update(draft.withTime(editing, h, m)),
                         ),
                       ],
                     ),
@@ -174,31 +213,48 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                   padding: EdgeInsets.only(top: AppSizes.calcTop),
                   child: draft.isValid
                       ? CalcRows(lines: calcLines(draft, rules))
-                      : Text(RecordEditTexts.invalidRange, style: AppTextStyles.calcError),
+                      : Text(
+                          RecordEditTexts.invalidRange,
+                          style: AppTextStyles.calcError,
+                        ),
                 ),
               ),
             ],
-            SizedBox(height: AppSizes.sheetButtonsTop),
-            _inset(
-              Row(
-                children: [
-                  Expanded(
-                    child: SheetButton(label: RecordEditTexts.cancel, primary: false, onTap: _close),
-                  ),
-                  SizedBox(width: AppSizes.sheetButtonGap),
-                  Expanded(
-                    child: SheetButton(label: RecordEditTexts.save, primary: true, onTap: draft.isValid ? _save : null),
-                  ),
-                ],
+            if (!draft.isFuture) ...[
+              SizedBox(height: AppSizes.sheetButtonsTop),
+              _inset(
+                Row(
+                  children: [
+                    Expanded(
+                      child: SheetButton(
+                        label: RecordEditTexts.cancel,
+                        primary: false,
+                        onTap: _close,
+                      ),
+                    ),
+                    SizedBox(width: AppSizes.sheetButtonGap),
+                    Expanded(
+                      child: SheetButton(
+                        label: RecordEditTexts.save,
+                        primary: true,
+                        onTap: draft.isValid ? _save : null,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
             if (draft.existing)
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: _delete,
                 child: Padding(
                   padding: EdgeInsets.only(top: AppSizes.deleteLinkTop),
-                  child: Text(RecordEditTexts.deleteLink, style: AppTextStyles.deleteLink, textAlign: TextAlign.center),
+                  child: Text(
+                    RecordEditTexts.deleteLink,
+                    style: AppTextStyles.deleteLink,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
           ],

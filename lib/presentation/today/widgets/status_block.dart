@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/presentation/format/time_format.dart';
+import '../../../domain/rules/work_rules.dart';
 import '../../../ui/app_colors.dart';
 import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
@@ -11,9 +12,10 @@ import 'type_badge.dart';
 
 /// 상태 카드 상단 블록. 높이 104 고정, 내용만 상태별로 바뀐다.
 class StatusBlock extends StatelessWidget {
-  const StatusBlock({super.key, required this.state});
+  const StatusBlock({super.key, required this.state, required this.rules});
 
   final TodayState state;
+  final WorkRules rules;
 
   @override
   Widget build(BuildContext context) {
@@ -31,15 +33,18 @@ class StatusBlock extends StatelessWidget {
     final gap = SizedBox(height: AppSizes.statusBlockGap);
     switch (state.screenState) {
       case TodayScreenState.beforeWork:
-        return [_DotLine(active: false, text: TodayTexts.beforeWork, style: AppTextStyles.body)];
-      case TodayScreenState.working:
-        final main = TodayTexts.statusMain(state);
         return [
-          if (main.isNotEmpty) ...[
-            Text(main, style: AppTextStyles.statusMain, textAlign: TextAlign.center),
-            gap,
-          ],
-          _DotLine(active: true, text: TodayTexts.statusSub(state), style: AppTextStyles.caption),
+          _DotLine(active: false, text: TodayTexts.beforeWork, style: AppTextStyles.body),
+          gap,
+          Text(TodayTexts.encouragement(state, rules), style: AppTextStyles.caption, textAlign: TextAlign.center, maxLines: 1),
+        ];
+      case TodayScreenState.working:
+        return [
+          _DotLine(active: true, text: TodayTexts.clockInLine(state), style: AppTextStyles.statusClock),
+          gap,
+          Text(TodayTexts.workingLine(state), style: AppTextStyles.body, textAlign: TextAlign.center, maxLines: 1),
+          gap,
+          Text(TodayTexts.encouragement(state, rules), style: AppTextStyles.caption, textAlign: TextAlign.center, maxLines: 1),
         ];
       case TodayScreenState.done:
         final delta = state.todayDelta;

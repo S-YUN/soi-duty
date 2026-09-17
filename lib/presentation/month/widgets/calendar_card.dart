@@ -23,7 +23,6 @@ class CalendarCard extends StatelessWidget {
       decoration: AppDecorations.card,
       child: Column(
         children: [
-          Text(MonthTexts.calendarTitle, style: AppTextStyles.calendarTitle),
           Padding(
             padding: AppSizes.calendarHeaderPadding,
             child: Row(

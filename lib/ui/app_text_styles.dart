@@ -32,10 +32,12 @@ abstract final class AppTextStyles {
   static TextStyle get primaryButton => _style(16.5, FontWeight.w600, color: AppColors.onBrand);
   static TextStyle get primaryButtonDisabled => _style(16.5, FontWeight.w600, color: AppColors.subtle);
   static TextStyle get statusMain => _style(15, FontWeight.w500, letterSpacingEm: -0.01);
+  /// 근무 중 "09:12 출근"
+  static TextStyle get statusClock => _style(20, FontWeight.w600, letterSpacingEm: -0.02);
   static TextStyle get summaryValue => _style(14.5, FontWeight.w600, letterSpacingEm: -0.01);
   static TextStyle get summaryLabel => _style(11, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle get tabSelected => _style(13.5, FontWeight.w600);
-  static TextStyle get tabUnselected => _style(13.5, FontWeight.w500, color: AppColors.subtle);
+  static TextStyle get tabSelected => _style(13, FontWeight.w600);
+  static TextStyle get tabUnselected => _style(13, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get body => _style(13.5, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get bodyInk => _style(13.5, FontWeight.w400);
   static TextStyle get bodyParagraph => _style(13.5, FontWeight.w400, height: 1.55, color: AppColors.subtle);
@@ -74,7 +76,6 @@ abstract final class AppTextStyles {
   static TextStyle rowValue(Color color) => _style(13.5, FontWeight.w500, color: color);
 
   // 월간
-  static TextStyle get calendarTitle => _style(12.5, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get calendarHeader => _style(10.5, FontWeight.w400, color: AppColors.subtle);
   static TextStyle calendarNum({required bool dim}) =>
       _style(10.5, FontWeight.w400, color: dim ? AppColors.dotInactive : AppColors.subtle);

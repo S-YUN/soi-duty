@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:soi_duty/domain/model/work_record.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/today/today_state_builder.dart';
@@ -35,21 +36,62 @@ void main() {
     expect(TodayTexts.progress(s), isNull);
   });
 
-  test('상태 문구: 근무 중', () {
+  test('상태 문구: 근무 중 — 출근 시각, 경과 · 퇴근 추천, 안내', () {
+    // 월 8h, 화 반차 4h → 남은 24h를 수·목·금 3일로 → 오늘 몫 8h → 09:12 + 8h + 1h = 18:12
     final s = buildTodayState(
       records: [...past, rec(16, inH: 9, inM: 12)],
       firstRecordDate: d(7),
       now: d(16, 16, 27),
       rules: rules,
     );
-    expect(TodayTexts.statusMain(s), '오늘 18:12에 퇴근하면 딱 맞아');
-    expect(TodayTexts.statusSub(s), '09:12 출근 · 7h 15m째');
+    expect(TodayTexts.clockInLine(s), '09:12 출근');
+    expect(TodayTexts.workingLine(s), '7시간 15분째 근무중 · 18:12 퇴근 추천');
+    expect(TodayTexts.encouragement(s, rules), '이번 주 페이스 좋아요');
     expect(TodayTexts.buttonLabel(s), '퇴근하기');
   });
 
-  test('상태 문구: 첫 주 근무 중', () {
+  test('상태 문구: 첫 주 근무 중 — 퇴근 추천 없음', () {
     final s = buildTodayState(records: [rec(16, inH: 9, inM: 12)], firstRecordDate: d(16), now: d(16, 12), rules: rules);
-    expect(TodayTexts.statusMain(s), '오늘 기록 중 · 이번 주는 목표 없이 실적만');
+    expect(TodayTexts.workingLine(s), '2시간 48분째 근무중');
+    expect(TodayTexts.encouragement(s, rules), '이번 주는 목표 없이 기록만 쌓아요');
+  });
+
+  test('상태 문구: 이미 채웠으면 시각 대신 안내', () {
+    // 월·화 0:00–23:59 → 45h 58m ≥ 40h
+    final s = buildTodayState(
+      records: [rec(14, inH: 0, outH: 23, outM: 59), rec(15, inH: 0, outH: 23, outM: 59), rec(16, inH: 9)],
+      firstRecordDate: d(7),
+      now: d(16, 10),
+      rules: rules,
+    );
+    expect(s.isWeekFilled, isTrue);
+    expect(s.expectedClockOut, isNull);
+    expect(TodayTexts.workingLine(s), '1시간째 근무중 · 이번 주 이미 채웠어요');
+    expect(TodayTexts.encouragement(s, rules), '오늘은 조금 일찍 퇴근하셔도 괜찮아요');
+  });
+
+  group('안내 문구', () {
+    String enc(List<WorkRecord> records, int day, {int hour = 8}) => TodayTexts.encouragement(
+          buildTodayState(records: records, firstRecordDate: d(7), now: d(day, hour), rules: rules),
+          rules,
+        );
+
+    test('월요일(첫 근무일)', () => expect(enc([], 14), '자, 이번주 시작해볼까요?'));
+    test('월요일이 연차면 화요일이 첫 근무일', () => expect(enc([rec(14, type: WorkType.dayOff)], 15), '자, 이번주 시작해볼까요?'));
+    test('금요일(마지막)', () => expect(enc([for (var day = 14; day <= 17; day++) rec(day, inH: 9, outH: 18)], 18), '드디어 금요일! 오늘도 힘내세요'));
+    test('금요일이 공휴일이면 목요일이 마지막', () {
+      expect(enc([rec(18, type: WorkType.holiday)], 17), '이번 주 마지막 날! 오늘도 힘내세요');
+    });
+    test('앞서 많이 함 → 일찍', () {
+      // 월 12h, 화 12h → 남은 16h / 3일 = 5h 20m < 7h 30m
+      expect(enc([rec(14, inH: 8, outH: 21), rec(15, inH: 8, outH: 21)], 16), '오늘은 조금 일찍 퇴근하셔도 괜찮아요');
+    });
+    test('모자람 → 더', () {
+      // 월 5h, 화 5h → 남은 30h / 3일 = 10h > 8h 30m
+      expect(enc([rec(14, inH: 9, outH: 15), rec(15, inH: 9, outH: 15)], 16), '오늘은 좀 더 일하는 것을 추천해요');
+    });
+    test('비슷함 → 페이스', () => expect(enc([rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18)], 16), '이번 주 페이스 좋아요'));
+    test('주말', () => expect(enc([], 19), '주말 근무는 주 40시간에 포함되지 않아요'));
   });
 
   test('버튼 라벨', () {

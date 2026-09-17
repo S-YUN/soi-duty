@@ -158,11 +158,26 @@ int weekendMinutes(List<WorkRecord> records, DateTime monday, WorkRules rules) {
   return sum;
 }
 
-// ---- 오늘 목표 · 퇴근 예상 (CLAUDE.md "퇴근 예상 시각") ----
+// ---- 오늘 몫 · 퇴근 예상 (CLAUDE.md "오늘 퇴근 시각 계산") ----
 
-/// 오늘 목표 = max(0, (주간 목표 − 오늘 제외 주간 실적) − 오늘 이후 평일 기준시간 합).
-/// 첫 주 예외·주말이면 null.
-int? todayTargetMinutes({
+bool _isOff(WorkRecord? r) => r != null && (r.type == WorkType.dayOff || r.type == WorkType.holiday);
+
+/// 이번 주 평일 중 연차·공휴일이 아닌 날. 기록 없는 날은 normal.
+List<DateTime> workdaysOfWeek(List<WorkRecord> records, DateTime monday) {
+  final byDate = recordsByDate(records);
+  return [for (final d in weekdaysOf(monday)) if (!_isOff(byDate[d])) d];
+}
+
+/// 오늘 포함, 이번 주 남은 근무일 수 (연차·공휴일 제외). 주말이면 0.
+int remainingWorkdays(List<WorkRecord> records, DateTime today) {
+  final day = dateOnly(today);
+  if (isWeekend(day)) return 0;
+  return workdaysOfWeek(records, mondayOf(day)).where((d) => !d.isBefore(day)).length;
+}
+
+/// 이번 주 남은 시간 = 주간 목표 − 오늘 이전 평일 실근무. 오늘 진행분은 넣지 않는다 (오늘 몫을 구하는 중이므로).
+/// 첫 주 예외·주말이면 null. 0 이하면 이미 채운 것.
+int? weekRemainingBeforeToday({
   required List<WorkRecord> records,
   required DateTime today,
   required WorkRules rules,
@@ -175,30 +190,56 @@ int? todayTargetMinutes({
 
   final byDate = recordsByDate(records);
   var reduction = 0;
-  var workedExcludingToday = 0;
-  var remainingStandard = 0;
-
+  var workedBefore = 0;
   for (final weekday in weekdaysOf(monday)) {
     final r = byDate[weekday];
-    final type = r?.type ?? WorkType.normal;
-    reduction += rules.dailyStandardMinutes - standardMinutes(type, rules);
-    if (weekday.isBefore(day)) {
-      if (r != null) workedExcludingToday += actualMinutes(r, rules) ?? 0;
-    } else if (weekday.isAfter(day)) {
-      remainingStandard += standardMinutes(type, rules);
-    }
+    reduction += rules.dailyStandardMinutes - standardMinutes(r?.type ?? WorkType.normal, rules);
+    if (weekday.isBefore(day) && r != null) workedBefore += actualMinutes(r, rules) ?? 0;
   }
-
-  final target = rules.weeklyTargetMinutes - reduction;
-  return math.max(0, target - workedExcludingToday - remainingStandard);
+  return rules.weeklyTargetMinutes - reduction - workedBefore;
 }
 
-/// 퇴근 예상 = 출근 + 오늘 목표 + 점심 공제(해당 시).
-DateTime? expectedClockOut(WorkRecord today, int todayTarget, WorkRules rules) {
+/// 오늘 몫 = 남은 시간 ÷ 남은 근무일 수. 반차인 날은 4h 고정. 마지막 근무일은 남은 시간 전부.
+/// 첫 주 예외·주말·연차·공휴일이면 null. 0 이하일 수 있다 (이미 채움).
+int? todayShareMinutes({
+  required List<WorkRecord> records,
+  required DateTime today,
+  required WorkRules rules,
+  required DateTime? firstRecordDate,
+}) {
+  final day = dateOnly(today);
+  final r = recordsByDate(records)[day];
+  if (_isOff(r)) return null;
+  if (r?.type == WorkType.halfDay) return rules.halfDayCreditMinutes;
+  final remaining = weekRemainingBeforeToday(records: records, today: day, rules: rules, firstRecordDate: firstRecordDate);
+  if (remaining == null) return null;
+  final days = remainingWorkdays(records, day);
+  if (days == 0) return null;
+  return (remaining / days).round();
+}
+
+/// 오늘이 이번 주 첫 근무일인지 (연차·공휴일 제외). 월요일이 연차면 화요일이 첫 근무일.
+bool isFirstWorkday(List<WorkRecord> records, DateTime today) {
+  final day = dateOnly(today);
+  if (isWeekend(day)) return false;
+  final days = workdaysOfWeek(records, mondayOf(day));
+  return days.isNotEmpty && days.first == day;
+}
+
+/// 오늘이 이번 주 마지막 근무일인지. 금요일이 공휴일이면 목요일이 마지막.
+bool isLastWorkday(List<WorkRecord> records, DateTime today) {
+  final day = dateOnly(today);
+  if (isWeekend(day)) return false;
+  final days = workdaysOfWeek(records, mondayOf(day));
+  return days.isNotEmpty && days.last == day;
+}
+
+/// 퇴근 예상 = 출근 + 오늘 몫 + 점심 공제(해당 시).
+DateTime? expectedClockOut(WorkRecord today, int todayShare, WorkRules rules) {
   final clockIn = today.clockIn;
   if (clockIn == null) return null;
   final lunch = deductsLunch(today) ? rules.lunchBreakMinutes : 0;
-  return clockIn.add(Duration(minutes: todayTarget + lunch));
+  return clockIn.add(Duration(minutes: todayShare + lunch));
 }
 
 // ---- 기록 누락 ----

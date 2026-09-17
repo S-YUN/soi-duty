@@ -5,7 +5,6 @@ import 'month_state.dart';
 
 /// 월간 화면의 모든 문구.
 abstract final class MonthTexts {
-  static const calendarTitle = '기준 대비 ±';
   static const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
   static const legend = [(WorkType.halfDay, '반차'), (WorkType.dayOff, '연차'), (WorkType.holiday, '공휴일')];
 

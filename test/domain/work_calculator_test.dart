@@ -199,64 +199,82 @@ void main() {
     });
   });
 
-  group('todayTargetMinutes (CLAUDE.md 퇴근 예상 시각)', () {
-    int? target(List<WorkRecord> records, int day, {DateTime? first}) => todayTargetMinutes(
+  group('todayShareMinutes (CLAUDE.md 오늘 퇴근 시각 계산)', () {
+    int? share(List<WorkRecord> records, int day, {DateTime? first}) => todayShareMinutes(
           records: records,
           today: d(day),
           rules: rules,
           firstRecordDate: first ?? d(7),
         );
 
-    test('앞선 날이 정확히 8h씩이면 오늘 목표 8h', () {
-      expect(target([rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 480);
+    test('앞선 날이 정확히 8h씩이면 오늘 몫 8h', () {
+      expect(share([rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 480);
     });
 
-    test('앞선 날 초과분만큼 오늘 목표가 줄어든다', () {
-      // 월 9h, 화 8h → 1h 초과 → 수 7h
-      expect(target([rec(14, inH: 9, outH: 19), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 420);
+    test('앞선 날 초과분을 남은 근무일에 나눠 오늘 몫이 줄어든다', () {
+      // 월 9h → 1h 초과, 수·목·금 3일 → 20분씩 → 수 7h 40m
+      expect(share([rec(14, inH: 9, outH: 19), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 460);
     });
 
-    test('앞선 날 부족분만큼 오늘 목표가 늘어난다', () {
-      // 월 7h → 수 9h
-      expect(target([rec(14, inH: 9, outH: 17), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 540);
+    test('앞선 날 부족분을 남은 근무일에 나눠 오늘 몫이 늘어난다', () {
+      // 월 7h → 1h 부족 → 수 8h 20m
+      expect(share([rec(14, inH: 9, outH: 17), rec(15, inH: 9, outH: 18), rec(16, inH: 9)], 16), 500);
     });
 
-    test('오늘이 반차면 목표가 4h 기준으로 줄고 남은 평일은 8h 유지', () {
-      final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9, type: WorkType.halfDay)];
-      // 목표 2160 − 960 − (목·금 960) = 240
-      expect(target(r, 16), 240);
+    test('오늘이 반차면 4h 고정', () {
+      final r = [rec(14, inH: 9, outH: 19), rec(15, inH: 9, outH: 18), rec(16, inH: 9, type: WorkType.halfDay)];
+      expect(share(r, 16), 240);
     });
 
-    test('남은 평일에 연차가 있으면 그날은 0으로 뺀다', () {
+    test('남은 평일에 연차가 있으면 일수에서 빠진다', () {
+      // 목 연차 → 목표 1920, 월·화 960 → 남은 960을 수·금 2일로 → 480
       final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9), rec(17, type: WorkType.dayOff)];
-      // 목표 1920 − 960 − (금 480) = 480
-      expect(target(r, 16), 480);
+      expect(share(r, 16), 480);
+      expect(remainingWorkdays(r, d(16)), 2);
     });
 
-    test('마지막 평일(금)은 잔여 전부', () {
+    test('마지막 평일(금)은 남은 시간 전부', () {
       final r = [for (var day = 14; day <= 17; day++) rec(day, inH: 9, outH: 17, outM: 30), rec(18, inH: 9)];
       // 월~목 각 7.5h = 1800 → 2400 − 1800 = 600
-      expect(target(r, 18), 600);
+      expect(share(r, 18), 600);
     });
 
-    test('이미 채웠으면 0 (음수 없음)', () {
-      expect(target([rec(14, inH: 9, outH: 22), rec(15, inH: 9, outH: 22), rec(16, inH: 9)], 16), 0);
+    test('이미 채웠으면 0 이하', () {
+      // 월·화 0:00–23:59 → 각 22h 59m → 45h 58m ≥ 40h
+      final r = [rec(14, inH: 0, outH: 23, outM: 59), rec(15, inH: 0, outH: 23, outM: 59), rec(16, inH: 9)];
+      expect(share(r, 16), lessThanOrEqualTo(0));
+      expect(weekRemainingBeforeToday(records: r, today: d(16), rules: rules, firstRecordDate: d(7)), lessThanOrEqualTo(0));
     });
 
-    test('오늘의 진행분은 계산에서 제외 (오늘 목표를 구하는 중이므로)', () {
-      final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9)];
-      expect(
-        todayTargetMinutes(records: r, today: d(16), rules: rules, firstRecordDate: d(7)),
-        480,
-      );
+    test('오늘의 진행분은 계산에서 제외', () {
+      final r = [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, inH: 9, outH: 12)];
+      expect(share(r, 16), 480);
     });
 
-    test('첫 주 예외면 null', () {
-      expect(target([rec(16, inH: 9)], 16, first: d(16)), isNull);
+    test('오늘이 연차·첫 주 예외·주말이면 null', () {
+      expect(share([rec(16, type: WorkType.dayOff)], 16), isNull);
+      expect(share([rec(16, inH: 9)], 16, first: d(16)), isNull);
+      expect(share([rec(19, inH: 9)], 19), isNull);
     });
+  });
 
-    test('주말이면 null', () {
-      expect(target([rec(19, inH: 9)], 19), isNull);
+  group('첫·마지막 근무일', () {
+    test('월요일이 첫 근무일, 금요일이 마지막', () {
+      expect(isFirstWorkday([], d(14)), isTrue);
+      expect(isFirstWorkday([], d(15)), isFalse);
+      expect(isLastWorkday([], d(18)), isTrue);
+      expect(isLastWorkday([], d(17)), isFalse);
+    });
+    test('월요일이 연차면 화요일이 첫 근무일, 금요일이 공휴일이면 목요일이 마지막', () {
+      final r = [rec(14, type: WorkType.dayOff), rec(18, type: WorkType.holiday)];
+      expect(isFirstWorkday(r, d(15)), isTrue);
+      expect(isFirstWorkday(r, d(14)), isFalse);
+      expect(isLastWorkday(r, d(17)), isTrue);
+      expect(isLastWorkday(r, d(18)), isFalse);
+    });
+    test('주말은 둘 다 아니다', () {
+      expect(isFirstWorkday([], d(19)), isFalse);
+      expect(isLastWorkday([], d(20)), isFalse);
     });
   });
 

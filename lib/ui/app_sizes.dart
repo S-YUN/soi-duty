@@ -5,7 +5,7 @@ import '../core/presentation/size_config.dart';
 /// 간격·radius·고정 높이. 전부 SizeConfig 비율이 적용된 getter.
 abstract final class AppSizes {
   // 화면 골격
-  static double get topInset => 8.w;
+  static double get topInset => 14.w;
   static double get screenHPadding => 20.w;
   static EdgeInsets get datePadding => EdgeInsets.fromLTRB(20.w, 18.w, 20.w, 14.w);
   static EdgeInsets get bodyPadding => EdgeInsets.fromLTRB(16.w, 4.w, 16.w, 20.w);
@@ -14,7 +14,7 @@ abstract final class AppSizes {
   // 알약 탭
   static double get tabPadding => 3.w;
   static double get tabGap => 2.w;
-  static double get tabItemVPadding => 9.w;
+  static double get tabItemVPadding => 7.w;
 
   // 카드
   static double get cardRadius => 20.w;
@@ -108,7 +108,7 @@ abstract final class AppSizes {
   static EdgeInsets get calendarPadding => EdgeInsets.fromLTRB(14.w, 16.w, 14.w, 16.w);
   static EdgeInsets get calendarHeaderPadding => EdgeInsets.fromLTRB(2.w, 14.w, 2.w, 6.w);
   static EdgeInsets get calendarGridPadding => EdgeInsets.symmetric(horizontal: 2.w);
-  static double get calendarCell => 58.w;
+  static double get calendarCell => 68.w;
   static double get calendarCellRadius => 10.w;
   static double get calendarCellTop => 9.w;
   static double get calendarCellGap => 5.w;
@@ -138,6 +138,8 @@ abstract final class AppSizes {
   static double get chipGap => 7.w;
   static EdgeInsets get chipPadding => EdgeInsets.symmetric(vertical: 11.w);
   static double get chipRadius => 11.w;
+  static double get chipCheck => 12.sp;
+  static double get chipCheckGap => 4.w;
   static double get timeRowOutdent => 12.w;
   static EdgeInsets get timeRowPadding => EdgeInsets.symmetric(vertical: 15.w, horizontal: 12.w);
   static double get timeRowRadius => 12.w;

@@ -34,15 +34,13 @@ TodayState buildTodayState({
     firstRecordDate: firstRecordDate,
   );
 
+  final remaining = weekRemainingBeforeToday(records: records, today: today, rules: rules, firstRecordDate: firstRecordDate);
+  final share = phase == TodayPhase.done
+      ? null
+      : todayShareMinutes(records: records, today: today, rules: rules, firstRecordDate: firstRecordDate);
   DateTime? expected;
-  if (phase == TodayPhase.working && record != null) {
-    final target = todayTargetMinutes(
-      records: records,
-      today: today,
-      rules: rules,
-      firstRecordDate: firstRecordDate,
-    );
-    if (target != null) expected = expectedClockOut(record, target, rules);
+  if (phase == TodayPhase.working && record != null && share != null && remaining != null && remaining > 0) {
+    expected = expectedClockOut(record, share, rules);
   }
 
   return TodayState(
@@ -56,6 +54,10 @@ TodayState buildTodayState({
     // 시트로 출근 시각을 미래로 잡을 수 있으므로 음수는 0으로.
     elapsedMinutes: phase == TodayPhase.working ? math.max(0, now.difference(record!.clockIn!).inMinutes) : null,
     expectedClockOut: expected,
+    todayShareMinutes: share,
+    weekRemainingBeforeToday: remaining,
+    isFirstWorkday: isFirstWorkday(records, today),
+    isLastWorkday: isLastWorkday(records, today),
     todayActual: phase == TodayPhase.done ? actualMinutes(record!, rules) : null,
     todayDelta: phase == TodayPhase.done ? deltaMinutes(record!, rules) : null,
     week: week,

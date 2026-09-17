@@ -20,12 +20,13 @@ abstract final class TodayTexts {
   static const firstWeekNotice =
       '첫 기록일이 월요일이 아니라 이번 주는 목표를 세우지 않아요. 기록한 시간만 그대로 보여드립니다. 다음 주부터 주 40시간 기준으로 계산돼요.';
   static const summaryLabels = ['출근', '퇴근', '근무', '기준 대비'];
-  static const firstWeekWorking = '오늘 기록 중 · 이번 주는 목표 없이 실적만';
 
-  static String heroLabel(TodayState s) => s.isFirstWeek ? '이번 주 기록한 시간' : '이번 주 남은 시간';
+  static String heroLabel(TodayState s) =>
+      s.isFirstWeek ? '이번 주 기록한 시간' : '이번 주 남은 시간';
 
-  static String heroValue(TodayState s) =>
-      formatHm(s.isFirstWeek ? s.week.workedMinutes : (s.week.remainingMinutes ?? 0));
+  static String heroValue(TodayState s) => formatHm(
+    s.isFirstWeek ? s.week.workedMinutes : (s.week.remainingMinutes ?? 0),
+  );
 
   static String heroReason(TodayState s, WorkRules rules) {
     if (s.isFirstWeek) {
@@ -33,13 +34,19 @@ abstract final class TodayTexts {
       return first == null ? '' : '${formatDateTitle(first)}부터 기록';
     }
     final w = s.week;
-    final parts = ['${formatHm(w.workedMinutes)} / ${formatHm(w.targetMinutes ?? 0)}'];
+    final parts = [
+      '${formatHm(w.workedMinutes)} / ${formatHm(w.targetMinutes ?? 0)}',
+    ];
     if (w.halfDayCount > 0) parts.add('반차 ${w.halfDayCount}회');
     if (w.dayOffCount > 0) {
-      parts.add('연차 ${w.dayOffCount}일로 목표 ${formatHm(w.dayOffCount * rules.dayOffCreditMinutes)} 차감');
+      parts.add(
+        '연차 ${w.dayOffCount}일로 목표 ${formatHm(w.dayOffCount * rules.dayOffCreditMinutes)} 차감',
+      );
     }
     if (w.holidayCount > 0) {
-      parts.add('공휴일 ${w.holidayCount}일로 목표 ${formatHm(w.holidayCount * rules.dayOffCreditMinutes)} 차감');
+      parts.add(
+        '공휴일 ${w.holidayCount}일로 목표 ${formatHm(w.holidayCount * rules.dayOffCreditMinutes)} 차감',
+      );
     }
     return parts.join(' · ');
   }
@@ -51,31 +58,65 @@ abstract final class TodayTexts {
     return (s.week.workedMinutes / target).clamp(0.0, 1.0);
   }
 
-  static String statusMain(TodayState s) {
-    if (s.isFirstWeek) return firstWeekWorking;
+  // ---- 상태 블록 ----
+
+  /// 근무 중 첫 줄: "09:12 출근"
+  static String clockInLine(TodayState s) =>
+      s.clockIn == null ? '' : '${formatClock(s.clockIn!)} 출근';
+
+  /// 근무 중 둘째 줄: "7시간 15분째 근무중 · 17:45 퇴근 추천". 채웠으면 "· 이번 주 이미 채웠어요".
+  /// 첫 주 예외·주말·반차 등 퇴근 추천이 없으면 경과만.
+  static String workingLine(TodayState s) {
+    final elapsed = s.elapsedMinutes;
+    if (elapsed == null) return '';
+    final parts = ['${formatKoreanDuration(elapsed)}째 근무중'];
     final expected = s.expectedClockOut;
-    return expected == null ? '' : '오늘 ${formatClock(expected)}에 퇴근하면 딱 맞아';
+    if (expected != null) {
+      parts.add('${formatClock(expected)} 퇴근 추천');
+    } else if (!s.isWeekend && !s.isFirstWeek && s.isWeekFilled) {
+      parts.add('이번 주 이미 채웠어요');
+    }
+    return parts.join(' · ');
   }
 
-  static String statusSub(TodayState s) {
-    final clockIn = s.clockIn;
-    final elapsed = s.elapsedMinutes;
-    if (clockIn == null || elapsed == null) return '';
-    return '${formatClock(clockIn)} 출근 · ${formatHm(elapsed)}째';
+  /// 안내 문구 (CLAUDE.md "안내 문구"). 출근 전·근무 중 공통. 오늘 몫을 8h와 비교, 기준선 ±30분.
+  static String encouragement(TodayState s, WorkRules rules) {
+    if (s.isWeekend) return weekendNote;
+    if (s.isFirstWeek) return firstWeekNote;
+    if (s.isLastWorkday) return s.date.weekday == DateTime.friday ? lastDayFriday : lastDay;
+    if (s.isFirstWorkday) return firstDay;
+    final share = s.todayShareMinutes;
+    if (share == null || s.isHalfDay) return onPace;
+    if (share < rules.dailyStandardMinutes - paceBandMinutes) return ahead;
+    if (share > rules.dailyStandardMinutes + paceBandMinutes) return behind;
+    return onPace;
   }
+
+  static const weekendNote = '주말 근무는 주 40시간에 포함되지 않아요';
+  static const firstWeekNote = '이번 주는 목표 없이 기록만 쌓아요';
+  static const firstDay = '자, 이번주 시작해볼까요?';
+  static const lastDayFriday = '드디어 금요일! 오늘도 힘내세요';
+  static const lastDay = '이번 주 마지막 날! 오늘도 힘내세요';
+  static const ahead = '오늘은 조금 일찍 퇴근하셔도 괜찮아요';
+  static const behind = '오늘은 좀 더 일하는 것을 추천해요';
+  static const onPace = '이번 주 페이스 좋아요';
+
+  /// 안내 문구 판정 기준선 (±30분)
+  static const paceBandMinutes = 30;
 
   static String buttonLabel(TodayState s) => switch (s.screenState) {
-        TodayScreenState.beforeWork || TodayScreenState.dayType => '출근하기',
-        TodayScreenState.working => '퇴근하기',
-        TodayScreenState.done => '오늘 퇴근 완료',
-      };
+    TodayScreenState.beforeWork || TodayScreenState.dayType => '출근하기',
+    TodayScreenState.working => '퇴근하기',
+    TodayScreenState.done => '오늘 퇴근 완료',
+  };
 
   static String dayTypeMessage(WorkType type) {
     final name = type == WorkType.dayOff ? '연차' : '공휴일';
     return '오늘은 $name로 처리돼 있어요\n근무 기록은 남기지 않습니다';
   }
 
-  static String badgeLabel(WorkType type) => type == WorkType.dayOff ? '연차' : '공휴일';
+  static String badgeLabel(WorkType type) =>
+      type == WorkType.dayOff ? '연차' : '공휴일';
 
   static String unrecordedTitle(int count) => '기록 안 된 날 $count개';
 }

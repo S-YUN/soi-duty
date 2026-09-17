@@ -41,7 +41,7 @@ void main() {
     expect(cell(s, d(15)).value, const MonthCellValue.none());
     expect(cell(s, d(15)).type, WorkType.holiday);
     expect(cell(s, d(16)).value, const MonthCellValue.working());
-    expect(cell(s, d(9)).value, const MonthCellValue.none());
+    expect(cell(s, d(9)).value, const MonthCellValue.delta(60)); // 반차: 배지 + 기준 대비
     expect(cell(s, d(9)).type, WorkType.halfDay);
     expect(cell(s, d(12)).value, const MonthCellValue.weekendActual(270));
     expect(cell(s, d(10)).value, const MonthCellValue.unrecorded());
@@ -50,12 +50,13 @@ void main() {
     expect(cell(s, d(23)).type, WorkType.dayOff);
   });
 
-  test('배경: 이번 달 과거·오늘 평일만', () {
-    final s = build([]);
+  test('배경: 이번 달 과거·오늘 평일 + 근무한 주말', () {
+    final s = build([rec(12, inH: 10, outH: 14)]);
     expect(cell(s, d(14)).hasBackground, isTrue);
     expect(cell(s, d(16)).hasBackground, isTrue);
     expect(cell(s, d(17)).hasBackground, isFalse);
-    expect(cell(s, d(12)).hasBackground, isFalse);
+    expect(cell(s, d(12)).hasBackground, isTrue);
+    expect(cell(s, d(13)).hasBackground, isFalse);
     expect(cell(s, DateTime(2026, 8, 31)).hasBackground, isFalse);
   });
 

@@ -26,8 +26,14 @@ abstract class TodayState with _$TodayState {
     DateTime? clockOut,
     /// working일 때 now − clockIn (점심 미공제)
     int? elapsedMinutes,
-    /// working일 때만. 첫 주 예외·주말이면 null
+    /// working일 때만. 첫 주 예외·주말·연차·이미 채움이면 null
     DateTime? expectedClockOut,
+    /// 출근 전·근무 중일 때 오늘 몫 (남은 시간 ÷ 남은 근무일). 반차는 4h 고정. 첫 주 예외·주말·연차면 null
+    int? todayShareMinutes,
+    /// 이번 주 남은 시간 (오늘 진행분 제외). 0 이하면 이미 채움
+    int? weekRemainingBeforeToday,
+    required bool isFirstWorkday,
+    required bool isLastWorkday,
     int? todayActual,
     int? todayDelta,
     required WeekSummary week,
@@ -37,6 +43,9 @@ abstract class TodayState with _$TodayState {
 
   bool get isWeekend => calc.isWeekend(date);
   bool get isFirstWeek => week.isFirstWeekException;
+
+  /// 이번 주 이미 채워서 퇴근 시각 대신 안내를 띄우는 상태
+  bool get isWeekFilled => (weekRemainingBeforeToday ?? 1) <= 0;
 
   TodayScreenState get screenState => switch (phase) {
         TodayPhase.working => TodayScreenState.working,

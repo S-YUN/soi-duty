@@ -32,7 +32,7 @@ void main() {
     await shot('week-previous');
 
     await driver.tap(find.text('월간'));
-    await driver.waitFor(find.text('기준 대비 ±'));
+    await driver.waitFor(find.text('토'));
     await shot('month-current');
     await driver.tap(find.text('◀'));
     await shot('month-previous');
@@ -48,6 +48,17 @@ void main() {
     await driver.tap(find.text('연차'));
     await shot('sheet-dayoff');
     await driver.tap(find.text('취소'));
+
+    // 미래 날짜: 칩 탭 한 번으로 저장·닫힘 → 배지가 생기고, 다시 열어 지우기
+    await driver.tap(find.text('24'));
+    await driver.waitFor(find.text('공휴일'));
+    await shot('sheet-future');
+    await driver.tap(find.text('반차'));
+    await driver.waitFor(find.text('반차'));
+    await shot('month-future-halfday');
+    await driver.tap(find.text('24'));
+    await driver.tap(find.text('이 날 기록 지우기'));
+    await driver.tap(find.text('지우기'));
 
     await driver.tap(find.text('오늘'));
     await driver.waitFor(find.text('퇴근하기'));

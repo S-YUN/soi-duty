@@ -16,8 +16,10 @@ T _$identity<T>(T value) => value;
 mixin _$TodayState {
 
  DateTime get date; WorkRecord? get record; TodayPhase get phase; WorkType? get dayType; bool get isHalfDay; DateTime? get clockIn; DateTime? get clockOut;/// working일 때 now − clockIn (점심 미공제)
- int? get elapsedMinutes;/// working일 때만. 첫 주 예외·주말이면 null
- DateTime? get expectedClockOut; int? get todayActual; int? get todayDelta; WeekSummary get week; List<DateTime> get unrecordedDays; DateTime? get firstRecordDate;
+ int? get elapsedMinutes;/// working일 때만. 첫 주 예외·주말·연차·이미 채움이면 null
+ DateTime? get expectedClockOut;/// 출근 전·근무 중일 때 오늘 몫 (남은 시간 ÷ 남은 근무일). 반차는 4h 고정. 첫 주 예외·주말·연차면 null
+ int? get todayShareMinutes;/// 이번 주 남은 시간 (오늘 진행분 제외). 0 이하면 이미 채움
+ int? get weekRemainingBeforeToday; bool get isFirstWorkday; bool get isLastWorkday; int? get todayActual; int? get todayDelta; WeekSummary get week; List<DateTime> get unrecordedDays; DateTime? get firstRecordDate;
 /// Create a copy of TodayState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +31,20 @@ $TodayStateCopyWith<TodayState> get copyWith => _$TodayStateCopyWithImpl<TodaySt
 @override
 bool operator ==(Object other) {
   final _this = this as TodayState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TodayState&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.record, _this.record) || other.record == _this.record)&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&(identical(other.dayType, _this.dayType) || other.dayType == _this.dayType)&&(identical(other.isHalfDay, _this.isHalfDay) || other.isHalfDay == _this.isHalfDay)&&(identical(other.clockIn, _this.clockIn) || other.clockIn == _this.clockIn)&&(identical(other.clockOut, _this.clockOut) || other.clockOut == _this.clockOut)&&(identical(other.elapsedMinutes, _this.elapsedMinutes) || other.elapsedMinutes == _this.elapsedMinutes)&&(identical(other.expectedClockOut, _this.expectedClockOut) || other.expectedClockOut == _this.expectedClockOut)&&(identical(other.todayActual, _this.todayActual) || other.todayActual == _this.todayActual)&&(identical(other.todayDelta, _this.todayDelta) || other.todayDelta == _this.todayDelta)&&(identical(other.week, _this.week) || other.week == _this.week)&&const DeepCollectionEquality().equals(other.unrecordedDays, _this.unrecordedDays)&&(identical(other.firstRecordDate, _this.firstRecordDate) || other.firstRecordDate == _this.firstRecordDate));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TodayState&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.record, _this.record) || other.record == _this.record)&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&(identical(other.dayType, _this.dayType) || other.dayType == _this.dayType)&&(identical(other.isHalfDay, _this.isHalfDay) || other.isHalfDay == _this.isHalfDay)&&(identical(other.clockIn, _this.clockIn) || other.clockIn == _this.clockIn)&&(identical(other.clockOut, _this.clockOut) || other.clockOut == _this.clockOut)&&(identical(other.elapsedMinutes, _this.elapsedMinutes) || other.elapsedMinutes == _this.elapsedMinutes)&&(identical(other.expectedClockOut, _this.expectedClockOut) || other.expectedClockOut == _this.expectedClockOut)&&(identical(other.todayShareMinutes, _this.todayShareMinutes) || other.todayShareMinutes == _this.todayShareMinutes)&&(identical(other.weekRemainingBeforeToday, _this.weekRemainingBeforeToday) || other.weekRemainingBeforeToday == _this.weekRemainingBeforeToday)&&(identical(other.isFirstWorkday, _this.isFirstWorkday) || other.isFirstWorkday == _this.isFirstWorkday)&&(identical(other.isLastWorkday, _this.isLastWorkday) || other.isLastWorkday == _this.isLastWorkday)&&(identical(other.todayActual, _this.todayActual) || other.todayActual == _this.todayActual)&&(identical(other.todayDelta, _this.todayDelta) || other.todayDelta == _this.todayDelta)&&(identical(other.week, _this.week) || other.week == _this.week)&&const DeepCollectionEquality().equals(other.unrecordedDays, _this.unrecordedDays)&&(identical(other.firstRecordDate, _this.firstRecordDate) || other.firstRecordDate == _this.firstRecordDate));
 }
 
 
 @override
 int get hashCode {
   final _this = this as TodayState;
-  return Object.hash(runtimeType,_this.date,_this.record,_this.phase,_this.dayType,_this.isHalfDay,_this.clockIn,_this.clockOut,_this.elapsedMinutes,_this.expectedClockOut,_this.todayActual,_this.todayDelta,_this.week,const DeepCollectionEquality().hash(_this.unrecordedDays),_this.firstRecordDate);
+  return Object.hash(runtimeType,_this.date,_this.record,_this.phase,_this.dayType,_this.isHalfDay,_this.clockIn,_this.clockOut,_this.elapsedMinutes,_this.expectedClockOut,_this.todayShareMinutes,_this.weekRemainingBeforeToday,_this.isFirstWorkday,_this.isLastWorkday,_this.todayActual,_this.todayDelta,_this.week,const DeepCollectionEquality().hash(_this.unrecordedDays),_this.firstRecordDate);
 }
 
 @override
 String toString() {
   final _this = this as TodayState;
-  return 'TodayState(date: ${_this.date}, record: ${_this.record}, phase: ${_this.phase}, dayType: ${_this.dayType}, isHalfDay: ${_this.isHalfDay}, clockIn: ${_this.clockIn}, clockOut: ${_this.clockOut}, elapsedMinutes: ${_this.elapsedMinutes}, expectedClockOut: ${_this.expectedClockOut}, todayActual: ${_this.todayActual}, todayDelta: ${_this.todayDelta}, week: ${_this.week}, unrecordedDays: ${_this.unrecordedDays}, firstRecordDate: ${_this.firstRecordDate})';
+  return 'TodayState(date: ${_this.date}, record: ${_this.record}, phase: ${_this.phase}, dayType: ${_this.dayType}, isHalfDay: ${_this.isHalfDay}, clockIn: ${_this.clockIn}, clockOut: ${_this.clockOut}, elapsedMinutes: ${_this.elapsedMinutes}, expectedClockOut: ${_this.expectedClockOut}, todayShareMinutes: ${_this.todayShareMinutes}, weekRemainingBeforeToday: ${_this.weekRemainingBeforeToday}, isFirstWorkday: ${_this.isFirstWorkday}, isLastWorkday: ${_this.isLastWorkday}, todayActual: ${_this.todayActual}, todayDelta: ${_this.todayDelta}, week: ${_this.week}, unrecordedDays: ${_this.unrecordedDays}, firstRecordDate: ${_this.firstRecordDate})';
 }
 
 
@@ -53,7 +55,7 @@ abstract mixin class $TodayStateCopyWith<$Res>  {
   factory $TodayStateCopyWith(TodayState value, $Res Function(TodayState) _then) = _$TodayStateCopyWithImpl;
 @useResult
 $Res call({
- DateTime date, WorkRecord? record, TodayPhase phase, WorkType? dayType, bool isHalfDay, DateTime? clockIn, DateTime? clockOut, int? elapsedMinutes, DateTime? expectedClockOut, int? todayActual, int? todayDelta, WeekSummary week, List<DateTime> unrecordedDays, DateTime? firstRecordDate
+ DateTime date, WorkRecord? record, TodayPhase phase, WorkType? dayType, bool isHalfDay, DateTime? clockIn, DateTime? clockOut, int? elapsedMinutes, DateTime? expectedClockOut, int? todayShareMinutes, int? weekRemainingBeforeToday, bool isFirstWorkday, bool isLastWorkday, int? todayActual, int? todayDelta, WeekSummary week, List<DateTime> unrecordedDays, DateTime? firstRecordDate
 });
 
 
@@ -70,7 +72,7 @@ class _$TodayStateCopyWithImpl<$Res>
 
 /// Create a copy of TodayState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? record = freezed,Object? phase = null,Object? dayType = freezed,Object? isHalfDay = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? elapsedMinutes = freezed,Object? expectedClockOut = freezed,Object? todayActual = freezed,Object? todayDelta = freezed,Object? week = null,Object? unrecordedDays = null,Object? firstRecordDate = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? record = freezed,Object? phase = null,Object? dayType = freezed,Object? isHalfDay = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? elapsedMinutes = freezed,Object? expectedClockOut = freezed,Object? todayShareMinutes = freezed,Object? weekRemainingBeforeToday = freezed,Object? isFirstWorkday = null,Object? isLastWorkday = null,Object? todayActual = freezed,Object? todayDelta = freezed,Object? week = null,Object? unrecordedDays = null,Object? firstRecordDate = freezed,}) {
   return _then(TodayState(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,record: freezed == record ? _self.record : record // ignore: cast_nullable_to_non_nullable
@@ -81,7 +83,11 @@ as bool,clockIn: freezed == clockIn ? _self.clockIn : clockIn // ignore: cast_nu
 as DateTime?,clockOut: freezed == clockOut ? _self.clockOut : clockOut // ignore: cast_nullable_to_non_nullable
 as DateTime?,elapsedMinutes: freezed == elapsedMinutes ? _self.elapsedMinutes : elapsedMinutes // ignore: cast_nullable_to_non_nullable
 as int?,expectedClockOut: freezed == expectedClockOut ? _self.expectedClockOut : expectedClockOut // ignore: cast_nullable_to_non_nullable
-as DateTime?,todayActual: freezed == todayActual ? _self.todayActual : todayActual // ignore: cast_nullable_to_non_nullable
+as DateTime?,todayShareMinutes: freezed == todayShareMinutes ? _self.todayShareMinutes : todayShareMinutes // ignore: cast_nullable_to_non_nullable
+as int?,weekRemainingBeforeToday: freezed == weekRemainingBeforeToday ? _self.weekRemainingBeforeToday : weekRemainingBeforeToday // ignore: cast_nullable_to_non_nullable
+as int?,isFirstWorkday: null == isFirstWorkday ? _self.isFirstWorkday : isFirstWorkday // ignore: cast_nullable_to_non_nullable
+as bool,isLastWorkday: null == isLastWorkday ? _self.isLastWorkday : isLastWorkday // ignore: cast_nullable_to_non_nullable
+as bool,todayActual: freezed == todayActual ? _self.todayActual : todayActual // ignore: cast_nullable_to_non_nullable
 as int?,todayDelta: freezed == todayDelta ? _self.todayDelta : todayDelta // ignore: cast_nullable_to_non_nullable
 as int?,week: null == week ? _self.week : week // ignore: cast_nullable_to_non_nullable
 as WeekSummary,unrecordedDays: null == unrecordedDays ? _self.unrecordedDays : unrecordedDays // ignore: cast_nullable_to_non_nullable
@@ -192,10 +198,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  TodayPhase phase,  WorkType? dayType,  bool isHalfDay,  DateTime? clockIn,  DateTime? clockOut,  int? elapsedMinutes,  DateTime? expectedClockOut,  int? todayActual,  int? todayDelta,  WeekSummary week,  List<DateTime> unrecordedDays,  DateTime? firstRecordDate)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  TodayPhase phase,  WorkType? dayType,  bool isHalfDay,  DateTime? clockIn,  DateTime? clockOut,  int? elapsedMinutes,  DateTime? expectedClockOut,  int? todayShareMinutes,  int? weekRemainingBeforeToday,  bool isFirstWorkday,  bool isLastWorkday,  int? todayActual,  int? todayDelta,  WeekSummary week,  List<DateTime> unrecordedDays,  DateTime? firstRecordDate)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TodayState() when $default != null:
-return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDay,_that.clockIn,_that.clockOut,_that.elapsedMinutes,_that.expectedClockOut,_that.todayActual,_that.todayDelta,_that.week,_that.unrecordedDays,_that.firstRecordDate);case _:
+return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDay,_that.clockIn,_that.clockOut,_that.elapsedMinutes,_that.expectedClockOut,_that.todayShareMinutes,_that.weekRemainingBeforeToday,_that.isFirstWorkday,_that.isLastWorkday,_that.todayActual,_that.todayDelta,_that.week,_that.unrecordedDays,_that.firstRecordDate);case _:
   return orElse();
 
 }
@@ -213,10 +219,10 @@ return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  TodayPhase phase,  WorkType? dayType,  bool isHalfDay,  DateTime? clockIn,  DateTime? clockOut,  int? elapsedMinutes,  DateTime? expectedClockOut,  int? todayActual,  int? todayDelta,  WeekSummary week,  List<DateTime> unrecordedDays,  DateTime? firstRecordDate)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  TodayPhase phase,  WorkType? dayType,  bool isHalfDay,  DateTime? clockIn,  DateTime? clockOut,  int? elapsedMinutes,  DateTime? expectedClockOut,  int? todayShareMinutes,  int? weekRemainingBeforeToday,  bool isFirstWorkday,  bool isLastWorkday,  int? todayActual,  int? todayDelta,  WeekSummary week,  List<DateTime> unrecordedDays,  DateTime? firstRecordDate)  $default,) {final _that = this;
 switch (_that) {
 case _TodayState():
-return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDay,_that.clockIn,_that.clockOut,_that.elapsedMinutes,_that.expectedClockOut,_that.todayActual,_that.todayDelta,_that.week,_that.unrecordedDays,_that.firstRecordDate);case _:
+return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDay,_that.clockIn,_that.clockOut,_that.elapsedMinutes,_that.expectedClockOut,_that.todayShareMinutes,_that.weekRemainingBeforeToday,_that.isFirstWorkday,_that.isLastWorkday,_that.todayActual,_that.todayDelta,_that.week,_that.unrecordedDays,_that.firstRecordDate);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -233,10 +239,10 @@ return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  WorkRecord? record,  TodayPhase phase,  WorkType? dayType,  bool isHalfDay,  DateTime? clockIn,  DateTime? clockOut,  int? elapsedMinutes,  DateTime? expectedClockOut,  int? todayActual,  int? todayDelta,  WeekSummary week,  List<DateTime> unrecordedDays,  DateTime? firstRecordDate)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  WorkRecord? record,  TodayPhase phase,  WorkType? dayType,  bool isHalfDay,  DateTime? clockIn,  DateTime? clockOut,  int? elapsedMinutes,  DateTime? expectedClockOut,  int? todayShareMinutes,  int? weekRemainingBeforeToday,  bool isFirstWorkday,  bool isLastWorkday,  int? todayActual,  int? todayDelta,  WeekSummary week,  List<DateTime> unrecordedDays,  DateTime? firstRecordDate)?  $default,) {final _that = this;
 switch (_that) {
 case _TodayState() when $default != null:
-return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDay,_that.clockIn,_that.clockOut,_that.elapsedMinutes,_that.expectedClockOut,_that.todayActual,_that.todayDelta,_that.week,_that.unrecordedDays,_that.firstRecordDate);case _:
+return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDay,_that.clockIn,_that.clockOut,_that.elapsedMinutes,_that.expectedClockOut,_that.todayShareMinutes,_that.weekRemainingBeforeToday,_that.isFirstWorkday,_that.isLastWorkday,_that.todayActual,_that.todayDelta,_that.week,_that.unrecordedDays,_that.firstRecordDate);case _:
   return null;
 
 }
@@ -248,7 +254,7 @@ return $default(_that.date,_that.record,_that.phase,_that.dayType,_that.isHalfDa
 
 
 class _TodayState extends TodayState {
-  const _TodayState({required this.date, this.record, required this.phase, this.dayType, required this.isHalfDay, this.clockIn, this.clockOut, this.elapsedMinutes, this.expectedClockOut, this.todayActual, this.todayDelta, required this.week, required  List<DateTime> unrecordedDays, this.firstRecordDate}): _unrecordedDays = unrecordedDays,super._();
+  const _TodayState({required this.date, this.record, required this.phase, this.dayType, required this.isHalfDay, this.clockIn, this.clockOut, this.elapsedMinutes, this.expectedClockOut, this.todayShareMinutes, this.weekRemainingBeforeToday, required this.isFirstWorkday, required this.isLastWorkday, this.todayActual, this.todayDelta, required this.week, required  List<DateTime> unrecordedDays, this.firstRecordDate}): _unrecordedDays = unrecordedDays,super._();
   
 
 @override final  DateTime date;
@@ -260,8 +266,14 @@ class _TodayState extends TodayState {
 @override final  DateTime? clockOut;
 /// working일 때 now − clockIn (점심 미공제)
 @override final  int? elapsedMinutes;
-/// working일 때만. 첫 주 예외·주말이면 null
+/// working일 때만. 첫 주 예외·주말·연차·이미 채움이면 null
 @override final  DateTime? expectedClockOut;
+/// 출근 전·근무 중일 때 오늘 몫 (남은 시간 ÷ 남은 근무일). 반차는 4h 고정. 첫 주 예외·주말·연차면 null
+@override final  int? todayShareMinutes;
+/// 이번 주 남은 시간 (오늘 진행분 제외). 0 이하면 이미 채움
+@override final  int? weekRemainingBeforeToday;
+@override final  bool isFirstWorkday;
+@override final  bool isLastWorkday;
 @override final  int? todayActual;
 @override final  int? todayDelta;
 @override final  WeekSummary week;
@@ -284,18 +296,18 @@ _$TodayStateCopyWith<_TodayState> get copyWith => __$TodayStateCopyWithImpl<_Tod
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TodayState&&(identical(other.date, date) || other.date == date)&&(identical(other.record, record) || other.record == record)&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.dayType, dayType) || other.dayType == dayType)&&(identical(other.isHalfDay, isHalfDay) || other.isHalfDay == isHalfDay)&&(identical(other.clockIn, clockIn) || other.clockIn == clockIn)&&(identical(other.clockOut, clockOut) || other.clockOut == clockOut)&&(identical(other.elapsedMinutes, elapsedMinutes) || other.elapsedMinutes == elapsedMinutes)&&(identical(other.expectedClockOut, expectedClockOut) || other.expectedClockOut == expectedClockOut)&&(identical(other.todayActual, todayActual) || other.todayActual == todayActual)&&(identical(other.todayDelta, todayDelta) || other.todayDelta == todayDelta)&&(identical(other.week, week) || other.week == week)&&const DeepCollectionEquality().equals(other.unrecordedDays, _unrecordedDays)&&(identical(other.firstRecordDate, firstRecordDate) || other.firstRecordDate == firstRecordDate));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TodayState&&(identical(other.date, date) || other.date == date)&&(identical(other.record, record) || other.record == record)&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.dayType, dayType) || other.dayType == dayType)&&(identical(other.isHalfDay, isHalfDay) || other.isHalfDay == isHalfDay)&&(identical(other.clockIn, clockIn) || other.clockIn == clockIn)&&(identical(other.clockOut, clockOut) || other.clockOut == clockOut)&&(identical(other.elapsedMinutes, elapsedMinutes) || other.elapsedMinutes == elapsedMinutes)&&(identical(other.expectedClockOut, expectedClockOut) || other.expectedClockOut == expectedClockOut)&&(identical(other.todayShareMinutes, todayShareMinutes) || other.todayShareMinutes == todayShareMinutes)&&(identical(other.weekRemainingBeforeToday, weekRemainingBeforeToday) || other.weekRemainingBeforeToday == weekRemainingBeforeToday)&&(identical(other.isFirstWorkday, isFirstWorkday) || other.isFirstWorkday == isFirstWorkday)&&(identical(other.isLastWorkday, isLastWorkday) || other.isLastWorkday == isLastWorkday)&&(identical(other.todayActual, todayActual) || other.todayActual == todayActual)&&(identical(other.todayDelta, todayDelta) || other.todayDelta == todayDelta)&&(identical(other.week, week) || other.week == week)&&const DeepCollectionEquality().equals(other.unrecordedDays, _unrecordedDays)&&(identical(other.firstRecordDate, firstRecordDate) || other.firstRecordDate == firstRecordDate));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,date,record,phase,dayType,isHalfDay,clockIn,clockOut,elapsedMinutes,expectedClockOut,todayActual,todayDelta,week,const DeepCollectionEquality().hash(_unrecordedDays),firstRecordDate);
+    return Object.hash(runtimeType,date,record,phase,dayType,isHalfDay,clockIn,clockOut,elapsedMinutes,expectedClockOut,todayShareMinutes,weekRemainingBeforeToday,isFirstWorkday,isLastWorkday,todayActual,todayDelta,week,const DeepCollectionEquality().hash(_unrecordedDays),firstRecordDate);
 }
 
 @override
 String toString() {
-    return 'TodayState(date: $date, record: $record, phase: $phase, dayType: $dayType, isHalfDay: $isHalfDay, clockIn: $clockIn, clockOut: $clockOut, elapsedMinutes: $elapsedMinutes, expectedClockOut: $expectedClockOut, todayActual: $todayActual, todayDelta: $todayDelta, week: $week, unrecordedDays: $unrecordedDays, firstRecordDate: $firstRecordDate)';
+    return 'TodayState(date: $date, record: $record, phase: $phase, dayType: $dayType, isHalfDay: $isHalfDay, clockIn: $clockIn, clockOut: $clockOut, elapsedMinutes: $elapsedMinutes, expectedClockOut: $expectedClockOut, todayShareMinutes: $todayShareMinutes, weekRemainingBeforeToday: $weekRemainingBeforeToday, isFirstWorkday: $isFirstWorkday, isLastWorkday: $isLastWorkday, todayActual: $todayActual, todayDelta: $todayDelta, week: $week, unrecordedDays: $unrecordedDays, firstRecordDate: $firstRecordDate)';
 }
 
 
@@ -306,7 +318,7 @@ abstract mixin class _$TodayStateCopyWith<$Res> implements $TodayStateCopyWith<$
   factory _$TodayStateCopyWith(_TodayState value, $Res Function(_TodayState) _then) = __$TodayStateCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime date, WorkRecord? record, TodayPhase phase, WorkType? dayType, bool isHalfDay, DateTime? clockIn, DateTime? clockOut, int? elapsedMinutes, DateTime? expectedClockOut, int? todayActual, int? todayDelta, WeekSummary week, List<DateTime> unrecordedDays, DateTime? firstRecordDate
+ DateTime date, WorkRecord? record, TodayPhase phase, WorkType? dayType, bool isHalfDay, DateTime? clockIn, DateTime? clockOut, int? elapsedMinutes, DateTime? expectedClockOut, int? todayShareMinutes, int? weekRemainingBeforeToday, bool isFirstWorkday, bool isLastWorkday, int? todayActual, int? todayDelta, WeekSummary week, List<DateTime> unrecordedDays, DateTime? firstRecordDate
 });
 
 
@@ -323,7 +335,7 @@ class __$TodayStateCopyWithImpl<$Res>
 
 /// Create a copy of TodayState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? record = freezed,Object? phase = null,Object? dayType = freezed,Object? isHalfDay = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? elapsedMinutes = freezed,Object? expectedClockOut = freezed,Object? todayActual = freezed,Object? todayDelta = freezed,Object? week = null,Object? unrecordedDays = null,Object? firstRecordDate = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? record = freezed,Object? phase = null,Object? dayType = freezed,Object? isHalfDay = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? elapsedMinutes = freezed,Object? expectedClockOut = freezed,Object? todayShareMinutes = freezed,Object? weekRemainingBeforeToday = freezed,Object? isFirstWorkday = null,Object? isLastWorkday = null,Object? todayActual = freezed,Object? todayDelta = freezed,Object? week = null,Object? unrecordedDays = null,Object? firstRecordDate = freezed,}) {
   return _then(_TodayState(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,record: freezed == record ? _self.record : record // ignore: cast_nullable_to_non_nullable
@@ -334,7 +346,11 @@ as bool,clockIn: freezed == clockIn ? _self.clockIn : clockIn // ignore: cast_nu
 as DateTime?,clockOut: freezed == clockOut ? _self.clockOut : clockOut // ignore: cast_nullable_to_non_nullable
 as DateTime?,elapsedMinutes: freezed == elapsedMinutes ? _self.elapsedMinutes : elapsedMinutes // ignore: cast_nullable_to_non_nullable
 as int?,expectedClockOut: freezed == expectedClockOut ? _self.expectedClockOut : expectedClockOut // ignore: cast_nullable_to_non_nullable
-as DateTime?,todayActual: freezed == todayActual ? _self.todayActual : todayActual // ignore: cast_nullable_to_non_nullable
+as DateTime?,todayShareMinutes: freezed == todayShareMinutes ? _self.todayShareMinutes : todayShareMinutes // ignore: cast_nullable_to_non_nullable
+as int?,weekRemainingBeforeToday: freezed == weekRemainingBeforeToday ? _self.weekRemainingBeforeToday : weekRemainingBeforeToday // ignore: cast_nullable_to_non_nullable
+as int?,isFirstWorkday: null == isFirstWorkday ? _self.isFirstWorkday : isFirstWorkday // ignore: cast_nullable_to_non_nullable
+as bool,isLastWorkday: null == isLastWorkday ? _self.isLastWorkday : isLastWorkday // ignore: cast_nullable_to_non_nullable
+as bool,todayActual: freezed == todayActual ? _self.todayActual : todayActual // ignore: cast_nullable_to_non_nullable
 as int?,todayDelta: freezed == todayDelta ? _self.todayDelta : todayDelta // ignore: cast_nullable_to_non_nullable
 as int?,week: null == week ? _self.week : week // ignore: cast_nullable_to_non_nullable
 as WeekSummary,unrecordedDays: null == unrecordedDays ? _self._unrecordedDays : unrecordedDays // ignore: cast_nullable_to_non_nullable

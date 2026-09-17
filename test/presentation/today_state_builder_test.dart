@@ -24,7 +24,8 @@ void main() {
     expect(s.phase, TodayPhase.before);
     expect(s.screenState, TodayScreenState.beforeWork);
     expect(s.record, isNull);
-    expect(s.expectedClockOut, isNull);
+    expect(s.expectedClockOut, isNull); // 출근 전엔 시각 없음
+    expect(s.todayShareMinutes, 480); // 문구 판정용 오늘 몫은 있음
     expect(s.week.remainingMinutes, 2400 - 960);
   });
 
@@ -33,6 +34,7 @@ void main() {
     expect(s.phase, TodayPhase.working);
     expect(s.screenState, TodayScreenState.working);
     expect(s.elapsedMinutes, 7 * 60 + 15);
+    expect(s.todayShareMinutes, 480); // 남은 24h / 수·목·금 3일
     expect(s.expectedClockOut, d(16, 18, 12)); // 09:12 + 8h + 1h
     expect(s.week.workedMinutes, 960 + (7 * 60 + 15 - 60));
   });
@@ -40,6 +42,7 @@ void main() {
   test('반차 근무 중 → isHalfDay, 퇴근 예상에 점심 없음', () {
     final s = build([...past, rec(16, inH: 9, inM: 12, type: WorkType.halfDay)]);
     expect(s.isHalfDay, isTrue);
+    expect(s.todayShareMinutes, 240);
     expect(s.expectedClockOut, d(16, 13, 12)); // 09:12 + 4h
   });
 
