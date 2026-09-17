@@ -62,7 +62,7 @@ abstract final class TodayTexts {
   }
 
   static const weekendNote = '주말 근무는 주 40시간에 포함되지 않아요';
-  static const firstWeekNote = '지난 요일을 채우면 이번 주도 목표가 계산돼요';
+  static const firstWeekNote = '기록 안 된 날을 채우면 이번 주도 목표가 계산돼요';
   static const firstDay = '자, 이번주 시작해볼까요?';
   static const lastDayFriday = '드디어 금요일! 오늘도 힘내세요';
   static const lastDay = '이번 주 마지막 날! 오늘도 힘내세요';
