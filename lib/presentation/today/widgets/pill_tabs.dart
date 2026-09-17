@@ -4,6 +4,7 @@ import '../../../ui/app_colors.dart';
 import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
 
+/// 가운데 정렬된 세그먼트. 폭은 내용만큼 — 화면을 가로지르지 않는다.
 class PillTabs extends StatelessWidget {
   const PillTabs({super.key, required this.labels, required this.selectedIndex, this.onSelected});
 
@@ -20,10 +21,11 @@ class PillTabs extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.pill),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           for (var i = 0; i < labels.length; i++) ...[
             if (i > 0) SizedBox(width: AppSizes.tabGap),
-            Expanded(child: _Tab(label: labels[i], selected: i == selectedIndex, onTap: () => onSelected?.call(i))),
+            _Tab(label: labels[i], selected: i == selectedIndex, onTap: () => onSelected?.call(i)),
           ],
         ],
       ),
@@ -44,7 +46,7 @@ class _Tab extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: AppSizes.tabItemVPadding),
+        padding: EdgeInsets.symmetric(vertical: AppSizes.tabItemVPadding, horizontal: AppSizes.tabItemHPadding),
         alignment: Alignment.center,
         decoration: selected
             ? BoxDecoration(

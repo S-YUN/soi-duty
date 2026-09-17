@@ -24,7 +24,8 @@ void main() {
     await driver.waitFor(find.text('퇴근하기'));
     await shot('today-working');
 
-    await driver.tap(find.text('주간'));
+    // 스와이프로 주간 이동
+    await driver.scroll(find.byType('PageView'), -300, 0, const Duration(milliseconds: 300));
     await driver.waitFor(find.text('이번 주 누적'));
     await shot('week-current');
     await driver.tap(find.text('◀'));

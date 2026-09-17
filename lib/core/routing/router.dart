@@ -14,8 +14,11 @@ GoRouter router(Ref ref) {
   return GoRouter(
     initialLocation: RoutePaths.today,
     routes: [
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => TabShell(navigationShell: navigationShell),
+      // IndexedStack 대신 PageView 컨테이너 — 스와이프로 탭을 넘긴다.
+      StatefulShellRoute(
+        builder: (context, state, navigationShell) => navigationShell,
+        navigatorContainerBuilder: (context, navigationShell, children) =>
+            TabShell(navigationShell: navigationShell, children: children),
         branches: [
           StatefulShellBranch(routes: [GoRoute(path: RoutePaths.today, builder: (_, _) => const TodayScreen())]),
           StatefulShellBranch(routes: [GoRoute(path: RoutePaths.week, builder: (_, _) => const WeekScreen())]),

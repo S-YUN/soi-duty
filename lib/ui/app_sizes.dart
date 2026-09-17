@@ -14,7 +14,8 @@ abstract final class AppSizes {
   // 알약 탭
   static double get tabPadding => 3.w;
   static double get tabGap => 2.w;
-  static double get tabItemVPadding => 7.w;
+  static double get tabItemVPadding => 6.w;
+  static double get tabItemHPadding => 16.w;
 
   // 카드
   static double get cardRadius => 20.w;
@@ -178,6 +179,7 @@ abstract final class AppDurations {
   static const sheetSlide = Duration(milliseconds: 260);
   static const wheelItem = Duration(milliseconds: 120);
   static const pressedOpacity = Duration(milliseconds: 100);
+  static const tabSwipe = Duration(milliseconds: 220);
 }
 
 abstract final class AppScales {

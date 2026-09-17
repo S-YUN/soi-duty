@@ -238,7 +238,7 @@ Clean Architecture, 단일 패키지. DI는 Riverpod 프로바이더가 겸한�
 ```
 lib/
 ├─ main.dart                 ProviderScope + MaterialApp.router
-├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치), route_paths.dart
+├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치 — PageView 컨테이너, 스와이프 전환), route_paths.dart
 ├─ core/presentation/        SizeConfig, 공용 위젯
 ├─ ui/                       색상·타이포 토큰
 ├─ domain/model/             WorkRecord, WorkType (freezed)
