@@ -298,7 +298,7 @@ void main() {
   });
 
   group('unrecordedWeekdays', () {
-    test('첫 기록일부터 어제까지의 평일 중 비거나 불완전한 날, 최신순', () {
+    test('첫 기록 주 월요일부터 어제까지의 평일 중 비거나 불완전한 날, 오래된 순', () {
       final r = [
         rec(7, inH: 9, outH: 18),
         rec(8, inH: 9, outH: 18),
@@ -308,7 +308,7 @@ void main() {
       ];
       expect(
         unrecordedWeekdays(records: r, today: d(16), firstRecordDate: d(7)),
-        [d(15), d(11), d(10), d(9)],
+        [d(9), d(10), d(11), d(15)],
       );
     });
 
@@ -325,7 +325,7 @@ void main() {
     test('첫 기록 주는 월요일부터 — 첫 기록일이 수요일이면 월·화가 누락으로 잡힌다', () {
       expect(
         unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)),
-        [d(15), d(14)],
+        [d(14), d(15)],
       );
     });
 

@@ -92,7 +92,7 @@ void main() {
     final thu = buildTodayState(records: [], firstRecordDate: null, now: d(17, 10), rules: rules);
     expect(thu.isFirstWeek, isTrue);
     expect(thu.week.targetMinutes, isNull);
-    expect(thu.unrecordedDays, [d(16), d(15), d(14)]); // 첫 주 월~어제는 바로 채우게 보여준다
+    expect(thu.unrecordedDays, [d(14), d(15), d(16)]); // 첫 주 월~어제를 오래된 순으로
     final mon = buildTodayState(records: [], firstRecordDate: null, now: d(14, 10), rules: rules);
     expect(mon.isFirstWeek, isFalse);
     expect(mon.week.remainingMinutes, 2400);
