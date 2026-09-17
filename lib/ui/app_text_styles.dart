@@ -35,6 +35,8 @@ abstract final class AppTextStyles {
   static TextStyle get statusMain => _style(15, FontWeight.w500, letterSpacingEm: -0.01);
   /// 근무 중 "09:12 출근"
   static TextStyle get statusClock => _style(20, FontWeight.w600, letterSpacingEm: -0.02);
+  /// 근무 중 "7시간 15분째 근무중" — body(14.5)보다 한 단계 크게
+  static TextStyle get statusWorking => _style(16, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get summaryValue => _style(18, FontWeight.w600, letterSpacingEm: -0.01);
   static TextStyle get summaryLabel => _style(12.5, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get tabSelected => _style(13, FontWeight.w600);
