@@ -74,7 +74,8 @@ class _CellState extends State<_Cell> {
   @override
   Widget build(BuildContext context) {
     final cell = widget.cell;
-    final dim = !cell.isCurrentMonth || cell.isWeekend || cell.isFuture;
+    final dim = !cell.isCurrentMonth || cell.isWeekend || cell.isFuture || cell.isBeforeFirstWeek;
+    final enabled = !cell.isBeforeFirstWeek;
     final text = MonthTexts.value(cell.value);
     final valueStyle = switch (cell.value) {
       MonthCellDelta(:final minutes) => AppTextStyles.calendarValue(
@@ -90,10 +91,10 @@ class _CellState extends State<_Cell> {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
+      onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
+      onTapUp: enabled ? (_) => setState(() => _pressed = false) : null,
+      onTapCancel: enabled ? () => setState(() => _pressed = false) : null,
+      onTap: enabled ? widget.onTap : null,
       child: AnimatedOpacity(
         duration: AppDurations.pressedOpacity,
         opacity: _pressed ? AppOpacities.cellPressed : 1,

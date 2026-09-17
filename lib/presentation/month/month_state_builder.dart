@@ -19,7 +19,8 @@ MonthState buildMonthState({
   final thisMonth = firstOfMonth(today);
   final byDate = recordsByDate(records);
 
-  final cells = [for (final d in calendarDays(start)) _cell(d, byDate, start, today, rules)];
+  final editableFrom = earliestMonday(firstRecordDate, today);
+  final cells = [for (final d in calendarDays(start)) _cell(d, byDate, start, today, editableFrom, rules)];
   return MonthState(
     month: start,
     canGoPrev: start.isAfter(earliestMonth(firstRecordDate, today)),
@@ -28,10 +29,18 @@ MonthState buildMonthState({
   );
 }
 
-MonthCell _cell(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime month, DateTime today, WorkRules rules) {
+MonthCell _cell(
+  DateTime date,
+  Map<DateTime, WorkRecord> byDate,
+  DateTime month,
+  DateTime today,
+  DateTime editableFrom,
+  WorkRules rules,
+) {
   final r = byDate[date];
   final weekend = isWeekend(date);
   final future = date.isAfter(today);
+  final beforeFirstWeek = date.isBefore(editableFrom);
   final isCurrentMonth = date.month == month.month && date.year == month.year;
   final type = r == null || r.type == WorkType.normal ? null : r.type;
   final hasBoth = r?.clockIn != null && r?.clockOut != null;
@@ -41,7 +50,7 @@ MonthCell _cell(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime month,
     value = const MonthCellValue.none();
   } else if (weekend) {
     value = hasBoth ? MonthCellValue.weekendActual(actualMinutes(r!, rules) ?? 0) : const MonthCellValue.none();
-  } else if (future) {
+  } else if (future || beforeFirstWeek) {
     value = const MonthCellValue.none();
   } else if (hasBoth) {
     value = MonthCellValue.delta(deltaMinutes(r!, rules) ?? 0);
@@ -57,9 +66,10 @@ MonthCell _cell(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime month,
     isToday: date == today,
     isWeekend: weekend,
     isFuture: future,
+    isBeforeFirstWeek: beforeFirstWeek,
     type: type,
     value: value,
     // 평일은 지난 날 전부, 주말은 근무 기록이 있는 날만.
-    hasBackground: isCurrentMonth && !future && (!weekend || hasBoth),
+    hasBackground: isCurrentMonth && !future && !beforeFirstWeek && (!weekend || hasBoth),
   );
 }
