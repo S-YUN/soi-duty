@@ -117,7 +117,7 @@ class _CellState extends State<_Cell> {
         opacity: _pressed ? AppOpacities.cellPressed : 1,
         child: Container(
           height: AppSizes.calendarCell,
-          padding: EdgeInsets.only(top: AppSizes.calendarCellTop),
+          padding: EdgeInsets.only(top: AppSizes.calendarCellTop, bottom: AppSizes.calendarCellBottom),
           clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
             color: cell.hasBackground ? AppColors.cardInner : Colors.transparent,

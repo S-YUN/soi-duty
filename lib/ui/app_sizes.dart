@@ -109,10 +109,12 @@ abstract final class AppSizes {
   static EdgeInsets get calendarPadding => EdgeInsets.fromLTRB(14.w, 16.w, 14.w, 16.w);
   static EdgeInsets get calendarHeaderPadding => EdgeInsets.fromLTRB(2.w, 14.w, 2.w, 6.w);
   static EdgeInsets get calendarGridPadding => EdgeInsets.symmetric(horizontal: 2.w);
-  static double get calendarCell => 68.w;
+  /// 숫자 + 값 + 배지(반차) = 55가 위 9·아래 6 여백과 함께 들어가는 높이.
+  static double get calendarCell => 72.w;
   static double get calendarCellRadius => 10.w;
   static double get calendarCellTop => 9.w;
-  static double get calendarCellGap => 5.w;
+  static double get calendarCellBottom => 6.w;
+  static double get calendarCellGap => 4.w;
   static double get calendarRowGap => 4.w;
   static double get calendarColGap => 3.w;
   static EdgeInsets get calendarBadgePadding => EdgeInsets.symmetric(vertical: 1.w, horizontal: 5.w);
