@@ -368,10 +368,4 @@ void main() {
     expect(addMonths(DateTime(2026, 12), 1), DateTime(2027, 1));
     expect(addMonths(DateTime(2026, 1), -1), DateTime(2025, 12));
   });
-
-  test('monthsBetween은 해를 넘겨 센다', () {
-    expect(monthsBetween(DateTime(2026, 9), DateTime(2026, 9)), 0);
-    expect(monthsBetween(DateTime(2026, 9), DateTime(2027, 2)), 5);
-    expect(monthsBetween(DateTime(2026, 9), DateTime(2026, 7)), -2);
-  });
 }

@@ -22,9 +22,6 @@ DateTime firstOfMonth(DateTime d) => DateTime(d.year, d.month);
 
 DateTime addMonths(DateTime month, int n) => DateTime(month.year, month.month + n);
 
-/// [from]부터 [to]까지 몇 달 뒤인지. 같은 달이면 0, 이전 달이면 음수.
-int monthsBetween(DateTime from, DateTime to) => (to.year - from.year) * 12 + to.month - from.month;
-
 /// 월요일 시작, 앞뒤를 채운 완전한 주 단위 (4~6주 × 7일).
 List<DateTime> calendarDays(DateTime month) {
   final first = firstOfMonth(month);

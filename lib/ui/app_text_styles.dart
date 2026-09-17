@@ -58,8 +58,8 @@ abstract final class AppTextStyles {
 
   // 기간 네비게이터
   static TextStyle get navLabel => _style(19, FontWeight.w600, letterSpacingEm: -0.02);
-  static TextStyle get navArrow => _style(13, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle get navArrowDisabled => _style(13, FontWeight.w400, color: AppColors.hairline);
+  static TextStyle get navArrow => _style(18, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get navArrowDisabled => _style(18, FontWeight.w400, color: AppColors.hairline);
 
   // 주간
   static TextStyle get weekValue => _style(26, FontWeight.w600, letterSpacingEm: -0.03);

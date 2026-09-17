@@ -47,7 +47,7 @@ final class SelectedMonthProvider
   }
 }
 
-String _$selectedMonthHash() => r'2f40bb3fd558359772eeeed76934407f7b64a479';
+String _$selectedMonthHash() => r'1d8681d31c928b938601e481471a7fa16297745b';
 
 /// 월간 탭이 보고 있는 달의 1일. 탭을 오가도 유지되고, 앱을 다시 켜면 이번 달.
 /// 범위는 첫 기록 달(없으면 이번 달)부터 올해 12월까지 — [earliestMonth]·[latestMonth].

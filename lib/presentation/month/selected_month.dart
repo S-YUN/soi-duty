@@ -24,7 +24,4 @@ class SelectedMonth extends _$SelectedMonth {
   void next() {
     if (state.isBefore(latestMonth(ref.read(clockProvider)()))) state = addMonths(state, 1);
   }
-
-  /// 페이저가 스와이프로 옮긴 달.
-  void select(DateTime month) => state = firstOfMonth(month);
 }
