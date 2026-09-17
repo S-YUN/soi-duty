@@ -7,7 +7,7 @@ import '../../../ui/app_text_styles.dart';
 import '../month_state.dart';
 import '../month_texts.dart';
 
-/// 카드 A — 캘린더. 월요일 시작 7열. 날짜 숫자 뒤 원 색이 곧 유형(범례와 같은 색), 오늘은 원에 테두리.
+/// 카드 A — 캘린더. 월요일 시작 7열. 날짜 숫자 뒤 원 색이 곧 유형(범례와 같은 색). 오늘 표시는 따로 없다.
 class CalendarCard extends StatelessWidget {
   const CalendarCard({super.key, required this.state, required this.onCellTap});
 
@@ -136,11 +136,7 @@ class _CellState extends State<_Cell> {
                 width: AppSizes.calendarCircle,
                 height: AppSizes.calendarCircle,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: circle,
-                  border: cell.isToday ? Border.all(color: AppColors.calendarTodayRing, width: AppSizes.calendarTodayRing) : null,
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: circle),
                 child: Text(
                   '${cell.date.day}',
                   style: AppTextStyles.calendarNum(_numColor(cell, onCircle: onCircle), onCircle: onCircle),

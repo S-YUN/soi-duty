@@ -62,8 +62,7 @@ void main() {
     expect(circleOf('16').color, AppColors.typeColors(WorkType.halfDay).$1);
     expect(circleOf('14').color, AppColors.calendarWorked);
     expect(circleOf('18').color, isNull); // 미래 — 원 없음
-    expect(circleOf('16').border, isNotNull); // 오늘(16)은 테두리
-    expect(circleOf('14').border, isNull);
+    expect(circleOf('16').border, isNull); // 오늘 표시는 따로 없다
     await tester.tap(find.text('+31m'));
     expect(tapped, d(14));
   });

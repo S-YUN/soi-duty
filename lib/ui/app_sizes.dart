@@ -113,7 +113,6 @@ abstract final class AppSizes {
   static double get calendarCell => 60.w;
   static double get calendarCellTop => 6.w;
   static double get calendarCircle => 30.w;
-  static double get calendarTodayRing => 1.5.w;
   static double get calendarCellGap => 5.w;
   static double get calendarRowGap => 4.w;
   static double get calendarColGap => 3.w;

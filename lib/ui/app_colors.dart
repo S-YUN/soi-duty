@@ -41,7 +41,6 @@ abstract final class AppColors {
   // 월간 캘린더 — 숫자 뒤 원. 유형이 있으면 typeColors, 없으면 아래.
   static const calendarWorked = Color(0xFFEFF1EC); // 일반 근무일 (주말 포함)
   static const calendarWeekendNum = Color(0xFF9C5F50); // 토·일 헤더·숫자
-  static const calendarTodayRing = Color(0x732C5A4C); // 오늘 원 테두리 — 브랜드색 45%, 은은하게
   static const scrim = Color(0x6B16191A); // rgba(22,25,26,.42)
   static const sheetShadow = Color(0x2E16191A); // rgba(22,25,26,.18)
 
