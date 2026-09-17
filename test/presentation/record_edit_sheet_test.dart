@@ -130,16 +130,18 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('행을 탭하면 휠이 열리고 값이 00:00(오전 12:00)이 된다', (tester) async {
+  testWidgets('빈 행은 --:--, 탭하면 휠이 기본 시각(오전 8:00)으로 열린다', (tester) async {
     await pumpSheet(tester, d(14));
     expect(find.text('--:--'), findsNWidgets(2));
     await tester.tap(find.text('출근'));
     await tester.pumpAndSettle();
     expect(find.byType(TimeWheel), findsOneWidget);
-    expect(find.text('00:00'), findsOneWidget);
+    expect(find.text('08:00'), findsOneWidget);
     expect(find.text('오전'), findsOneWidget);
     expect(find.text('오후'), findsOneWidget);
-    expect(find.text('12'), findsOneWidget);
+    await tester.tap(find.text('퇴근'));
+    await tester.pumpAndSettle();
+    expect(find.text('17:00'), findsOneWidget);
     await unmount(tester);
   });
 

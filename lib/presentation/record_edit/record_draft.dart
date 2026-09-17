@@ -68,10 +68,15 @@ class RecordDraft {
 
   RecordDraft withType(WorkType? next) => _copy(type: next ?? WorkType.normal);
 
-  /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 펼 때 값이 없으면 00:00.
+  /// 빈 행을 펼 때 휠이 시작하는 시각. 시트 안에서만 쓰이고 행 표시(--:--)나 저장값에는 관여하지 않는다.
+  static const defaultClockInHour = 8;
+  static const defaultClockOutHour = 17;
+
+  /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 펼 때 값이 없으면 기본 시각(출근 08:00 · 퇴근 17:00).
   RecordDraft toggleEditing(EditingRow row) {
     if (editing == row) return _copy(editing: null);
-    final current = timeOf(row) ?? DateTime(date.year, date.month, date.day);
+    final defaultHour = row == EditingRow.clockIn ? defaultClockInHour : defaultClockOutHour;
+    final current = timeOf(row) ?? DateTime(date.year, date.month, date.day, defaultHour);
     return _copy(
       editing: row,
       clockIn: row == EditingRow.clockIn ? current : _Keep.time,
