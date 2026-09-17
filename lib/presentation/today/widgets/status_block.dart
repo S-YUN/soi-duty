@@ -43,8 +43,6 @@ class StatusBlock extends StatelessWidget {
           _DotLine(active: true, text: TodayTexts.clockInLine(state), style: AppTextStyles.statusClock),
           gap,
           Text(TodayTexts.workingLine(state), style: AppTextStyles.body, textAlign: TextAlign.center, maxLines: 1),
-          gap,
-          Text(TodayTexts.encouragement(state, rules), style: AppTextStyles.caption, textAlign: TextAlign.center, maxLines: 1),
         ];
       case TodayScreenState.done:
         final delta = state.todayDelta;

@@ -64,22 +64,13 @@ abstract final class TodayTexts {
   static String clockInLine(TodayState s) =>
       s.clockIn == null ? '' : '${formatClock(s.clockIn!)} 출근';
 
-  /// 근무 중 둘째 줄: "7시간 15분째 근무중 · 17:45 퇴근 추천". 채웠으면 "· 이번 주 이미 채웠어요".
-  /// 첫 주 예외·주말·반차 등 퇴근 추천이 없으면 경과만.
+  /// 근무 중 둘째 줄: "7시간 15분째 근무중". 퇴근 추천 시각은 계산만 하고 아직 화면에 띄우지 않는다.
   static String workingLine(TodayState s) {
     final elapsed = s.elapsedMinutes;
-    if (elapsed == null) return '';
-    final parts = ['${formatKoreanDuration(elapsed)}째 근무중'];
-    final expected = s.expectedClockOut;
-    if (expected != null) {
-      parts.add('${formatClock(expected)} 퇴근 추천');
-    } else if (!s.isWeekend && !s.isFirstWeek && s.isWeekFilled) {
-      parts.add('이번 주 이미 채웠어요');
-    }
-    return parts.join(' · ');
+    return elapsed == null ? '' : '${formatKoreanDuration(elapsed)}째 근무중';
   }
 
-  /// 안내 문구 (CLAUDE.md "안내 문구"). 출근 전·근무 중 공통. 오늘 몫을 8h와 비교, 기준선 ±30분.
+  /// 안내 문구 (CLAUDE.md "안내 문구"). 출근 전에만. 오늘 몫을 8h와 비교, 기준선 ±30분.
   static String encouragement(TodayState s, WorkRules rules) {
     if (s.isWeekend) return weekendNote;
     if (s.isFirstWeek) return firstWeekNote;
@@ -110,10 +101,9 @@ abstract final class TodayTexts {
     TodayScreenState.done => '오늘 퇴근 완료',
   };
 
-  static String dayTypeMessage(WorkType type) {
-    final name = type == WorkType.dayOff ? '연차' : '공휴일';
-    return '오늘은 $name로 처리돼 있어요\n근무 기록은 남기지 않습니다';
-  }
+  static String dayTypeMessage(WorkType type) => type == WorkType.dayOff
+      ? '오늘은 연차입니다\n근무 기록을 남기지 않습니다'
+      : '오늘은 공휴일입니다\n행복한 휴일 되세요';
 
   static String badgeLabel(WorkType type) =>
       type == WorkType.dayOff ? '연차' : '공휴일';

@@ -45,8 +45,8 @@ void main() {
       rules: rules,
     );
     expect(TodayTexts.clockInLine(s), '09:12 출근');
-    expect(TodayTexts.workingLine(s), '7시간 15분째 근무중 · 18:12 퇴근 추천');
-    expect(TodayTexts.encouragement(s, rules), '이번 주 페이스 좋아요');
+    expect(TodayTexts.workingLine(s), '7시간 15분째 근무중');
+    expect(s.expectedClockOut, d(16, 18, 12)); // 계산은 되지만 화면엔 아직 안 띄움
     expect(TodayTexts.buttonLabel(s), '퇴근하기');
   });
 
@@ -66,7 +66,7 @@ void main() {
     );
     expect(s.isWeekFilled, isTrue);
     expect(s.expectedClockOut, isNull);
-    expect(TodayTexts.workingLine(s), '1시간째 근무중 · 이번 주 이미 채웠어요');
+    expect(TodayTexts.workingLine(s), '1시간째 근무중');
     expect(TodayTexts.encouragement(s, rules), '오늘은 조금 일찍 퇴근하셔도 괜찮아요');
   });
 
@@ -103,8 +103,8 @@ void main() {
   });
 
   test('연차/공휴일 안내', () {
-    expect(TodayTexts.dayTypeMessage(WorkType.dayOff), '오늘은 연차로 처리돼 있어요\n근무 기록은 남기지 않습니다');
-    expect(TodayTexts.dayTypeMessage(WorkType.holiday), '오늘은 공휴일로 처리돼 있어요\n근무 기록은 남기지 않습니다');
+    expect(TodayTexts.dayTypeMessage(WorkType.dayOff), '오늘은 연차입니다\n근무 기록을 남기지 않습니다');
+    expect(TodayTexts.dayTypeMessage(WorkType.holiday), '오늘은 공휴일입니다\n행복한 휴일 되세요');
   });
 
   test('기록 안 된 날 타이틀', () {
