@@ -11,7 +11,8 @@ part 'selected_month.g.dart';
 @Riverpod(keepAlive: true)
 class SelectedMonth extends _$SelectedMonth {
   @override
-  DateTime build() => firstOfMonth(ref.read(clockProvider)());
+  // watch: 디버그 시계 이동 시 이번 달로 되돌아온다.
+  DateTime build() => firstOfMonth(ref.watch(clockProvider)());
 
   void prev() {
     final today = ref.read(clockProvider)();

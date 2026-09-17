@@ -44,7 +44,7 @@ final class SelectedWeekProvider
   }
 }
 
-String _$selectedWeekHash() => r'9b8df26fb21a09c8ed7a1d32cec74dfd9b353c57';
+String _$selectedWeekHash() => r'348f1bec6205890827f73f2b8a098577b6606d38';
 
 /// 주간 탭이 보고 있는 주의 월요일. 탭을 오가도 유지되고, 앱을 다시 켜면 이번 주.
 

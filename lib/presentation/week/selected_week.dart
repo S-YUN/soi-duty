@@ -11,7 +11,8 @@ part 'selected_week.g.dart';
 @Riverpod(keepAlive: true)
 class SelectedWeek extends _$SelectedWeek {
   @override
-  DateTime build() => mondayOf(ref.read(clockProvider)());
+  // watch: 디버그 시계 이동 시 이번 주로 되돌아온다.
+  DateTime build() => mondayOf(ref.watch(clockProvider)());
 
   void prev() {
     final today = ref.read(clockProvider)();

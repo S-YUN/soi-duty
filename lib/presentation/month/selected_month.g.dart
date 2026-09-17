@@ -44,7 +44,7 @@ final class SelectedMonthProvider
   }
 }
 
-String _$selectedMonthHash() => r'31070142c23e09522c1e8657d4228b11704b74a6';
+String _$selectedMonthHash() => r'4ec4c16d2ad835f5d13af8e08fccdbc9def718d6';
 
 /// 월간 탭이 보고 있는 달의 1일. 탭을 오가도 유지되고, 앱을 다시 켜면 이번 달.
 
