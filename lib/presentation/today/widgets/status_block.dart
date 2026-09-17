@@ -35,15 +35,15 @@ class StatusBlock extends StatelessWidget {
     switch (state.screenState) {
       case TodayScreenState.beforeWork:
         return [
-          _DotLine(active: false, text: TodayTexts.beforeWork, style: AppTextStyles.body),
+          _DotLine(active: false, text: TodayTexts.beforeWork, style: AppTextStyles.statusLine),
           gap,
-          Text(TodayTexts.encouragement(state, rules), style: AppTextStyles.caption, textAlign: TextAlign.center, maxLines: 1),
+          Text(TodayTexts.encouragement(state, rules), style: AppTextStyles.statusNote, textAlign: TextAlign.center, maxLines: 1),
         ];
       case TodayScreenState.working:
         return [
           _DotLine(active: true, text: TodayTexts.clockInLine(state), style: AppTextStyles.statusClock),
           gap,
-          Text(TodayTexts.workingLine(state), style: AppTextStyles.statusWorking, textAlign: TextAlign.center, maxLines: 1),
+          Text(TodayTexts.workingLine(state), style: AppTextStyles.statusLine, textAlign: TextAlign.center, maxLines: 1),
         ];
       case TodayScreenState.done:
         // 제목 없이 요약만 — "오늘 퇴근 완료"는 아래 버튼이 이미 말한다.
