@@ -60,15 +60,6 @@ void main() {
     expect(cell(s, DateTime(2026, 8, 31)).hasBackground, isFalse);
   });
 
-  test('이동 가능 여부', () {
-    final s = build([]);
-    expect(s.canGoNext, isFalse);
-    expect(s.canGoPrev, isTrue);
-    final aug = build([], month: DateTime(2026, 8));
-    expect(aug.canGoPrev, isFalse);
-    expect(aug.canGoNext, isTrue);
-  });
-
   test('문구', () {
     expect(MonthTexts.value(const MonthCellValue.delta(-15)), '−15m');
     expect(MonthTexts.value(const MonthCellValue.working()), '···');

@@ -35,9 +35,21 @@ void main() {
     await driver.tap(find.text('월간'));
     await driver.waitFor(find.text('토'));
     await shot('month-current');
+
+    // 캘린더 안에서 스와이프하면 달이 넘어간다 (다음 달 = 미래, 연차 미리 찍기용)
+    await driver.scroll(find.byType('CalendarCard'), -300, 0, const Duration(milliseconds: 300));
+    await driver.waitFor(find.text('2026년 10월'));
+    await shot('month-swiped-next');
+    await driver.scroll(find.byType('CalendarCard'), 300, 0, const Duration(milliseconds: 300));
+    await driver.waitFor(find.text('2026년 9월'));
+
     await driver.tap(find.text('◀'));
+    await driver.waitFor(find.text('2026년 8월'));
     await shot('month-previous');
     await driver.tap(find.text('▶'));
+    // 상태 변경은 다음 프레임에 애니메이션을 시작하므로, 타이틀 갱신을 본 뒤에 애니메이션 종료를 기다린다.
+    await driver.waitFor(find.text('2026년 9월'));
+    await driver.waitUntilNoTransientCallbacks();
 
     // 셀 탭 → 시트 → 출근 행 → 휠
     await driver.tap(find.text('14'));

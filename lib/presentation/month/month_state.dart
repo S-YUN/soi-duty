@@ -34,8 +34,6 @@ abstract class MonthCell with _$MonthCell {
 abstract class MonthState with _$MonthState {
   const factory MonthState({
     required DateTime month,
-    required bool canGoPrev,
-    required bool canGoNext,
     required List<List<MonthCell>> weeks,
   }) = _MonthState;
 }

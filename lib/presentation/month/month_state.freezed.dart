@@ -735,7 +735,7 @@ $MonthCellValueCopyWith<$Res> get value {
 /// @nodoc
 mixin _$MonthState {
 
- DateTime get month; bool get canGoPrev; bool get canGoNext; List<List<MonthCell>> get weeks;
+ DateTime get month; List<List<MonthCell>> get weeks;
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -747,20 +747,20 @@ $MonthStateCopyWith<MonthState> get copyWith => _$MonthStateCopyWithImpl<MonthSt
 @override
 bool operator ==(Object other) {
   final _this = this as MonthState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthState&&(identical(other.month, _this.month) || other.month == _this.month)&&(identical(other.canGoPrev, _this.canGoPrev) || other.canGoPrev == _this.canGoPrev)&&(identical(other.canGoNext, _this.canGoNext) || other.canGoNext == _this.canGoNext)&&const DeepCollectionEquality().equals(other.weeks, _this.weeks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthState&&(identical(other.month, _this.month) || other.month == _this.month)&&const DeepCollectionEquality().equals(other.weeks, _this.weeks));
 }
 
 
 @override
 int get hashCode {
   final _this = this as MonthState;
-  return Object.hash(runtimeType,_this.month,_this.canGoPrev,_this.canGoNext,const DeepCollectionEquality().hash(_this.weeks));
+  return Object.hash(runtimeType,_this.month,const DeepCollectionEquality().hash(_this.weeks));
 }
 
 @override
 String toString() {
   final _this = this as MonthState;
-  return 'MonthState(month: ${_this.month}, canGoPrev: ${_this.canGoPrev}, canGoNext: ${_this.canGoNext}, weeks: ${_this.weeks})';
+  return 'MonthState(month: ${_this.month}, weeks: ${_this.weeks})';
 }
 
 
@@ -771,7 +771,7 @@ abstract mixin class $MonthStateCopyWith<$Res>  {
   factory $MonthStateCopyWith(MonthState value, $Res Function(MonthState) _then) = _$MonthStateCopyWithImpl;
 @useResult
 $Res call({
- DateTime month, bool canGoPrev, bool canGoNext, List<List<MonthCell>> weeks
+ DateTime month, List<List<MonthCell>> weeks
 });
 
 
@@ -788,12 +788,10 @@ class _$MonthStateCopyWithImpl<$Res>
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? month = null,Object? canGoPrev = null,Object? canGoNext = null,Object? weeks = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? month = null,Object? weeks = null,}) {
   return _then(MonthState(
 month: null == month ? _self.month : month // ignore: cast_nullable_to_non_nullable
-as DateTime,canGoPrev: null == canGoPrev ? _self.canGoPrev : canGoPrev // ignore: cast_nullable_to_non_nullable
-as bool,canGoNext: null == canGoNext ? _self.canGoNext : canGoNext // ignore: cast_nullable_to_non_nullable
-as bool,weeks: null == weeks ? _self.weeks : weeks // ignore: cast_nullable_to_non_nullable
+as DateTime,weeks: null == weeks ? _self.weeks : weeks // ignore: cast_nullable_to_non_nullable
 as List<List<MonthCell>>,
   ));
 }
@@ -879,10 +877,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime month,  bool canGoPrev,  bool canGoNext,  List<List<MonthCell>> weeks)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MonthState() when $default != null:
-return $default(_that.month,_that.canGoPrev,_that.canGoNext,_that.weeks);case _:
+return $default(_that.month,_that.weeks);case _:
   return orElse();
 
 }
@@ -900,10 +898,10 @@ return $default(_that.month,_that.canGoPrev,_that.canGoNext,_that.weeks);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime month,  bool canGoPrev,  bool canGoNext,  List<List<MonthCell>> weeks)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks)  $default,) {final _that = this;
 switch (_that) {
 case _MonthState():
-return $default(_that.month,_that.canGoPrev,_that.canGoNext,_that.weeks);case _:
+return $default(_that.month,_that.weeks);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -920,10 +918,10 @@ return $default(_that.month,_that.canGoPrev,_that.canGoNext,_that.weeks);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime month,  bool canGoPrev,  bool canGoNext,  List<List<MonthCell>> weeks)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime month,  List<List<MonthCell>> weeks)?  $default,) {final _that = this;
 switch (_that) {
 case _MonthState() when $default != null:
-return $default(_that.month,_that.canGoPrev,_that.canGoNext,_that.weeks);case _:
+return $default(_that.month,_that.weeks);case _:
   return null;
 
 }
@@ -935,12 +933,10 @@ return $default(_that.month,_that.canGoPrev,_that.canGoNext,_that.weeks);case _:
 
 
 class _MonthState implements MonthState {
-  const _MonthState({required this.month, required this.canGoPrev, required this.canGoNext, required  List<List<MonthCell>> weeks}): _weeks = weeks;
+  const _MonthState({required this.month, required  List<List<MonthCell>> weeks}): _weeks = weeks;
   
 
 @override final  DateTime month;
-@override final  bool canGoPrev;
-@override final  bool canGoNext;
  final  List<List<MonthCell>> _weeks;
 @override List<List<MonthCell>> get weeks {
   if (_weeks is EqualUnmodifiableListView) return _weeks;
@@ -959,18 +955,18 @@ _$MonthStateCopyWith<_MonthState> get copyWith => __$MonthStateCopyWithImpl<_Mon
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthState&&(identical(other.month, month) || other.month == month)&&(identical(other.canGoPrev, canGoPrev) || other.canGoPrev == canGoPrev)&&(identical(other.canGoNext, canGoNext) || other.canGoNext == canGoNext)&&const DeepCollectionEquality().equals(other.weeks, _weeks));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthState&&(identical(other.month, month) || other.month == month)&&const DeepCollectionEquality().equals(other.weeks, _weeks));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,month,canGoPrev,canGoNext,const DeepCollectionEquality().hash(_weeks));
+    return Object.hash(runtimeType,month,const DeepCollectionEquality().hash(_weeks));
 }
 
 @override
 String toString() {
-    return 'MonthState(month: $month, canGoPrev: $canGoPrev, canGoNext: $canGoNext, weeks: $weeks)';
+    return 'MonthState(month: $month, weeks: $weeks)';
 }
 
 
@@ -981,7 +977,7 @@ abstract mixin class _$MonthStateCopyWith<$Res> implements $MonthStateCopyWith<$
   factory _$MonthStateCopyWith(_MonthState value, $Res Function(_MonthState) _then) = __$MonthStateCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime month, bool canGoPrev, bool canGoNext, List<List<MonthCell>> weeks
+ DateTime month, List<List<MonthCell>> weeks
 });
 
 
@@ -998,12 +994,10 @@ class __$MonthStateCopyWithImpl<$Res>
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? month = null,Object? canGoPrev = null,Object? canGoNext = null,Object? weeks = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? month = null,Object? weeks = null,}) {
   return _then(_MonthState(
 month: null == month ? _self.month : month // ignore: cast_nullable_to_non_nullable
-as DateTime,canGoPrev: null == canGoPrev ? _self.canGoPrev : canGoPrev // ignore: cast_nullable_to_non_nullable
-as bool,canGoNext: null == canGoNext ? _self.canGoNext : canGoNext // ignore: cast_nullable_to_non_nullable
-as bool,weeks: null == weeks ? _self._weeks : weeks // ignore: cast_nullable_to_non_nullable
+as DateTime,weeks: null == weeks ? _self._weeks : weeks // ignore: cast_nullable_to_non_nullable
 as List<List<MonthCell>>,
   ));
 }

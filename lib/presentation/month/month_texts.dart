@@ -8,7 +8,7 @@ abstract final class MonthTexts {
   static const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
   static const legend = [(WorkType.halfDay, '반차'), (WorkType.dayOff, '연차'), (WorkType.holiday, '공휴일')];
 
-  static String title(MonthState s) => formatMonthTitle(s.month);
+  static String title(DateTime month) => formatMonthTitle(month);
 
   static String value(MonthCellValue v) => switch (v) {
         MonthCellNone() => '',

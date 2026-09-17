@@ -10,4 +10,6 @@ void main() {
   test('첫 기록일 없으면 이번 달', () => expect(earliestMonth(null, d(16)), DateTime(2026, 9)));
   test('첫 기록일 있으면 그 달', () => expect(earliestMonth(DateTime(2026, 7, 20), d(16)), DateTime(2026, 7)));
   test('첫 기록일이 다음 달이면 이번 달', () => expect(earliestMonth(DateTime(2026, 10, 2), d(16)), DateTime(2026, 9)));
+  test('상한은 올해 12월', () => expect(latestMonth(d(16)), DateTime(2026, 12)));
+  test('해가 바뀌면 새해 12월', () => expect(latestMonth(DateTime(2027, 1, 3)), DateTime(2027, 12)));
 }

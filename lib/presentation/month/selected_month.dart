@@ -8,6 +8,7 @@ import '../../domain/rules/work_calculator.dart';
 part 'selected_month.g.dart';
 
 /// 월간 탭이 보고 있는 달의 1일. 탭을 오가도 유지되고, 앱을 다시 켜면 이번 달.
+/// 범위는 첫 기록 달(없으면 이번 달)부터 올해 12월까지 — [earliestMonth]·[latestMonth].
 @Riverpod(keepAlive: true)
 class SelectedMonth extends _$SelectedMonth {
   @override
@@ -21,7 +22,9 @@ class SelectedMonth extends _$SelectedMonth {
   }
 
   void next() {
-    final thisMonth = firstOfMonth(ref.read(clockProvider)());
-    if (state.isBefore(thisMonth)) state = addMonths(state, 1);
+    if (state.isBefore(latestMonth(ref.read(clockProvider)()))) state = addMonths(state, 1);
   }
+
+  /// 페이저가 스와이프로 옮긴 달.
+  void select(DateTime month) => state = firstOfMonth(month);
 }

@@ -16,15 +16,12 @@ MonthState buildMonthState({
   final today = dateOnly(now);
   final start = firstOfMonth(month);
   firstRecordDate = effectiveFirstRecordDate(firstRecordDate, now);
-  final thisMonth = firstOfMonth(today);
   final byDate = recordsByDate(records);
 
   final editableFrom = earliestMonday(firstRecordDate, today);
   final cells = [for (final d in calendarDays(start)) _cell(d, byDate, start, today, editableFrom, rules)];
   return MonthState(
     month: start,
-    canGoPrev: start.isAfter(earliestMonth(firstRecordDate, today)),
-    canGoNext: start.isBefore(thisMonth),
     weeks: [for (var i = 0; i < cells.length; i += 7) cells.sublist(i, i + 7)],
   );
 }
