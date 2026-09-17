@@ -255,10 +255,12 @@ DateTime? expectedClockOut(WorkRecord today, int todayShare, WorkRules rules) {
 
 // ---- 기록 누락 ----
 
-/// 첫 기록 주의 월요일 ~ 어제의 평일 중 기록이 없거나, 출퇴근이 필요한 유형인데 하나라도 빈 날. 오래된 순 —
+/// 어제까지의 평일 중 기록이 없거나, 출퇴근이 필요한 유형인데 하나라도 빈 날. 오래된 순 —
 /// 채우는 순서가 시간 순이고, 오래된 누락일수록 잊히기 쉽다.
-/// 시작이 첫 기록일이 아니라 그 주 월요일인 이유: 첫 주는 채우게 할 것이고(편집 가능 범위와 같다),
-/// 채우면 첫 기록일이 당겨져 첫 주 예외가 풀린다. 월요일에 시작했다면 차이가 없다.
+///
+/// 시작점은 **첫 기록 주 안에 있는 동안은 그 주 월요일, 그 뒤로는 첫 기록일**. 첫 기록 전 날들은 첫 주에만
+/// "채워볼래요?"로 보여주고(채우면 첫 기록일이 당겨져 첫 주 예외가 풀린다), 그 주가 지나면 설치 전 날짜로 취급해
+/// 더 조르지 않는다 — 첫 주는 목표가 없어 그 날들이 어떤 계산에도 쓰이지 않기 때문이다.
 List<DateTime> unrecordedWeekdays({
   required List<WorkRecord> records,
   required DateTime today,
@@ -269,7 +271,9 @@ List<DateTime> unrecordedWeekdays({
   final end = dateOnly(today);
   final result = <DateTime>[];
 
-  var cursor = mondayOf(firstRecordDate);
+  final first = dateOnly(firstRecordDate);
+  final inFirstWeek = mondayOf(end) == mondayOf(first);
+  var cursor = inFirstWeek ? mondayOf(first) : first;
   while (cursor.isBefore(end)) {
     if (!isWeekend(cursor)) {
       final r = byDate[cursor];

@@ -322,10 +322,18 @@ void main() {
       expect(unrecordedWeekdays(records: r, today: d(16), firstRecordDate: d(14)), isEmpty);
     });
 
-    test('첫 기록 주는 월요일부터 — 첫 기록일이 수요일이면 월·화가 누락으로 잡힌다', () {
+    test('첫 기록 주 안에서는 월요일부터 — 첫 기록일이 수요일이면 월·화가 누락으로 잡힌다', () {
       expect(
         unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)),
         [d(14), d(15)],
+      );
+    });
+
+    test('첫 주가 지나면 첫 기록 전 날들은 더 조르지 않는다 — 첫 기록일 이후만', () {
+      // 첫 기록 9/16(수), 오늘 9/22(화). 14·15는 빠지고, 17·18·21만.
+      expect(
+        unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(22), firstRecordDate: d(16)),
+        [d(17), d(18), d(21)],
       );
     });
 

@@ -17,7 +17,7 @@ abstract final class TodayTexts {
   static const revert = '되돌리기';
   static const record = '기록하기 →';
   static const firstWeekNotice =
-      '첫 기록을 시작하시는군요! 환영합니다.\n이번 주는 목표 없이 기록한 시간만 보여드려요.\n아래 기록 안 된 날을 모두 채우면 이번 주 목표 시간이 계산돼요.';
+      '첫 기록을 시작하시는군요! 환영합니다.\n아래 기록 안 된 날을 모두 채우면 이번 주 목표 시간이 계산돼요.\n채우지 않아도 다음 주부터는 자동으로 계산되니 걱정하지 않으셔도 돼요.';
   static const summaryLabels = ['출근', '퇴근', '근무', '기준 대비'];
 
   static String heroLabel(TodayState s) =>
@@ -62,7 +62,7 @@ abstract final class TodayTexts {
   }
 
   static const weekendNote = '주말 근무는 주 40시간에 포함되지 않아요';
-  static const firstWeekNote = '기록 안 된 날을 채우면 목표 시간이 계산돼요';
+  static const firstWeekNote = '이번 주 기록 안 된 날을 채워주세요';
   static const firstDay = '자, 이번주 시작해볼까요?';
   static const lastDayFriday = '드디어 금요일! 오늘도 힘내세요';
   static const lastDay = '이번 주 마지막 날! 오늘도 힘내세요';
