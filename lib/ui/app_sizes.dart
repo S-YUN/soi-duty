@@ -47,9 +47,8 @@ abstract final class AppSizes {
   static double get badgeBorder => 1.w;
 
   // 4칸 요약
-  static double get summaryRadius => 12.w;
-  static EdgeInsets get summaryCellPadding => EdgeInsets.symmetric(vertical: 10.w, horizontal: 4.w);
-  static double get summaryValueTop => 3.w;
+  static EdgeInsets get summaryCellPadding => EdgeInsets.symmetric(vertical: 12.w, horizontal: 4.w);
+  static double get summaryValueTop => 6.w;
   static double get summaryDivider => 1.w;
 
   // 체크박스

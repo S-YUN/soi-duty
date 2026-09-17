@@ -45,10 +45,9 @@ class StatusBlock extends StatelessWidget {
           Text(TodayTexts.workingLine(state), style: AppTextStyles.body, textAlign: TextAlign.center, maxLines: 1),
         ];
       case TodayScreenState.done:
+        // 제목 없이 요약만 — "오늘 퇴근 완료"는 아래 버튼이 이미 말한다.
         final delta = state.todayDelta;
         return [
-          Text(TodayTexts.doneTitle, style: AppTextStyles.reason, textAlign: TextAlign.center),
-          gap,
           SummaryRow(
             labels: TodayTexts.summaryLabels,
             values: [

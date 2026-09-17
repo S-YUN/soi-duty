@@ -7,7 +7,6 @@ import 'today_state.dart';
 abstract final class TodayTexts {
   static const tabs = ['오늘', '주간', '월간'];
   static const beforeWork = '아직 출근 전';
-  static const doneTitle = '오늘 기록 완료';
   static const halfDay = '오늘은 반차';
   static const dayOff = '오늘은 연차';
   static const holiday = '오늘은 공휴일';
@@ -17,7 +16,7 @@ abstract final class TodayTexts {
   static const revert = '되돌리기';
   static const record = '기록하기 →';
   static const firstWeekNotice =
-      '첫 기록을 시작하시는군요! 환영합니다.\n아래 기록 안 된 날을 모두 채우면 이번 주 목표 시간이 계산돼요.\n채우지 않아도 다음 주부터는 자동으로 계산되니 걱정하지 않으셔도 돼요.';
+      '첫 기록을 시작하시는군요! 환영합니다.\n기록 안 된 날을 모두 채우면 이번 주 목표 시간이 계산돼요.\n채우지 않아도 다음 주부터는 자동으로 계산됩니다.';
   static const summaryLabels = ['출근', '퇴근', '근무', '기준 대비'];
 
   static String heroLabel(TodayState s) =>
