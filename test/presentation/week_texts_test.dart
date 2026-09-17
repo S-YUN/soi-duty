@@ -18,38 +18,36 @@ void main() {
         monday: monday ?? d(14),
       );
 
-  test('이번 주 근거: 남은 시간 · 반차 차감 · 주말 제외', () {
+  test('이번 주: 실적 / 그 주 목표 · 반차 개수 (주말은 실적에 안 들어감)', () {
     final s = build([
       rec(14, inH: 9, outH: 18), // 8h
       rec(15, inH: 13, outH: 18, type: WorkType.halfDay), // 5h
       rec(19, inH: 10, outH: 14, outM: 30),
     ]);
-    expect(WeekTexts.summaryLabel(s), '이번 주 누적');
+    expect(WeekTexts.summaryLabel(s), '이번 주 근무 통계');
     expect(WeekTexts.summaryValue(s), '13h');
     expect(WeekTexts.summaryGoal(s), '/ 36h');
-    expect(WeekTexts.summaryReason(s, rules), '남은 23h · 반차 1회 · 주말 4h 30m 제외');
+    expect(WeekTexts.summaryDetail(s), '반차 1');
   });
 
-  test('지난 주 부족·초과·딱 맞음', () {
-    final short = build([for (var day = 7; day <= 11; day++) rec(day, inH: 9, outH: 17)], monday: d(7));
-    expect(WeekTexts.summaryLabel(short), '주간 누적');
-    expect(WeekTexts.summaryReason(short, rules), '5h 부족');
-    final over = build([for (var day = 7; day <= 11; day++) rec(day, inH: 9, outH: 19)], monday: d(7));
-    expect(WeekTexts.summaryReason(over, rules), '5h 초과');
-    final exact = build([for (var day = 7; day <= 11; day++) rec(day, inH: 9, outH: 18)], monday: d(7));
-    expect(WeekTexts.summaryReason(exact, rules), '딱 맞음');
-  });
-
-  test('이번 주 목표 달성', () {
-    final s = build([for (var day = 14; day <= 16; day++) rec(day, inH: 8, outH: 23)], now: d(16, 23, 30));
-    expect(WeekTexts.summaryReason(s, rules), startsWith('목표 달성 · +'));
+  test('연·반·공이 다 있으면 연차 · 반차 · 공휴일 순, 없으면 빈 줄', () {
+    final s = build([
+      rec(14, type: WorkType.dayOff),
+      rec(15, inH: 13, outH: 18, type: WorkType.halfDay),
+      rec(16, type: WorkType.holiday),
+    ]);
+    expect(WeekTexts.summaryDetail(s), '연차 1 · 반차 1 · 공휴일 1');
+    expect(WeekTexts.summaryGoal(s), '/ 20h');
+    final plain = build([for (var day = 7; day <= 11; day++) rec(day, inH: 9, outH: 17)], monday: d(7));
+    expect(WeekTexts.summaryLabel(plain), '주간 근무 통계');
+    expect(WeekTexts.summaryDetail(plain), '');
   });
 
   test('첫 주 예외', () {
     final s = build([rec(16, inH: 9)], first: d(16));
     expect(WeekTexts.summaryLabel(s), '이번 주 기록한 시간');
     expect(WeekTexts.summaryGoal(s), '');
-    expect(WeekTexts.summaryReason(s, rules), '9월 16일 수요일부터 기록 · 목표 없음');
+    expect(WeekTexts.summaryDetail(s), '9월 16일 수요일부터 기록 · 목표 없음');
   });
 
   test('행 문구', () {

@@ -1,7 +1,6 @@
 import '../../core/presentation/format/date_format.dart';
 import '../../core/presentation/format/time_format.dart';
 import '../../domain/model/work_type.dart';
-import '../../domain/rules/work_rules.dart';
 import 'week_state.dart';
 
 /// 주간 화면의 모든 문구. 숫자(WeekState) → 문자열은 여기서만.
@@ -14,7 +13,7 @@ abstract final class WeekTexts {
 
   static String summaryLabel(WeekState s) {
     if (s.summary.isFirstWeekException) return '이번 주 기록한 시간';
-    return s.isCurrentWeek ? '이번 주 누적' : '주간 누적';
+    return s.isCurrentWeek ? '이번 주 근무 통계' : '주간 근무 통계';
   }
 
   static String summaryValue(WeekState s) => formatHm(s.summary.workedMinutes);
@@ -25,32 +24,18 @@ abstract final class WeekTexts {
     return target == null ? none : '/ ${formatHm(target)}';
   }
 
-  static String summaryReason(WeekState s, WorkRules rules) {
+  /// 목표 아래 한 줄. 첫 주 예외면 왜 목표가 없는지, 아니면 그 주의 연차·반차·공휴일 개수 (없으면 빈 문자열).
+  static String summaryDetail(WeekState s) {
     final w = s.summary;
     if (w.isFirstWeekException) {
       final first = s.firstRecordDate;
       return first == null ? '목표 없음' : '${formatDateTitle(first)}부터 기록 · 목표 없음';
     }
-    final remaining = w.remainingMinutes ?? 0;
-    final parts = <String>[];
-    if (s.isCurrentWeek) {
-      parts.add(remaining > 0 ? '남은 ${formatHm(remaining)}' : '목표 달성 · ${formatSignedHm(-remaining)}');
-    } else if (remaining > 0) {
-      parts.add('${formatHm(remaining)} 부족');
-    } else if (remaining < 0) {
-      parts.add('${formatHm(-remaining)} 초과');
-    } else {
-      parts.add('딱 맞음');
-    }
-    if (w.halfDayCount > 0) parts.add('반차 ${w.halfDayCount}회');
-    if (w.dayOffCount > 0) {
-      parts.add('연차 ${w.dayOffCount}일로 목표 ${formatHm(w.dayOffCount * rules.dayOffCreditMinutes)} 차감');
-    }
-    if (w.holidayCount > 0) {
-      parts.add('공휴일 ${w.holidayCount}일로 목표 ${formatHm(w.holidayCount * rules.dayOffCreditMinutes)} 차감');
-    }
-    if (s.weekendMinutes > 0) parts.add('주말 ${formatHm(s.weekendMinutes)} 제외');
-    return parts.join(' · ');
+    return [
+      if (w.dayOffCount > 0) '연차 ${w.dayOffCount}',
+      if (w.halfDayCount > 0) '반차 ${w.halfDayCount}',
+      if (w.holidayCount > 0) '공휴일 ${w.holidayCount}',
+    ].join(' · ');
   }
 
   /// 진행률 0..1. 첫 주 예외면 null.

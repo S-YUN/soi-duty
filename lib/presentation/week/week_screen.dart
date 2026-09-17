@@ -72,7 +72,7 @@ class WeekView extends StatelessWidget {
             padding: AppSizes.bodyPadding.copyWith(bottom: AppSizes.bodyPadding.bottom + bottomInset),
             child: Column(
               children: [
-                WeekSummaryCard(state: state, rules: rules),
+                WeekSummaryCard(state: state),
                 SizedBox(height: AppSizes.cardGap),
                 // 행이 카드 폭을 꽉 채운다 — 카드 자체 패딩 없이 radius로 잘라낸다.
                 Container(

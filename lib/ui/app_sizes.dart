@@ -26,7 +26,6 @@ abstract final class AppSizes {
 
   // 히어로
   static double get heroValueTop => 8.w;
-  static double get heroReasonTop => 9.w;
   static double get progressBarTop => 18.w;
   static double get progressBar => 6.w;
 

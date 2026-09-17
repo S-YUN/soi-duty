@@ -43,6 +43,8 @@ abstract final class AppTextStyles {
   static TextStyle get bodyInk => _style(14.5, FontWeight.w400);
   static TextStyle get bodyParagraph => _style(14.5, FontWeight.w400, height: 1.55, color: AppColors.subtle);
   static TextStyle get label => _style(13, FontWeight.w500, color: AppColors.subtle);
+  /// 오늘·주간 첫 카드의 제목 ("이번 주 남은 근무시간", "이번 주 근무 통계")
+  static TextStyle get cardTitle => _style(16, FontWeight.w600, letterSpacingEm: -0.01, color: AppColors.subtle);
   static TextStyle get reason => _style(13.5, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get caption => _style(13.5, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get captionMedium => _style(13.5, FontWeight.w500, color: AppColors.subtle);

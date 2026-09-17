@@ -1,4 +1,3 @@
-import '../../core/presentation/format/date_format.dart';
 import '../../core/presentation/format/time_format.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_rules.dart';
@@ -18,38 +17,15 @@ abstract final class TodayTexts {
   static const revert = '되돌리기';
   static const record = '기록하기 →';
   static const firstWeekNotice =
-      '첫 기록일이 월요일이 아니라 이번 주는 목표를 세우지 않아요. 기록한 시간만 그대로 보여드립니다. 다음 주부터 주 40시간 기준으로 계산돼요.';
+      '첫 기록을 시작하시는군요! 환영합니다.\n첫 주는 기록한 시간만 그대로 보여드립니다.\n다음 주부터 주 40시간 기준으로 계산돼요.';
   static const summaryLabels = ['출근', '퇴근', '근무', '기준 대비'];
 
   static String heroLabel(TodayState s) =>
-      s.isFirstWeek ? '이번 주 기록한 시간' : '이번 주 남은 시간';
+      s.isFirstWeek ? '이번 주 기록한 시간' : '이번 주 남은 근무시간';
 
   static String heroValue(TodayState s) => formatHm(
     s.isFirstWeek ? s.week.workedMinutes : (s.week.remainingMinutes ?? 0),
   );
-
-  static String heroReason(TodayState s, WorkRules rules) {
-    if (s.isFirstWeek) {
-      final first = s.firstRecordDate;
-      return first == null ? '' : '${formatDateTitle(first)}부터 기록';
-    }
-    final w = s.week;
-    final parts = [
-      '${formatHm(w.workedMinutes)} / ${formatHm(w.targetMinutes ?? 0)}',
-    ];
-    if (w.halfDayCount > 0) parts.add('반차 ${w.halfDayCount}회');
-    if (w.dayOffCount > 0) {
-      parts.add(
-        '연차 ${w.dayOffCount}일로 목표 ${formatHm(w.dayOffCount * rules.dayOffCreditMinutes)} 차감',
-      );
-    }
-    if (w.holidayCount > 0) {
-      parts.add(
-        '공휴일 ${w.holidayCount}일로 목표 ${formatHm(w.holidayCount * rules.dayOffCreditMinutes)} 차감',
-      );
-    }
-    return parts.join(' · ');
-  }
 
   /// 진행률 0..1. 첫 주 예외면 null (바를 그리지 않는다).
   static double? progress(TodayState s) {
@@ -74,7 +50,8 @@ abstract final class TodayTexts {
   static String encouragement(TodayState s, WorkRules rules) {
     if (s.isWeekend) return weekendNote;
     if (s.isFirstWeek) return firstWeekNote;
-    if (s.isLastWorkday) return s.date.weekday == DateTime.friday ? lastDayFriday : lastDay;
+    if (s.isLastWorkday)
+      return s.date.weekday == DateTime.friday ? lastDayFriday : lastDay;
     if (s.isFirstWorkday) return firstDay;
     final share = s.todayShareMinutes;
     if (share == null || s.isHalfDay) return onPace;

@@ -13,26 +13,25 @@ void main() {
 
   test('히어로: 정상 주', () {
     final s = buildTodayState(records: past, firstRecordDate: d(7), now: d(16, 12), rules: rules);
-    expect(TodayTexts.heroLabel(s), '이번 주 남은 시간');
+    expect(TodayTexts.heroLabel(s), '이번 주 남은 근무시간');
     expect(TodayTexts.heroValue(s), '24h');
-    expect(TodayTexts.heroReason(s, rules), '12h / 36h · 반차 1회');
     expect(TodayTexts.progress(s), closeTo(720 / 2160, 0.0001));
   });
 
-  test('히어로: 연차 문구', () {
+  test('히어로: 연차가 있으면 잔여와 진행률이 줄어든 목표 기준', () {
     final s = buildTodayState(
       records: [rec(14, inH: 9, outH: 18), rec(16, type: WorkType.dayOff)],
       firstRecordDate: d(7),
       now: d(16, 12),
       rules: rules,
     );
-    expect(TodayTexts.heroReason(s, rules), '8h / 32h · 연차 1일로 목표 8h 차감');
+    expect(TodayTexts.heroValue(s), '24h'); // 32h − 8h
+    expect(TodayTexts.progress(s), closeTo(480 / 1920, 0.0001));
   });
 
   test('히어로: 첫 주 예외', () {
     final s = buildTodayState(records: [rec(16, inH: 9)], firstRecordDate: d(16), now: d(16, 12), rules: rules);
     expect(TodayTexts.heroLabel(s), '이번 주 기록한 시간');
-    expect(TodayTexts.heroReason(s, rules), '9월 16일 수요일부터 기록');
     expect(TodayTexts.progress(s), isNull);
   });
 

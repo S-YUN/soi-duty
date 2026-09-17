@@ -38,7 +38,7 @@ class TodayView extends StatelessWidget {
             padding: AppSizes.bodyPadding.copyWith(bottom: AppSizes.bodyPadding.bottom + bottomInset),
             child: Column(
               children: [
-                HeroCard(state: state, rules: rules),
+                HeroCard(state: state),
                 SizedBox(height: AppSizes.cardGap),
                 StatusCard(state: state, rules: rules, callbacks: callbacks),
                 if (state.isFirstWeek) ...[
