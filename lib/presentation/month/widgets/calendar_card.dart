@@ -85,13 +85,12 @@ class _CellState extends State<_Cell> {
     };
   }
 
-  /// 숫자 색. 원 위에서는 유형 글자색/잉크, 아니면 평일 subtle · 주말 적갈색, 미래·다른 달·설치 전은 흐리게.
+  /// 숫자 색. 원 위에서는 유형 글자색/잉크, 아니면 평일 subtle · 주말 적갈색. 미래도 같은 색 — 원 유무로 충분히 구분된다.
+  /// (다른 달·설치 전은 셀 전체 투명도로 흐려진다.)
   Color _numColor(MonthCell cell, {required bool onCircle}) {
     if (onCircle && cell.type != null) return AppColors.typeColors(cell.type!).$2;
     if (onCircle) return AppColors.ink;
-    final dim = cell.isFuture; // 다른 달·설치 전은 셀 전체 투명도로 흐려진다
-    if (cell.isWeekend) return dim ? AppColors.calendarWeekendNumDim : AppColors.calendarWeekendNum;
-    return dim ? AppColors.dotInactive : AppColors.subtle;
+    return cell.isWeekend ? AppColors.calendarWeekendNum : AppColors.subtle;
   }
 
   @override
@@ -140,7 +139,7 @@ class _CellState extends State<_Cell> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: circle,
-                  border: cell.isToday ? Border.all(color: AppColors.brand, width: AppSizes.calendarTodayRing) : null,
+                  border: cell.isToday ? Border.all(color: AppColors.calendarTodayRing, width: AppSizes.calendarTodayRing) : null,
                 ),
                 child: Text(
                   '${cell.date.day}',

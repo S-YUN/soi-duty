@@ -79,11 +79,11 @@ abstract final class AppTextStyles {
   static TextStyle rowValue(Color color) => _style(13.5, FontWeight.w500, color: color);
 
   // 월간
-  static TextStyle get calendarHeader => _style(10.5, FontWeight.w400, color: AppColors.subtle);
-  /// 원 안의 날짜 숫자. 원이 있으면 유형색/잉크로 진하게, 없으면 subtle, 미래·다른 달은 dim.
+  static TextStyle get calendarHeader => _style(12.5, FontWeight.w500, color: AppColors.subtle);
+  /// 원 안의 날짜 숫자. 원이 있으면 유형색/잉크로 진하게, 없으면 subtle. 흐림은 셀 투명도가 맡는다.
   static TextStyle calendarNum(Color color, {required bool onCircle}) =>
       _style(12, onCircle ? FontWeight.w600 : FontWeight.w400, color: color);
-  static TextStyle get calendarHeaderWeekend => _style(10.5, FontWeight.w400, color: AppColors.calendarWeekendNum);
+  static TextStyle get calendarHeaderWeekend => _style(12.5, FontWeight.w500, color: AppColors.calendarWeekendNum);
   static TextStyle calendarValue(Color color) => _style(11.5, FontWeight.w500, color: color);
   static TextStyle get calendarWeekendValue => _style(11, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get legend => _style(11.5, FontWeight.w400, color: AppColors.subtle);
