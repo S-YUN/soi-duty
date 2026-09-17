@@ -134,6 +134,17 @@ abstract final class AppSizes {
   static EdgeInsets get sheetNoteMargin => EdgeInsets.fromLTRB(0, 12.w, 0, 4.w);
   static double get sheetNoteRadius => 11.w;
   static EdgeInsets get chipsMargin => EdgeInsets.fromLTRB(0, 14.w, 0, 4.w);
+
+  // 미래 날짜 시트 — 유형 행 목록
+  static double get sheetSubtitleTop => 6.w;
+  static double get typeRowsTop => 18.w;
+  static double get typeRow => 52.w;
+  static double get typeRowRadius => 14.w;
+  static EdgeInsets get typeRowPadding => EdgeInsets.symmetric(horizontal: 16.w);
+  static double get typeRowGap => 8.w;
+  static double get typeRowDot => 13.w;
+  static double get typeRowDotGap => 12.w;
+  static double get typeRowCheck => 18.w;
   static double get chipGap => 7.w;
   static EdgeInsets get chipPadding => EdgeInsets.symmetric(vertical: 11.w);
   static double get chipRadius => 11.w;

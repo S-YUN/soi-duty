@@ -17,6 +17,7 @@ class CalcLine {
 /// 시간 수정 시트의 모든 문구.
 abstract final class RecordEditTexts {
   static const weekendNote = '주말 근무는 주 40시간에 포함되지 않아요';
+  static const futureNote = '미리 지정해두면 그 주 목표 시간이 자동으로 계산돼요';
   static const clockIn = '출근';
   static const clockOut = '퇴근';
   static const clockInTitle = '출근 시각';
@@ -34,7 +35,8 @@ abstract final class RecordEditTexts {
   static const pm = '오후';
   static const dash = '—';
 
-  static String title(RecordDraft d) => formatDateTitle(d.date);
+  /// 미래는 "9월 17일", 나머지는 "9월 17일 목요일".
+  static String title(RecordDraft d) => d.isFuture ? formatMonthDay(d.date) : formatDateTitle(d.date);
 
   static String chipLabel(WorkType t) => switch (t) {
         WorkType.halfDay => '반차',

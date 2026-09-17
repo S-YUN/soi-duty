@@ -17,6 +17,7 @@ import 'widgets/calc_rows.dart';
 import 'widgets/time_row.dart';
 import 'widgets/time_wheel.dart';
 import 'widgets/type_chips.dart';
+import 'widgets/type_rows.dart';
 
 /// 네 진입점(오늘 시간 수정 · 누락 리스트 · 주간 행 · 월간 셀)이 공유하는 시트.
 Future<void> showRecordEditSheet(BuildContext context, DateTime date) {
@@ -167,7 +168,13 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                   ),
                 ),
               ),
-            if (draft.showsTypeChips)
+            // 미래 날짜는 유형만 고르는 자리 — 안내 한 줄 + 전체 너비 행. 과거는 시각 행 위의 칩.
+            if (draft.isFuture && draft.showsTypeChips) ...[
+              SizedBox(height: AppSizes.sheetSubtitleTop),
+              _inset(Text(RecordEditTexts.futureNote, style: AppTextStyles.sheetSubtitle)),
+              SizedBox(height: AppSizes.typeRowsTop),
+              _inset(TypeRows(selected: draft.type, onChanged: (t) => _onTypeChanged(draft, t))),
+            ] else if (draft.showsTypeChips)
               _inset(
                 Padding(
                   padding: AppSizes.chipsMargin,

@@ -10,6 +10,7 @@ import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/presentation/record_edit/record_edit_sheet.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/time_wheel.dart';
+import 'package:soi_duty/presentation/record_edit/widgets/type_rows.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/fonts.dart';
@@ -123,10 +124,31 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('미래 날짜는 시각 행이 없다', (tester) async {
+  testWidgets('미래 날짜는 시각 행 없이 유형 행 3개, 탭하면 바로 저장·닫힘, 다시 열면 체크', (tester) async {
     await pumpSheet(tester, d(23));
+    expect(find.text('9월 23일'), findsOneWidget);
+    expect(find.text('미리 지정해두면 그 주 목표 시간이 자동으로 계산돼요'), findsOneWidget);
     expect(find.text('출근'), findsNothing);
-    expect(find.text('연차'), findsOneWidget);
+    expect(find.text('저장'), findsNothing);
+    expect(find.byType(TypeRows), findsOneWidget);
+    double checkOpacity(String label) => tester
+        .widget<AnimatedOpacity>(find.descendant(
+          of: find.ancestor(of: find.text(label), matching: find.byType(GestureDetector)).first,
+          matching: find.byType(AnimatedOpacity),
+        ))
+        .opacity;
+    expect(checkOpacity('연차'), 0);
+
+    await tester.tap(find.text('연차'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RecordEditSheet), findsNothing);
+    expect((await db.select(db.workRecords).get()).single.type, WorkType.dayOff);
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(checkOpacity('연차'), 1);
+    expect(checkOpacity('반차'), 0);
+    expect(find.text('이 날 기록 지우기'), findsOneWidget);
     await unmount(tester);
   });
 
