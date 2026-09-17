@@ -104,7 +104,13 @@ class _WeekDayRowState extends State<WeekDayRow> {
             SizedBox(width: AppSizes.rowGap),
             SizedBox(
               width: AppSizes.rowValueWidth,
-              child: Text(WeekTexts.value(day), style: AppTextStyles.rowValue(valueColor), textAlign: TextAlign.right),
+              child: Text(
+                WeekTexts.value(day),
+                style: AppTextStyles.rowValue(valueColor),
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                softWrap: false,
+              ),
             ),
           ],
         ),

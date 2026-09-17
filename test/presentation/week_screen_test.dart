@@ -6,6 +6,8 @@ import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/week/week_screen.dart';
 import 'package:soi_duty/presentation/week/week_state_builder.dart';
 import 'package:soi_duty/presentation/week/widgets/week_day_row.dart';
+import 'package:soi_duty/ui/app_colors.dart';
+import 'package:soi_duty/ui/app_text_styles.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/fonts.dart';
@@ -26,7 +28,7 @@ void main() {
 
     final state = buildWeekState(
       records: [
-        rec(14, inH: 9, inM: 5, outH: 18, outM: 36),
+        rec(14, inH: 9, inM: 5, outH: 21, outM: 1), // +2h 56m — 한 줄에 들어가야 한다
         rec(15, type: WorkType.holiday),
         rec(16, inH: 9, inM: 12),
         rec(19, inH: 10, outH: 14, outM: 30),
@@ -47,6 +49,8 @@ void main() {
 
     final heights = tester.widgetList(find.byType(WeekDayRow)).map((w) => tester.getSize(find.byWidget(w)).height).toSet();
     expect(heights.length, 1, reason: '행 높이: $heights');
+    final valueLine = AppTextStyles.rowValue(AppColors.ink).fontSize! * 1.6;
+    expect(tester.getSize(find.text('+2h 56m')).height, lessThan(valueLine), reason: '± 값이 한 줄에 들어가야 한다');
     expect(find.text('9월 3째주'), findsOneWidget);
 
     await tester.tap(find.text('근무 중'));

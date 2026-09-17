@@ -95,7 +95,8 @@ abstract final class AppSizes {
   static EdgeInsets get rowPadding => EdgeInsets.symmetric(vertical: 13.w, horizontal: 18.w);
   static double get rowGap => 12.w;
   static double get rowDateWidth => 30.w;
-  static double get rowValueWidth => 58.w;
+  /// "+2h 56m"까지 한 줄에.
+  static double get rowValueWidth => 76.w;
   static double get rowNoteMinHeight => 16.w;
   static double get rowNoteTop => 3.w;
   static double get rowDowTop => 1.w;
