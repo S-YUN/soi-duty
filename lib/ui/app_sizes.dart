@@ -83,7 +83,7 @@ abstract final class AppSizes {
   // 기간 네비게이터
   static EdgeInsets get navPadding => EdgeInsets.fromLTRB(20.w, 16.w, 20.w, 14.w);
   static double get navArrow => 40.w;
-  static double get navLabelMinWidth => 186.w;
+  static double get navLabelMinWidth => 140.w;
   static double get navGap => 4.w;
 
   // 주간 누적 카드
