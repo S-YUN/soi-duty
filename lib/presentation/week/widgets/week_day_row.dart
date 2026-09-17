@@ -26,6 +26,7 @@ class _WeekDayRowState extends State<WeekDayRow> {
     final day = widget.day;
     final weekend = day.date.weekday >= DateTime.saturday;
     final badge = WeekTexts.badge(day);
+    final main = WeekTexts.main(day);
     final delta = day.deltaMinutes;
 
     final mainStyle = switch (day.kind) {
@@ -78,9 +79,10 @@ class _WeekDayRowState extends State<WeekDayRow> {
                 children: [
                   Row(
                     children: [
-                      Text(WeekTexts.main(day), style: mainStyle, maxLines: 1),
+                      // 비어 있어도 그려서 줄 높이를 유지한다 — 배지만 있는 연차·공휴일 행이 낮아지지 않게.
+                      Text(main, style: mainStyle, maxLines: 1),
                       if (badge != null) ...[
-                        SizedBox(width: AppSizes.rowBadgeGap),
+                        if (main.isNotEmpty) SizedBox(width: AppSizes.rowBadgeGap),
                         TypeTag(
                           type: badge,
                           label: WeekTexts.badgeLabel(badge),

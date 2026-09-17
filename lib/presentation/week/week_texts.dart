@@ -64,7 +64,8 @@ abstract final class WeekTexts {
         WeekDayKind.recorded || WeekDayKind.weekendRecorded => formatHm(day.actualMinutes ?? 0),
         WeekDayKind.working => '근무 중',
         WeekDayKind.unrecorded || WeekDayKind.partial => '기록 없음',
-        WeekDayKind.off || WeekDayKind.future || WeekDayKind.beforeWork || WeekDayKind.weekendEmpty => dash,
+        WeekDayKind.off => none, // 연차·공휴일은 배지만
+        WeekDayKind.future || WeekDayKind.beforeWork || WeekDayKind.weekendEmpty => dash,
       };
 
   static String note(WeekDay day) {

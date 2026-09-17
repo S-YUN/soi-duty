@@ -63,7 +63,7 @@ void main() {
     expect(WeekTexts.main(day(14)), '8h 31m');
     expect(WeekTexts.note(day(14)), '09:05 – 18:36');
     expect(WeekTexts.value(day(14)), '+31m');
-    expect(WeekTexts.main(day(15)), '—');
+    expect(WeekTexts.main(day(15)), ''); // 연차·공휴일은 배지만
     expect(WeekTexts.note(day(15)), '근무 없음');
     expect(WeekTexts.main(day(16)), '근무 중');
     expect(WeekTexts.note(day(16)), '09:12 출근');
