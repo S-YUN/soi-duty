@@ -50,7 +50,8 @@ abstract final class TodayTexts {
   static String encouragement(TodayState s, WorkRules rules) {
     if (s.isWeekend) return weekendNote;
     if (s.isFirstWeek) return firstWeekNote;
-    if (s.isLastWorkday) return s.date.weekday == DateTime.friday ? lastDayFriday : lastDay;
+    if (s.isLastWorkday)
+      return s.date.weekday == DateTime.friday ? lastDayFriday : lastDay;
     if (s.isFirstWorkday) return firstDay;
     final share = s.todayShareMinutes;
     if (share == null || s.isHalfDay) return onPace;
