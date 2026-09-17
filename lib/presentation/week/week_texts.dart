@@ -7,6 +7,10 @@ import 'week_state.dart';
 abstract final class WeekTexts {
   static const dash = '—';
   static const none = '';
+
+  /// 출퇴근이 덜 찍힌 오늘을 탭했을 때. 연차·공휴일로 찍힌 오늘은 되돌리기 안내.
+  static String todayInProgressToast(WeekDay day) =>
+      day.kind == WeekDayKind.off ? '오늘 연차·공휴일은 오늘 탭에서 되돌릴 수 있어요' : '오늘 기록은 퇴근한 뒤에 수정할 수 있어요';
   static const _dow = ['월', '화', '수', '목', '금', '토', '일'];
 
   static String dow(DateTime d) => _dow[d.weekday - DateTime.monday];

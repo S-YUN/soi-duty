@@ -167,10 +167,17 @@ abstract final class AppSizes {
   static double get pill => 999.w;
   static Offset get shadowOffset => Offset(0, 1.w);
   static double get shadowBlur => 2.w;
+
+  // 토스트 — 화면 아래 알약
+  static double get toastBottom => 28.w;
+  static double get toastHPadding => 24.w;
+  static EdgeInsets get toastPadding => EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.w);
 }
 
 /// 애니메이션 시간. 핸드오프 Interactions 표.
 abstract final class AppDurations {
+  static const toast = Duration(milliseconds: 2400);
+  static const toastFade = Duration(milliseconds: 220);
   static const progressBar = Duration(milliseconds: 400);
   static const checkbox = Duration(milliseconds: 150);
   static const buttonColor = Duration(milliseconds: 200);
@@ -184,6 +191,8 @@ abstract final class AppDurations {
 abstract final class AppScales {
   static const buttonPressed = 0.985;
   static const rowPressed = 0.99;
+  /// 토스트가 떠오르는 거리 — 자기 높이 대비.
+  static const toastSlide = 0.35;
 }
 
 abstract final class AppCurves {

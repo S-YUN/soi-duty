@@ -72,6 +72,13 @@ int? deltaMinutes(WorkRecord r, WorkRules rules) {
   return actual - standardMinutes(r.type, rules);
 }
 
+/// 오늘인데 출근·퇴근이 다 찍히지 않은 날. 오늘 기록은 오늘 화면 버튼이 맡으므로 시트에서 편집하지 않는다.
+/// 퇴근까지 찍힌 오늘은 다른 날처럼 편집할 수 있다. 연차·공휴일로 찍힌 오늘도 오늘 화면(되돌리기)이 맡는다.
+bool isTodayInProgress(WorkRecord? record, DateTime date, DateTime today) {
+  if (dateOnly(date) != dateOnly(today)) return false;
+  return record?.clockIn == null || record?.clockOut == null;
+}
+
 /// 둘 다 있을 때 퇴근이 출근보다 이르면 무효. 자정 넘김은 지원하지 않는다.
 bool isValidClockRange(DateTime? clockIn, DateTime? clockOut) {
   if (clockIn == null || clockOut == null) return true;

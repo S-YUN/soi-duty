@@ -43,6 +43,12 @@ void main() {
     await driver.waitFor(find.text('2026년 9월'));
     await driver.waitUntilNoTransientCallbacks();
 
+    // 퇴근 전 오늘을 탭하면 시트 대신 토스트
+    await driver.tap(find.text('${DateTime.now().day}'));
+    // (driver.screenshot()은 오버레이 토스트를 못 담아 스크린샷은 생략)
+    await driver.waitFor(find.text('오늘 기록은 퇴근한 뒤에 수정할 수 있어요'));
+    await driver.waitForAbsent(find.text('오늘 기록은 퇴근한 뒤에 수정할 수 있어요'));
+
     // 셀 탭 → 시트 → 출근 행 → 휠
     await driver.tap(find.text('14'));
     await driver.waitFor(find.text('저장'));

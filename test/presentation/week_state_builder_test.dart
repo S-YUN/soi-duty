@@ -40,6 +40,8 @@ void main() {
     expect(day(s, 14).actualMinutes, 511);
     expect(day(s, 14).deltaMinutes, 31);
     expect(day(s, 15).kind, WeekDayKind.off);
+    expect(day(s, 16).isTodayInProgress, isTrue); // 오늘, 출근만
+    expect(day(s, 15).isTodayInProgress, isFalse);
     expect(day(s, 16).kind, WeekDayKind.working);
     expect(day(s, 17).kind, WeekDayKind.future);
     expect(day(s, 18).kind, WeekDayKind.future); // 미래 반차 — 배지는 record.type으로

@@ -10,6 +10,12 @@ abstract final class MonthTexts {
 
   static String title(DateTime month) => formatMonthTitle(month);
 
+  /// 출퇴근이 덜 찍힌 오늘을 탭했을 때. 연차·공휴일로 찍힌 오늘은 되돌리기 안내.
+  static String todayInProgressToast(MonthCell cell) =>
+      cell.type == WorkType.dayOff || cell.type == WorkType.holiday
+          ? '오늘 연차·공휴일은 오늘 탭에서 되돌릴 수 있어요'
+          : '오늘 기록은 퇴근한 뒤에 수정할 수 있어요';
+
   static String value(MonthCellValue v) => switch (v) {
         MonthCellNone() => '',
         MonthCellDelta(:final minutes) => formatSignedHm(minutes),

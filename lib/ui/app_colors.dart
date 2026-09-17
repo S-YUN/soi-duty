@@ -42,6 +42,7 @@ abstract final class AppColors {
   static const calendarWorked = Color(0xFFEFF1EC); // 일반 근무일 (주말 포함)
   static const calendarWeekendNum = Color(0xFF9C5F50); // 토·일 헤더·숫자
   static const scrim = Color(0x6B16191A); // rgba(22,25,26,.42)
+  static const toastBackground = Color(0xE616191A); // ink 90%
   static const sheetShadow = Color(0x2E16191A); // rgba(22,25,26,.18)
 
   // 그림자·글로우 (알파 포함)

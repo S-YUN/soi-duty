@@ -114,6 +114,8 @@ abstract final class AppTextStyles {
   static TextStyle get sheetButtonSecondary => _style(15, FontWeight.w600, color: AppColors.subtle);
   static TextStyle get deleteLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
 
+  static TextStyle get toast => _style(13.5, FontWeight.w500, color: AppColors.onBrand);
+
   // 확인 다이얼로그
   static TextStyle get dialogTitle => _style(16, FontWeight.w600);
   static TextStyle get dialogMessage => _style(14, FontWeight.w400, height: 1.5, color: AppColors.subtle);

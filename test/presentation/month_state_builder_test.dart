@@ -26,6 +26,8 @@ void main() {
     expect(cell(s, DateTime(2026, 8, 31)).isCurrentMonth, isFalse);
     expect(cell(s, d(1)).isCurrentMonth, isTrue);
     expect(cell(s, d(16)).isToday, isTrue);
+    expect(cell(s, d(16)).isTodayInProgress, isTrue); // 기록 없음
+    expect(cell(s, d(15)).isTodayInProgress, isFalse);
   });
 
   test('값 판정', () {

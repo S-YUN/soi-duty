@@ -26,6 +26,8 @@ abstract class WeekDay with _$WeekDay {
     int? actualMinutes,
     int? deltaMinutes,
     required bool isToday,
+    /// 오늘인데 출퇴근이 덜 찍힘 — 탭해도 시트 대신 안내만.
+    required bool isTodayInProgress,
   }) = _WeekDay;
 }
 

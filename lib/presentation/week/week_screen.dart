@@ -9,10 +9,12 @@ import '../../ui/app_decorations.dart';
 import '../../ui/app_sizes.dart';
 import '../../ui/app_text_styles.dart';
 import '../record_edit/record_edit_sheet.dart';
+import '../shared/app_toast.dart';
 import '../shared/period_navigator.dart';
 import 'selected_week.dart';
 import 'week_provider.dart';
 import 'week_state.dart';
+import 'week_texts.dart';
 import 'widgets/week_day_row.dart';
 import 'widgets/week_summary_card.dart';
 
@@ -30,7 +32,12 @@ class WeekScreen extends ConsumerWidget {
       data: (state) => WeekView(
         state: state,
         rules: rules,
-        onDayTap: (date) => showRecordEditSheet(context, date),
+        onDayTap: (date) {
+          final day = state.days.firstWhere((d) => d.date == date);
+          // 오늘은 오늘 화면 버튼이 찍는다. 퇴근까지 찍히기 전엔 시트 대신 안내만.
+          if (day.isTodayInProgress) return showAppToast(context, WeekTexts.todayInProgressToast(day));
+          showRecordEditSheet(context, date);
+        },
         onPrev: selected.prev,
         onNext: selected.next,
       ),

@@ -60,5 +60,6 @@ WeekDay _day(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime today, Wo
     actualMinutes: hasBoth ? actualMinutes(r!, rules) : null,
     deltaMinutes: kind == WeekDayKind.recorded ? deltaMinutes(r!, rules) : null,
     isToday: isToday,
+    isTodayInProgress: isTodayInProgress(r, date, today),
   );
 }

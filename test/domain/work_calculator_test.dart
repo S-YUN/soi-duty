@@ -149,6 +149,13 @@ void main() {
       expect(s.workedMinutes, 480 + 240 + 0 + 0 + 480);
     });
 
+    test('미리 찍은 미래 반차·연차도 그 주 목표에 바로 반영된다 (월요일 시점, 금요일 반차)', () {
+      final s = week([rec(14, inH: 9, outH: 18), rec(18, type: WorkType.halfDay)], now: d(14, 19));
+      expect(s.targetMinutes, 2400 - 240); // 36h
+      expect(s.remainingMinutes, 2160 - 480);
+      expect(s.halfDayCount, 1);
+    });
+
     test('기록이 없는 평일은 normal로 간주해 목표 8h 유지', () {
       final s = week([rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18)]);
       expect(s.targetMinutes, 2400);
@@ -362,6 +369,15 @@ void main() {
     });
     test('2026-08: 6주', () => expect(calendarDays(DateTime(2026, 8)).length, 42));
     test('2027-02: 2/1 월요일, 28일 → 딱 4주', () => expect(calendarDays(DateTime(2027, 2)).length, 28));
+  });
+
+  test('isTodayInProgress: 오늘이고 출퇴근이 덜 찍혔을 때만', () {
+    expect(isTodayInProgress(null, d(16), d(16, 12)), isTrue);
+    expect(isTodayInProgress(rec(16, inH: 9), d(16), d(16, 12)), isTrue);
+    expect(isTodayInProgress(rec(16, type: WorkType.dayOff), d(16), d(16, 12)), isTrue);
+    expect(isTodayInProgress(rec(16, inH: 9, outH: 18), d(16), d(16, 12)), isFalse);
+    expect(isTodayInProgress(null, d(15), d(16, 12)), isFalse); // 어제
+    expect(isTodayInProgress(null, d(17), d(16, 12)), isFalse); // 내일
   });
 
   test('addMonths는 해를 넘긴다', () {

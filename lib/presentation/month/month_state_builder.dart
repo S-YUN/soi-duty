@@ -61,6 +61,7 @@ MonthCell _cell(
     date: date,
     isCurrentMonth: isCurrentMonth,
     isToday: date == today,
+    isTodayInProgress: isTodayInProgress(r, date, today),
     isWeekend: weekend,
     isFuture: future,
     isBeforeFirstWeek: beforeFirstWeek,
