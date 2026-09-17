@@ -20,6 +20,7 @@ class TodayCallbacks {
     required this.onDayTypeChanged,
     required this.onRevert,
     required this.onEditTime,
+    required this.onEditClockIn,
     required this.onCancelClockIn,
     required this.onCancelClockOut,
     required this.onUnrecordedTap,
@@ -32,6 +33,8 @@ class TodayCallbacks {
   final ValueChanged<WorkType?> onDayTypeChanged;
   final VoidCallback onRevert;
   final VoidCallback onEditTime;
+  /// 근무 중 출근 시각만 고치는 작은 시트. 퇴근 후의 [onEditTime](전체 시트)과 다르다.
+  final VoidCallback onEditClockIn;
   final VoidCallback onCancelClockIn;
   final VoidCallback onCancelClockOut;
   final ValueChanged<DateTime> onUnrecordedTap;
@@ -59,7 +62,7 @@ class StatusCard extends StatelessWidget {
       decoration: AppDecorations.card,
       child: Column(
         children: [
-          StatusBlock(state: state, rules: rules),
+          StatusBlock(state: state, rules: rules, onHalfDayChanged: callbacks.onHalfDayChanged),
           PrimaryButton(label: TodayTexts.buttonLabel(state), onPressed: _primaryAction),
           SizedBox(height: AppSizes.secondarySlotGap - AppSizes.secondarySlotHitInset),
           // 레이아웃 높이 자체를 44(minTapHeight)로 잡아 히트 영역을 진짜로 확보한다.
@@ -99,16 +102,10 @@ class StatusCard extends StatelessWidget {
           ],
         );
       case TodayScreenState.working:
-        final cancel = QuietTextButton(label: TodayTexts.cancelClockIn, onTap: callbacks.onCancelClockIn);
-        if (state.isWeekend) return cancel;
+        // 반차 체크는 상태 블록(출근 시각 아래)으로 올라갔다. 여기는 출근 시각 손보기 둘.
         return _pair(
-          SoiCheckbox(
-            label: TodayTexts.halfDay,
-            checked: state.isHalfDay,
-            onChanged: callbacks.onHalfDayChanged,
-            shape: SoiCheckShape.square,
-          ),
-          cancel,
+          QuietTextButton(label: TodayTexts.editClockIn, onTap: callbacks.onEditClockIn),
+          QuietTextButton(label: TodayTexts.cancelClockIn, onTap: callbacks.onCancelClockIn),
         );
       case TodayScreenState.done:
         return _pair(

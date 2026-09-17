@@ -55,6 +55,18 @@ void main() {
     expect(s.clockIn, now);
   });
 
+  test('setClockIn → 출근 시각만 바뀌고 반차·날짜는 유지', () async {
+    await notifier().clockIn();
+    await waitFor((s) => s.phase == TodayPhase.working);
+    await notifier().setHalfDay(true);
+    await waitFor((s) => s.isHalfDay);
+    await notifier().setClockIn(DateTime(2000, 1, 1, 8, 50)); // 날짜는 무시, 시분만
+    final s = await waitFor((s) => s.clockIn == d(16, 8, 50));
+    expect(s.phase, TodayPhase.working);
+    expect(s.isHalfDay, isTrue);
+    expect(s.record!.date, d(16));
+  });
+
   test('clockOut → 퇴근 완료', () async {
     await notifier().clockIn();
     await waitFor((s) => s.phase == TodayPhase.working);

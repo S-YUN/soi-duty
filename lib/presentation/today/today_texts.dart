@@ -11,6 +11,10 @@ abstract final class TodayTexts {
   static const dayOff = '오늘은 연차';
   static const holiday = '오늘은 공휴일';
   static const editTime = '시간 수정';
+  static const editClockIn = '출근 변경';
+  static const clockInSheetTitle = '출근 시각';
+  static const clockInTooLate = '지금보다 늦을 수 없어요';
+  static const save = '저장';
   static const cancelClockIn = '출근 취소';
   static const cancelClockOut = '퇴근 취소';
   static const revert = '되돌리기';

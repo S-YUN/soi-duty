@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/providers/clock_provider.dart';
 import '../../core/providers/database_providers.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_text_styles.dart';
@@ -9,6 +10,7 @@ import '../debug/seed_picker_sheet.dart';
 import '../record_edit/record_edit_sheet.dart';
 import 'today_controller.dart';
 import 'today_view.dart';
+import 'widgets/clock_in_edit_sheet.dart';
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -35,6 +37,7 @@ class TodayScreen extends ConsumerWidget {
           onCancelClockIn: controller.cancelClockIn,
           onCancelClockOut: controller.cancelClockOut,
           onEditTime: () => showRecordEditSheet(context, state.date),
+          onEditClockIn: () => showClockInEditSheet(context, state.clockIn!, ref.read(clockProvider)),
           onUnrecordedTap: (date) => showRecordEditSheet(context, date),
           onDateLongPress: kDebugMode ? () => showSeedPicker(context, ref) : null,
         ),

@@ -36,6 +36,12 @@ class TodayController extends _$TodayController {
 
   Future<void> revert() => setDayType(null);
 
+  /// 근무 중 출근 시각만 고친다 (늦게 찍은 출근 보정). 날짜는 오늘로 고정, 시분만 받는다.
+  Future<void> setClockIn(DateTime clockIn) => _saveToday((r, now) {
+        final t = DateTime(r.date.year, r.date.month, r.date.day, clockIn.hour, clockIn.minute);
+        return r.copyWith(clockIn: t);
+      });
+
   /// 근무 중 → 출근 전. 실수로 찍은 출근을 없던 일로 — 반차 체크도 함께 풀린다 (기록 삭제).
   Future<void> cancelClockIn() async {
     final today = dateOnly(ref.read(clockProvider)());
