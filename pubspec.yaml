@@ -46,12 +46,15 @@ dev_dependencies:
   flutter_driver:
     sdk: flutter
   test: ^1.31.1
+  # 네이티브 스플래시 생성: dart run flutter_native_splash:create
+  flutter_native_splash: ^2.4.8
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
+    - assets/splash/
 
   fonts:
     - family: Pretendard
@@ -62,6 +65,17 @@ flutter:
           weight: 500
         - asset: assets/fonts/Pretendard-SemiBold.otf
           weight: 600
+
+# 네이티브 스플래시 생성: dart run flutter_native_splash:create
+# 배경·로고를 인앱 SplashGate와 똑같이 맞춰 첫 프레임까지 이어져 보이게 한다 (핸드오프 3 스플래시).
+flutter_native_splash:
+  color: "#1B473A"
+  image: assets/splash/logo.png # 756px = 3x 기준 폭 252
+  ios_content_mode: center
+  android_gravity: center
+  android_12:
+    color: "#1B473A"
+    image: assets/splash/mark_android12.png # 원형 마스크라 워드마크 없는 마크만
 
 # 아이콘 원본은 assets/icon/ (핸드오프 규칙: #1B473A 배경 + 투명 로고 78%).
 # Android adaptive 전경은 원형 마스크 안전 영역 때문에 62%로 따로 합성했다.

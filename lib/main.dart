@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/presentation/size_config.dart';
 import 'core/routing/router.dart';
+import 'presentation/splash/splash_gate.dart';
 import 'ui/app_theme.dart';
 
 Future<void> main() async {
@@ -26,7 +27,7 @@ class SoiDutyApp extends ConsumerWidget {
         SizeConfig.init(MediaQuery.sizeOf(context).width);
         return MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.0,
-          child: KeyedSubtree(key: ValueKey(SizeConfig.scale), child: child!),
+          child: KeyedSubtree(key: ValueKey(SizeConfig.scale), child: SplashGate(child: child!)),
         );
       },
     );

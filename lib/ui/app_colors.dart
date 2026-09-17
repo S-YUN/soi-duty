@@ -17,6 +17,10 @@ abstract final class AppColors {
   static const brandPressed = Color(0xFF24483E);
   static const brandDeep = Color(0xFF1B473A);
   static const mint = Color(0xFF9FD3B4);
+  // 스플래시 (딥그린 위)
+  static const splashBackground = brandDeep;
+  static const splashText = Color(0xFFC9D8CE);
+  static const splashBarTrack = Color(0x33F4F6F3); // onBrand 20%
   static const onBrand = Color(0xFFF4F6F3);
   static const buttonDisabled = Color(0xFFEDEFEA);
   static const minus = Color(0xFFA8503F);

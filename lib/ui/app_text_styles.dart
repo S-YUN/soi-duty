@@ -117,6 +117,7 @@ abstract final class AppTextStyles {
   static TextStyle get sheetButtonSecondary => _style(15, FontWeight.w600, color: AppColors.subtle);
   static TextStyle get deleteLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
 
+  static TextStyle get splashCaption => _style(11.5, FontWeight.w400, letterSpacingEm: 0.06, color: AppColors.splashText);
   static TextStyle get toast => _style(13.5, FontWeight.w500, color: AppColors.onBrand);
 
   // 확인 다이얼로그

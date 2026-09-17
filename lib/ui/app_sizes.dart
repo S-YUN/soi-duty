@@ -179,6 +179,13 @@ abstract final class AppSizes {
   static Offset get shadowOffset => Offset(0, 1.w);
   static double get shadowBlur => 2.w;
 
+  // 스플래시
+  static double get splashLogoWidth => 252.w;
+  static double get splashBottom => 64.w;
+  static double get splashGap => 14.w;
+  static double get splashBarWidth => 96.w;
+  static double get splashBarHeight => 4.w;
+
   // 토스트 — 화면 아래 알약
   static double get toastBottom => 28.w;
   static double get toastHPadding => 24.w;
@@ -188,6 +195,10 @@ abstract final class AppSizes {
 /// 애니메이션 시간. 핸드오프 Interactions 표.
 abstract final class AppDurations {
   static const toast = Duration(milliseconds: 2400);
+  static const splashFade = Duration(milliseconds: 200);
+  /// 이보다 빨리 준비되면 대기 바·문구를 아예 안 보여준다 (번쩍임 방지).
+  static const splashBarDelay = Duration(milliseconds: 200);
+  static const splashBar = Duration(milliseconds: 1600);
   static const toastFade = Duration(milliseconds: 220);
   static const progressBar = Duration(milliseconds: 400);
   static const checkbox = Duration(milliseconds: 150);
