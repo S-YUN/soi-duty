@@ -52,7 +52,7 @@ void main() {
   test('상태 문구: 첫 주 근무 중 — 퇴근 추천 없음', () {
     final s = buildTodayState(records: [rec(16, inH: 9, inM: 12)], firstRecordDate: d(16), now: d(16, 12), rules: rules);
     expect(TodayTexts.workingLine(s), '2시간 48분째 근무중');
-    expect(TodayTexts.encouragement(s, rules), '기록 안 된 날을 채우면 이번 주도 목표가 계산돼요');
+    expect(TodayTexts.encouragement(s, rules), '기록 안 된 날을 채우면 목표 시간이 계산돼요');
   });
 
   test('상태 문구: 이미 채웠으면 시각 대신 안내', () {
