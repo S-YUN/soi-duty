@@ -16,6 +16,12 @@ String formatSignedHm(int minutes) {
   return formatHm(minutes);
 }
 
+/// 공백 없는 좁은 칸용. 442 → "7h22m". 월간 캘린더 셀(폭 43 남짓)에서 "7h 22m"은 뒤가 잘린다.
+String formatCompactHm(int minutes) => formatHm(minutes).replaceAll(' ', '');
+
+/// 공백 없는 기준 대비. 232 → "+3h52m".
+String formatSignedCompactHm(int minutes) => formatSignedHm(minutes).replaceAll(' ', '');
+
 String formatClock(DateTime t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 

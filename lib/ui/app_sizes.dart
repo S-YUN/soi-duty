@@ -115,7 +115,8 @@ abstract final class AppSizes {
   static double get calendarCircle => 30.w;
   static double get calendarCellGap => 5.w;
   static double get calendarRowGap => 4.w;
-  static double get calendarColGap => 3.w;
+  /// 셀 폭을 조금이라도 넓혀 "+3h52m" 같은 값이 온전히 들어가게 한다 (측정 기준 44.4 > 44.3).
+  static double get calendarColGap => 2.w;
   static EdgeInsets get legendPadding => EdgeInsets.fromLTRB(6.w, 2.w, 6.w, 0);
   static double get legendChip => 13.w;
   static double get legendChipGap => 6.w;

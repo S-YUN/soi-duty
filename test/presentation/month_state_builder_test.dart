@@ -56,7 +56,8 @@ void main() {
     expect(MonthTexts.value(const MonthCellValue.delta(-15)), '−15m');
     expect(MonthTexts.value(const MonthCellValue.working()), '···');
     expect(MonthTexts.value(const MonthCellValue.unrecorded()), '—');
-    expect(MonthTexts.value(const MonthCellValue.weekendActual(270)), '4h 30m');
+    expect(MonthTexts.value(const MonthCellValue.weekendActual(270)), '4h30m');
+    expect(MonthTexts.value(const MonthCellValue.delta(232)), '+3h52m'); // 좁은 셀이라 공백 없음
     expect(MonthTexts.value(const MonthCellValue.none()), '');
   });
 

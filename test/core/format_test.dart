@@ -3,6 +3,16 @@ import 'package:soi_duty/core/presentation/format/date_format.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
 
 void main() {
+  test('formatCompactHm / formatSignedCompactHm — 좁은 칸용, 공백 없음', () {
+    expect(formatCompactHm(442), '7h22m');
+    expect(formatCompactHm(2160), '36h');
+    expect(formatCompactHm(22), '22m');
+    expect(formatSignedCompactHm(232), '+3h52m');
+    expect(formatSignedCompactHm(-65), '−1h5m');
+    expect(formatSignedCompactHm(31), '+31m');
+    expect(formatSignedCompactHm(0), '0m');
+  });
+
   test('formatHm', () {
     expect(formatHm(442), '7h 22m');
     expect(formatHm(2160), '36h');

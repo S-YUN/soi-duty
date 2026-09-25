@@ -7,6 +7,9 @@ import '../../../ui/app_text_styles.dart';
 import '../month_state.dart';
 import '../month_texts.dart';
 
+/// 캘린더 셀의 키. `test_driver`가 같은 규칙으로 만들어 셀을 찾는다.
+String calendarCellKey(DateTime date) => 'cell-${date.year}-${date.month}-${date.day}';
+
 /// 카드 A — 캘린더. 월요일 시작 7열. 날짜 숫자 뒤 원 색이 곧 유형(범례와 같은 색). 오늘 표시는 따로 없다.
 class CalendarCard extends StatelessWidget {
   const CalendarCard({super.key, required this.state, required this.onCellTap});
@@ -48,7 +51,12 @@ class CalendarCard extends StatelessWidget {
                       for (var c = 0; c < 7; c++) ...[
                         if (c > 0) SizedBox(width: AppSizes.calendarColGap),
                         Expanded(
-                          child: _Cell(cell: state.weeks[r][c], onTap: () => onCellTap(state.weeks[r][c].date)),
+                          child: _Cell(
+                            // 스모크 드라이브가 날짜로 셀을 집는다 — 하드코딩한 날짜 숫자는 오늘이 바뀌면 깨진다.
+                            key: ValueKey(calendarCellKey(state.weeks[r][c].date)),
+                            cell: state.weeks[r][c],
+                            onTap: () => onCellTap(state.weeks[r][c].date),
+                          ),
                         ),
                       ],
                     ],
@@ -64,7 +72,7 @@ class CalendarCard extends StatelessWidget {
 }
 
 class _Cell extends StatefulWidget {
-  const _Cell({required this.cell, required this.onTap});
+  const _Cell({super.key, required this.cell, required this.onTap});
 
   final MonthCell cell;
   final VoidCallback onTap;
@@ -144,7 +152,11 @@ class _CellState extends State<_Cell> {
               ),
               if (text.isNotEmpty) ...[
                 SizedBox(height: AppSizes.calendarCellGap),
-                Text(text, style: valueStyle, maxLines: 1, overflow: TextOverflow.clip, softWrap: false),
+                // 공백을 뺀 표기도 셀을 넘는 드문 값("+12h30m")은 잘리는 대신 조금 줄어든다.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(text, style: valueStyle, maxLines: 1, softWrap: false),
+                ),
               ],
             ],
           ),

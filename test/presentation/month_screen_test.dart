@@ -5,7 +5,10 @@ import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/month/month_screen.dart';
 import 'package:soi_duty/presentation/month/month_state_builder.dart';
+import 'package:soi_duty/presentation/month/widgets/calendar_card.dart';
 import 'package:soi_duty/ui/app_colors.dart';
+import 'package:soi_duty/ui/app_sizes.dart';
+import 'package:soi_duty/ui/app_text_styles.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/fonts.dart';
@@ -65,5 +68,41 @@ void main() {
     expect(circleOf('16').border, isNull); // 오늘 표시는 따로 없다
     await tester.tap(find.text('+31m'));
     expect(tapped, d(14));
+  });
+
+  testWidgets('긴 값(+3h52m)도 셀 안에 들어간다 — 뒤가 잘리지 않는다', (tester) async {
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    SizeConfig.init(393);
+
+    final state = buildMonthState(
+      records: [rec(14, inH: 9, outH: 21, outM: 52)], // 12h − 1h 점심 − 8h = +3h 52m
+      firstRecordDate: DateTime(2026, 8, 20),
+      now: d(16, 12),
+      rules: rules,
+      month: DateTime(2026, 9),
+    );
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSizes.screenHPadding),
+          child: CalendarCard(state: state, onCellTap: (_) {}),
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final value = find.text('+3h52m');
+    expect(value, findsOneWidget);
+    // 그려진 글자 폭이 자연 폭과 같아야 한다 — 잘리거나 줄어들지 않았다는 뜻.
+    final painted = tester.getRect(value).width;
+    final natural = (TextPainter(
+      text: TextSpan(text: '+3h52m', style: AppTextStyles.calendarValue(AppColors.brand)),
+      textDirection: TextDirection.ltr,
+    )..layout())
+        .width;
+    expect(painted, closeTo(natural, 0.5), reason: '그려진 $painted / 자연 $natural');
   });
 }
