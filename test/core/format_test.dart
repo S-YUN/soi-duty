@@ -3,14 +3,14 @@ import 'package:soi_duty/core/presentation/format/date_format.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
 
 void main() {
-  test('formatCompactHm / formatSignedCompactHm — 좁은 칸용, 공백 없음', () {
-    expect(formatCompactHm(442), '7h22m');
-    expect(formatCompactHm(2160), '36h');
-    expect(formatCompactHm(22), '22m');
-    expect(formatSignedCompactHm(232), '+3h52m');
-    expect(formatSignedCompactHm(-65), '−1h5m');
-    expect(formatSignedCompactHm(31), '+31m');
-    expect(formatSignedCompactHm(0), '0m');
+  test('formatNarrowHm / formatSignedNarrowHm — 좁은 칸용, 시·분 사이가 얇은 공백', () {
+    expect(formatNarrowHm(442), '7h${narrowSpace}22m');
+    expect(formatNarrowHm(2160), '36h');
+    expect(formatNarrowHm(22), '22m');
+    expect(formatSignedNarrowHm(232), '+3h${narrowSpace}52m');
+    expect(formatSignedNarrowHm(-65), '−1h${narrowSpace}5m');
+    expect(formatSignedNarrowHm(31), '+31m');
+    expect(formatSignedNarrowHm(0), '0m');
   });
 
   test('formatHm', () {

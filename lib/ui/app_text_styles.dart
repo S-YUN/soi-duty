@@ -14,6 +14,7 @@ abstract final class AppTextStyles {
     double? letterSpacingEm,
     double? height,
     Color color = AppColors.ink,
+    bool tabularFigures = true,
   }) {
     final fontSize = size.sp;
     return TextStyle(
@@ -23,7 +24,8 @@ abstract final class AppTextStyles {
       letterSpacing: letterSpacingEm == null ? null : fontSize * letterSpacingEm,
       height: height,
       color: color,
-      fontFeatures: const [FontFeature.tabularFigures()],
+      // 고정폭 숫자가 기본 — 숫자가 바뀔 때 칸이 흔들리지 않는다. 폭이 빠듯한 곳만 해제한다.
+      fontFeatures: tabularFigures ? const [FontFeature.tabularFigures()] : const [],
     );
   }
 
@@ -88,8 +90,12 @@ abstract final class AppTextStyles {
   static TextStyle calendarNum(Color color, {required bool onCircle}) =>
       _style(12, onCircle ? FontWeight.w600 : FontWeight.w400, color: color);
   static TextStyle get calendarHeaderWeekend => _style(12.5, FontWeight.w500, color: AppColors.calendarWeekendNum);
-  static TextStyle calendarValue(Color color) => _style(11.5, FontWeight.w500, color: color);
-  static TextStyle get calendarWeekendValue => _style(11, FontWeight.w400, color: AppColors.subtle);
+  /// 캘린더 셀 값. 칸이 44남짓이라 "+3h 52m"(47.1)이 안 들어간다 — 비례 숫자 + 좁은 자간 +
+  /// 얇은 공백(formatNarrowHm)으로 43.2까지 줄여 원래 크기로 넣는다. 셀 폭을 바꾸면 다시 측정해야 한다.
+  static TextStyle calendarValue(Color color) =>
+      _style(11.5, FontWeight.w500, color: color, letterSpacingEm: -0.022, tabularFigures: false);
+  static TextStyle get calendarWeekendValue =>
+      _style(11, FontWeight.w400, color: AppColors.subtle, letterSpacingEm: -0.022, tabularFigures: false);
   static TextStyle get legend => _style(11.5, FontWeight.w400, color: AppColors.subtle);
 
   // 시간 수정 시트

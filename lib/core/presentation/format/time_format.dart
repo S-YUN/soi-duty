@@ -16,11 +16,15 @@ String formatSignedHm(int minutes) {
   return formatHm(minutes);
 }
 
-/// 공백 없는 좁은 칸용. 442 → "7h22m". 월간 캘린더 셀(폭 43 남짓)에서 "7h 22m"은 뒤가 잘린다.
-String formatCompactHm(int minutes) => formatHm(minutes).replaceAll(' ', '');
+/// 시·분 사이를 얇은 공백(U+2009)으로 — 월간 캘린더 셀(폭 44 남짓)용. 보통 공백이면 "+3h 52m"이 47.1px로
+/// 칸을 넘어 뒤가 잘린다. 얇은 공백 + [AppTextStyles.calendarValue]의 좁은 자간·비례 숫자로 43.2px에 들어간다.
+const narrowSpace = '\u2009';
 
-/// 공백 없는 기준 대비. 232 → "+3h52m".
-String formatSignedCompactHm(int minutes) => formatSignedHm(minutes).replaceAll(' ', '');
+/// 442 → "7h 22m" (얇은 공백).
+String formatNarrowHm(int minutes) => formatHm(minutes).replaceAll(' ', narrowSpace);
+
+/// 232 → "+3h 52m" (얇은 공백).
+String formatSignedNarrowHm(int minutes) => formatSignedHm(minutes).replaceAll(' ', narrowSpace);
 
 String formatClock(DateTime t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';

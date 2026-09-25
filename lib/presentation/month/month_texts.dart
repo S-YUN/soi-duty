@@ -18,8 +18,8 @@ abstract final class MonthTexts {
 
   static String value(MonthCellValue v) => switch (v) {
         MonthCellNone() => '',
-        MonthCellDelta(:final minutes) => formatSignedCompactHm(minutes),
-        MonthCellWeekendActual(:final minutes) => formatCompactHm(minutes),
+        MonthCellDelta(:final minutes) => formatSignedNarrowHm(minutes),
+        MonthCellWeekendActual(:final minutes) => formatNarrowHm(minutes),
         MonthCellWorking() => '···',
         MonthCellUnrecorded() => '—',
       };

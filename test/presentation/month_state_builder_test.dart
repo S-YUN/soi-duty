@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:soi_duty/core/presentation/format/time_format.dart';
 import 'package:soi_duty/domain/model/work_record.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
@@ -56,8 +57,8 @@ void main() {
     expect(MonthTexts.value(const MonthCellValue.delta(-15)), '−15m');
     expect(MonthTexts.value(const MonthCellValue.working()), '···');
     expect(MonthTexts.value(const MonthCellValue.unrecorded()), '—');
-    expect(MonthTexts.value(const MonthCellValue.weekendActual(270)), '4h30m');
-    expect(MonthTexts.value(const MonthCellValue.delta(232)), '+3h52m'); // 좁은 셀이라 공백 없음
+    expect(MonthTexts.value(const MonthCellValue.weekendActual(270)), '4h${narrowSpace}30m');
+    expect(MonthTexts.value(const MonthCellValue.delta(232)), '+3h${narrowSpace}52m'); // 좁은 셀이라 얇은 공백
     expect(MonthTexts.value(const MonthCellValue.none()), '');
   });
 

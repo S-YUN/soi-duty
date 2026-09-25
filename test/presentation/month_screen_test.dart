@@ -94,12 +94,12 @@ void main() {
     ));
     await tester.pump(const Duration(milliseconds: 500));
 
-    final value = find.text('+3h52m');
+    final value = find.text('+3h\u200952m');
     expect(value, findsOneWidget);
     // 그려진 글자 폭이 자연 폭과 같아야 한다 — 잘리거나 줄어들지 않았다는 뜻.
     final painted = tester.getRect(value).width;
     final natural = (TextPainter(
-      text: TextSpan(text: '+3h52m', style: AppTextStyles.calendarValue(AppColors.brand)),
+      text: TextSpan(text: '+3h\u200952m', style: AppTextStyles.calendarValue(AppColors.brand)),
       textDirection: TextDirection.ltr,
     )..layout())
         .width;
