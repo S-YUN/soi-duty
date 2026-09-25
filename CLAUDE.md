@@ -87,7 +87,9 @@
 - 반차인 날은 나눈 값을 쓰지 않고 오늘 몫을 4h로 고정한다.
 - 남은 시간이 0 이하면 이미 채운 것이다.
 - 첫 주 예외인 주에는 계산하지 않는다.
-- **아직 화면에는 띄우지 않는다.** 근무 중 상태 블록은 출근 시각과 경과 시간만 보여준다. 계산 함수만 둔다.
+- **화면에는 쓰지 않는다.** 근무 중 상태 블록은 출근 시각·경과 시간·반차 체크만 보여준다.
+  `todayShareMinutes`·`expectedClockOut`은 계산 함수와 테스트로만 남아 있고, 안내 문구 판정에만 쓰인다.
+  노출 여부는 실사용 뒤에 다시 판단한다 (2026-09-25 현재 미노출).
 
 ### 안내 문구
 
@@ -161,10 +163,12 @@
 ```dart
 class WorkRules {
   const WorkRules({
-    this.weeklyTargetMinutes   = 2400,  // 40h
-    this.lunchBreakMinutes     = 60,
-    this.halfDayCreditMinutes  = 240,   // 4h
-    this.dayOffCreditMinutes   = 480,   // 8h
+    this.weeklyTargetMinutes    = 2400,     // 40h
+    this.lunchBreakMinutes      = 60,
+    this.halfDayCreditMinutes   = 240,      // 4h
+    this.dayOffCreditMinutes    = 480,      // 8h
+    this.defaultClockInMinutes  = 8 * 60,   // 시트에서 빈 행을 열 때 휠의 시작 시각
+    this.defaultClockOutMinutes = 17 * 60,
   });
 }
 ```
@@ -216,6 +220,7 @@ class WorkRecord with _$WorkRecord {
 ### Repository
 
 Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구현이 붙을 때를 위한 것이다.
+**백업·내보내기는 아직 없다** (2026-09-25). 완전 로컬이라 앱을 지우면 기록도 사라진다 — 남은 가장 큰 공백이다.
 
 **Fake 구현체는 만들지 않는다.** Fake는 보통 UI를 미완성 데이터 소스에서 떼어놓기
 위한 것인데, Drift는 로컬이라 항상 준비돼 있고 네트워크 대기도 실패도 없다.
@@ -232,10 +237,18 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
 최소한 아래는 테스트로 고정한다.
 
 - 일반/반차/주말의 점심 공제 분기
-- 반차·연차·공휴일이 섞인 주의 목표 계산
+- 반차·연차·공휴일이 섞인 주의 목표 계산 (미리 찍은 미래 유형도 즉시 반영되는지)
 - 기록이 없는 평일이 목표에 8h로 잡히는지
 - 주말 근무가 주간 집계에서 빠지는지
 - 첫 주 예외 판정 (월요일 시작 여부)
+- 기록 누락 범위 (첫 주는 월요일부터, 그 주가 지나면 첫 기록일부터) 와 오래된 순 정렬
+- `isTodayInProgress` — 퇴근 전 오늘만 편집 잠금
+
+레이아웃도 어긋나기 쉬운 곳만 고정한다. 글꼴·간격 토큰을 바꾸면 여기서 먼저 터진다.
+
+- 주간 7행의 높이가 모두 같은지 (메모 유무로 1px씩 어긋나던 자리)
+- 월간 캘린더 값이 잘리거나 축소되지 않는지 — 기기 폭 320~600 8종에서 그려진 폭 = 자연 폭
+- 오늘 화면 네 상태(출근 전·근무 중·퇴근 완료·연차/공휴일)의 카드 높이가 같은지
 
 스모크 드라이브: `flutter drive --flavor dev --target test_driver/app.dart -d <시뮬레이터 ID>` —
 드라이버 진입점이 '두 달치 기록' 시드를 넣고 오늘/주간/월간/시트를 눌러 `docs/screenshots/`에 스크린샷을 남긴다
@@ -268,7 +281,7 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
 - 색상, 텍스트 스타일, 사이즈 등을 하드코딩하지 않는다. 전부 `ui/` 토큰(`AppColors`·`AppTextStyles`·`AppSizes`).
 - 토스트는 `presentation/shared/app_toast.dart`(자체 오버레이, 브랜드색 반투명 알약). SnackBar·패키지 토스트를 쓰지 않는다.
 
-### 핸드오프와 다르게 확정한 화면 (2026-09-18)
+### 핸드오프와 다르게 확정한 화면 (2026-09-18 ~ 25)
 
 시각 표현은 디자인 핸드오프가 기준이지만, 아래는 실사용 후 사용자가 직접 바꾼 것이라 핸드오프보다 우선한다.
 
@@ -284,8 +297,14 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
   (미리 찍은 유형만 색 원). 토·일 헤더·숫자는 적갈색.
 - **미래 날짜 시트**: 제목 "9월 24일" → 안내 한 줄 → 색 점·라벨·체크가 있는 전체 너비 행 3개. 선택 행 배경 `#DDE8E1`,
   라벨은 선택 여부와 무관(잉크 w500) — 상태는 배경과 브랜드색 체크가 말한다.
-- **글자 크기**: 오늘 요약 라벨·안내, 시트 안내·계산 내역, 확인 다이얼로그, 캘린더 요일 헤더는 핸드오프보다 1~2 키웠다.
+- **오늘 근무 중**: 상태 블록은 "09:12 출근" + "7시간 15분째 근무중"만. 보조 슬롯이 "☐ 오늘 반차 · 출근 변경 · 출근 취소" 셋.
+- **오늘 퇴근 완료**: "오늘 기록 완료" 제목 없이 요약 4칸만 — 배경 박스 없이 1px 구분선, 값 18.
+  제목은 버튼("오늘 퇴근 완료")이 이미 말한다.
+- **글자 크기**: 핸드오프 표보다 전반적으로 키웠다 (실기기에서 작게 느껴져서, 2026-09-18·25 두 번에 걸쳐).
+  상태 블록 본문 16 · 안내 15, 오늘 요약 라벨 13 / 값 18, 주간 메모 13 · 요일 12.5 · ± 15 · 근거 13.5 · 배지 12,
+  캘린더 요일 헤더 12.5 · 날짜 13, 범례 12.5, 시트 칩 13.5 · 휠 제목 13, 확인 다이얼로그 16/14.
   기간 네비게이터 화살표는 18(히트 영역 40), 라벨 최소 너비 140.
+  **가장 작은 글자는 캘린더 값 11.5** — 칸 폭(44px) 한계라 더 키우면 잘린다.
 - **스플래시**: 핸드오프 3의 딥그린 `#1B473A` + 로고 폭 252. 로고 등장 애니메이션과 대기 바는 인앱 스플래시를 빼면서 같이 뺐다.
 
 
@@ -299,8 +318,9 @@ Clean Architecture, 단일 패키지. DI는 Riverpod 프로바이더가 겸한�
 lib/
 ├─ main.dart                 ProviderScope + MaterialApp.router
 ├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치 — PageView 컨테이너, 스와이프 전환), route_paths.dart
-├─ core/presentation/        SizeConfig, 공용 위젯
-├─ ui/                       색상·타이포 토큰
+├─ core/presentation/        SizeConfig, format/(date_format·time_format)
+├─ core/providers/           clock(디버그 시계·매 분 now), database, workRules
+├─ ui/                       색상·타이포·사이즈 토큰
 ├─ domain/model/             WorkRecord, WorkType (freezed)
 ├─ domain/rules/             WorkRules + 계산 함수 (순수 Dart, 테스트 1순위)
 ├─ domain/repository/        Repository 인터페이스
@@ -311,7 +331,9 @@ lib/
 ├─ presentation/shared/      기간 네비게이터, 토스트(app_toast), 확인 다이얼로그 등 공용 위젯
 ├─ presentation/splash/      NativeSplashHold — 오늘 상태 준비까지 네이티브 스플래시 유지
 ├─ presentation/record_edit/ 시간 수정 시트 (오늘·주간·월간·누락 리스트가 공유). 미래 날짜는 type_rows, 과거는 type_chips
-└─ presentation/<feature>/   @riverpod Notifier + Screen (today / week / month)
+├─ presentation/debug/       시드·시계 이동 시트 (kDebugMode에서만 진입)
+└─ presentation/<feature>/   @riverpod Notifier/Provider + Screen + <feature>_texts + <feature>_state(_builder)
+                             (today / week / month). 오늘 화면의 '출근 변경' 시트는 today/widgets/clock_in_edit_sheet
 assets/images/, assets/fonts/, assets/icon/(앱 아이콘 원본), assets/splash/(네이티브 스플래시 원본 — 번들에는 안 넣는다)
 ```
 
@@ -319,7 +341,9 @@ assets/images/, assets/fonts/, assets/icon/(앱 아이콘 원본), assets/splash
   재생성: `dart run flutter_native_splash:create`, `dart run flutter_launcher_icons`. 로고는 투명 PNG로만 관리하고
   배경색은 설정에서 채운다 (핸드오프 3).
 
-- `domain/`에는 `package:flutter` import 금지.
+- `domain/`에는 `package:flutter` import 금지. `presentation/`은 `data/`를 직접 import하지 않는다 (프로바이더로만).
+- 화면은 순수 위젯(`TodayView`·`WeekView`·`MonthView`)과 프로바이더를 읽는 `*Screen`으로 나눈다 — 위젯 테스트가 상태만 넣어 그릴 수 있게.
+- 문구는 `<feature>_texts.dart`에서만 조립한다. 위젯 안에 한국어 문자열을 두지 않는다.
 - 코드젠: `dart run build_runner build --delete-conflicting-outputs`
 - `riverpod_lint`는 pubspec이 아니라 `analysis_options.yaml`의 `plugins:`로 설치한다.
 
