@@ -42,7 +42,7 @@ abstract final class AppTextStyles {
   /// 상태 블록 안내 — 출근 전 격려 문구. caption(13.5)보다 한 단계 크게
   static TextStyle get statusNote => _style(15, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get summaryValue => _style(18, FontWeight.w600, letterSpacingEm: -0.01);
-  static TextStyle get summaryLabel => _style(12.5, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get summaryLabel => _style(13, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get tabSelected => _style(13, FontWeight.w600);
   static TextStyle get tabUnselected => _style(13, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get body => _style(14.5, FontWeight.w400, color: AppColors.subtle);
@@ -82,22 +82,22 @@ abstract final class AppTextStyles {
   static TextStyle get rowMainNone => _style(15, FontWeight.w400, color: AppColors.weekendNone);
   /// 메모. 줄 높이를 명시한다 — 안 하면 빈 메모(18)와 시각이 든 메모(19)의 높이가 달라져 행 높이가 1px 어긋난다.
   static TextStyle get rowNote => _style(13, FontWeight.w400, height: 1.5, color: AppColors.subtle);
-  static TextStyle rowBadge(Color color) => _style(11, FontWeight.w600, color: color);
+  static TextStyle rowBadge(Color color) => _style(12, FontWeight.w600, color: color);
   static TextStyle rowValue(Color color) => _style(15, FontWeight.w500, color: color);
 
   // 월간
   static TextStyle get calendarHeader => _style(12.5, FontWeight.w500, color: AppColors.subtle);
   /// 원 안의 날짜 숫자. 원이 있으면 유형색/잉크로 진하게, 없으면 subtle. 흐림은 셀 투명도가 맡는다.
   static TextStyle calendarNum(Color color, {required bool onCircle}) =>
-      _style(12, onCircle ? FontWeight.w600 : FontWeight.w400, color: color);
+      _style(13, onCircle ? FontWeight.w600 : FontWeight.w400, color: color);
   static TextStyle get calendarHeaderWeekend => _style(12.5, FontWeight.w500, color: AppColors.calendarWeekendNum);
   /// 캘린더 셀 값. 칸이 44남짓이라 "+3h 52m"(47.1)이 안 들어간다 — 비례 숫자 + 좁은 자간 +
   /// 얇은 공백(formatNarrowHm)으로 43.2까지 줄여 원래 크기로 넣는다. 셀 폭을 바꾸면 다시 측정해야 한다.
   static TextStyle calendarValue(Color color) =>
       _style(11.5, FontWeight.w500, color: color, letterSpacingEm: -0.022, tabularFigures: false);
   static TextStyle get calendarWeekendValue =>
-      _style(11, FontWeight.w400, color: AppColors.subtle, letterSpacingEm: -0.022, tabularFigures: false);
-  static TextStyle get legend => _style(11.5, FontWeight.w400, color: AppColors.subtle);
+      _style(11.5, FontWeight.w400, color: AppColors.subtle, letterSpacingEm: -0.022, tabularFigures: false);
+  static TextStyle get legend => _style(12.5, FontWeight.w400, color: AppColors.subtle);
 
   // 시간 수정 시트
   static TextStyle get sheetTitle => _style(16, FontWeight.w600, letterSpacingEm: -0.01);
@@ -106,7 +106,7 @@ abstract final class AppTextStyles {
   /// 선택 여부와 무관 — 상태는 행 배경과 체크가 말한다.
   static TextStyle get typeRowLabel => _style(15.5, FontWeight.w500);
   static TextStyle chip({required bool selected, required Color selectedColor}) =>
-      _style(12.5, selected ? FontWeight.w600 : FontWeight.w500, color: selected ? selectedColor : AppColors.subtle);
+      _style(13.5, selected ? FontWeight.w600 : FontWeight.w500, color: selected ? selectedColor : AppColors.subtle);
   static TextStyle get timeLabel => _style(13, FontWeight.w400, color: AppColors.subtle);
   static TextStyle timeValue({required bool selected}) => _style(
         20,
@@ -114,7 +114,7 @@ abstract final class AppTextStyles {
         letterSpacingEm: -0.01,
         color: selected ? AppColors.brand : AppColors.ink,
       );
-  static TextStyle get wheelTitle => _style(12, FontWeight.w500, color: AppColors.subtle);
+  static TextStyle get wheelTitle => _style(13, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get wheelSelected => _style(25, FontWeight.w600, letterSpacingEm: -0.02);
   static TextStyle get wheelItem =>
       _style(20, FontWeight.w500, letterSpacingEm: -0.02, color: AppColors.wheelUnselected);
