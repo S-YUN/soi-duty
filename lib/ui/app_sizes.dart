@@ -97,7 +97,8 @@ abstract final class AppSizes {
   static double get rowDateWidth => 30.w;
   /// "+2h 56m"까지 한 줄에.
   static double get rowValueWidth => 76.w;
-  static double get rowNoteMinHeight => 16.w;
+  /// 메모 줄의 고정 높이. 최소 높이로 두면 빈 메모와 글자가 든 메모의 줄 높이가 1px 달라 행이 어긋난다.
+  static double get rowNoteHeight => 20.w;
   static double get rowNoteTop => 3.w;
   static double get rowDowTop => 1.w;
   static double get rowBadgeGap => 6.w;

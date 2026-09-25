@@ -94,9 +94,12 @@ class _WeekDayRowState extends State<WeekDayRow> {
                     ],
                   ),
                   SizedBox(height: AppSizes.rowNoteTop),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: AppSizes.rowNoteMinHeight),
-                    child: Text(WeekTexts.note(day), style: AppTextStyles.rowNote, maxLines: 1),
+                  SizedBox(
+                    height: AppSizes.rowNoteHeight,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(WeekTexts.note(day), style: AppTextStyles.rowNote, maxLines: 1),
+                    ),
                   ),
                 ],
               ),

@@ -72,17 +72,18 @@ abstract final class AppTextStyles {
   // 주간
   static TextStyle get weekValue => _style(26, FontWeight.w600, letterSpacingEm: -0.03);
   static TextStyle get weekGoal => _style(17, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle get weekReason => _style(12.5, FontWeight.w400, height: 1.5, color: AppColors.subtle);
+  static TextStyle get weekReason => _style(13.5, FontWeight.w400, height: 1.5, color: AppColors.subtle);
   static TextStyle get rowNum => _style(15, FontWeight.w500, height: 1.15);
   static TextStyle get rowNumWeekend => _style(15, FontWeight.w500, height: 1.15, color: AppColors.faint);
-  static TextStyle get rowDow => _style(11.5, FontWeight.w400, color: AppColors.subtle);
-  static TextStyle get rowDowWeekend => _style(11.5, FontWeight.w400, color: AppColors.faint);
+  static TextStyle get rowDow => _style(12.5, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get rowDowWeekend => _style(12.5, FontWeight.w400, color: AppColors.faint);
   static TextStyle get rowMain => _style(15, FontWeight.w500);
   static TextStyle get rowMainDim => _style(15, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get rowMainNone => _style(15, FontWeight.w400, color: AppColors.weekendNone);
-  static TextStyle get rowNote => _style(11.5, FontWeight.w400, color: AppColors.subtle);
+  /// 메모. 줄 높이를 명시한다 — 안 하면 빈 메모(18)와 시각이 든 메모(19)의 높이가 달라져 행 높이가 1px 어긋난다.
+  static TextStyle get rowNote => _style(13, FontWeight.w400, height: 1.5, color: AppColors.subtle);
   static TextStyle rowBadge(Color color) => _style(11, FontWeight.w600, color: color);
-  static TextStyle rowValue(Color color) => _style(13.5, FontWeight.w500, color: color);
+  static TextStyle rowValue(Color color) => _style(15, FontWeight.w500, color: color);
 
   // 월간
   static TextStyle get calendarHeader => _style(12.5, FontWeight.w500, color: AppColors.subtle);
