@@ -119,6 +119,7 @@ abstract final class AppTextStyles {
   static TextStyle get wheelItem =>
       _style(20, FontWeight.w500, letterSpacingEm: -0.02, color: AppColors.wheelUnselected);
   static TextStyle get wheelColon => _style(20, FontWeight.w600);
+  static TextStyle get heroNote => _style(14, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get deductionHelp => _style(13, FontWeight.w400, height: 1.55, color: AppColors.subtle);
   static TextStyle get wheelUnit => _style(14, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get calcRow => _style(13.5, FontWeight.w400, height: 1.9);

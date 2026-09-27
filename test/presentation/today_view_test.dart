@@ -334,4 +334,15 @@ void main() {
     await tester.tap(find.text('되돌리기'));
     expect(reverted, isTrue);
   });
+
+  testWidgets('목표를 넘긴 주: 히어로에 0h와 초과 문구', (tester) async {
+    await pumpView(
+      tester,
+      stateOf([
+        for (final day in [14, 15, 16, 17]) rec(day, inH: 8, outH: 21),
+      ], now: d(20, 12)),
+    );
+    expect(find.text('0h'), findsOneWidget);
+    expect(find.text('이번 주에 8시간 더 일했어요'), findsOneWidget);
+  });
 }

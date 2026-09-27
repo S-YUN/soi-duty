@@ -29,6 +29,29 @@ void main() {
     expect(TodayTexts.progress(s), closeTo(480 / 1920, 0.0001));
   });
 
+  test('히어로: 목표를 넘기면 0h + "이번 주에 4시간 27분 더 일했어요"', () {
+    // 월·화·수 12h, 목 10h 27m → 46h 27m 근무, 목표 40h → 6h 27m 초과
+    final s = buildTodayState(
+      records: [
+        rec(14, inH: 8, outH: 21), // 12h
+        rec(15, inH: 8, outH: 21), // 12h
+        rec(16, inH: 8, outH: 21), // 12h
+        rec(17, inH: 8, outH: 19, outM: 27), // 10h 27m
+      ],
+      firstRecordDate: d(7),
+      now: d(20, 12), // 일요일
+      rules: rules,
+    );
+    expect(s.week.remainingMinutes, -387);
+    expect(TodayTexts.heroValue(s), '0h');
+    expect(TodayTexts.heroOverNote(s), '이번 주에 6시간 27분 더 일했어요');
+  });
+
+  test('히어로: 남은 시간이 있거나 딱 채웠으면 초과 문구 없음', () {
+    final s = buildTodayState(records: past, firstRecordDate: d(7), now: d(16, 12), rules: rules);
+    expect(TodayTexts.heroOverNote(s), isNull);
+  });
+
   test('히어로: 첫 주 예외', () {
     final s = buildTodayState(records: [rec(16, inH: 9)], firstRecordDate: d(16), now: d(16, 12), rules: rules);
     expect(TodayTexts.heroLabel(s), '이번 주 기록한 시간');

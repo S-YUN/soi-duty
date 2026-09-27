@@ -29,9 +29,21 @@ abstract final class TodayTexts {
   static String heroLabel(TodayState s) =>
       s.isFirstWeek ? '이번 주 기록한 시간' : '이번 주 남은 근무시간';
 
-  static String heroValue(TodayState s) => formatHm(
-    s.isFirstWeek ? s.week.workedMinutes : (s.week.remainingMinutes ?? 0),
-  );
+  /// 목표를 넘겨도 음수(−4h 27m)를 보이지 않는다 — "남은 시간 마이너스"는 읽기 어렵다. 0h + 아래 [heroOverNote].
+  static String heroValue(TodayState s) {
+    if (s.isFirstWeek) return formatHm(s.week.workedMinutes);
+    final remaining = s.week.remainingMinutes ?? 0;
+    return remaining <= 0 ? filledValue : formatHm(remaining);
+  }
+
+  static const filledValue = '0h';
+
+  /// 목표를 넘긴 주에만: "이번 주에 4시간 27분 더 일했어요". 남았거나 딱 채웠거나 첫 주면 null.
+  static String? heroOverNote(TodayState s) {
+    final remaining = s.week.remainingMinutes;
+    if (s.isFirstWeek || remaining == null || remaining >= 0) return null;
+    return '이번 주에 ${formatKoreanDuration(-remaining)} 더 일했어요';
+  }
 
   /// 진행률 0..1. 첫 주 예외면 null (바를 그리지 않는다).
   static double? progress(TodayState s) {

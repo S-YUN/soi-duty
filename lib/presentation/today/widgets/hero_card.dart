@@ -7,7 +7,8 @@ import '../../shared/progress_bar.dart';
 import '../today_state.dart';
 import '../today_texts.dart';
 
-/// 제목 → 이번 주 잔여 → 진행 바. 실적/목표 같은 세부는 주간 탭에 있으니 여기서는 숫자 하나에 집중한다.
+/// 제목 → 이번 주 잔여 → (목표를 넘긴 주만) 초과 한 줄 → 진행 바.
+/// 실적/목표 같은 세부는 주간 탭에 있으니 여기서는 숫자 하나에 집중한다.
 class HeroCard extends StatelessWidget {
   const HeroCard({super.key, required this.state});
 
@@ -16,6 +17,7 @@ class HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = TodayTexts.progress(state);
+    final overNote = TodayTexts.heroOverNote(state);
     return Container(
       width: double.infinity,
       padding: AppSizes.heroPadding,
@@ -26,6 +28,11 @@ class HeroCard extends StatelessWidget {
           Text(TodayTexts.heroLabel(state), style: AppTextStyles.cardTitle, textAlign: TextAlign.center, maxLines: 1),
           SizedBox(height: AppSizes.heroValueTop),
           Text(TodayTexts.heroValue(state), style: AppTextStyles.heroValue, textAlign: TextAlign.center, maxLines: 1),
+          // 목표를 넘긴 주에만 붙는 한 줄 — 카드가 그만큼 길어지는 건 받아들인다 (2026-09-27).
+          if (overNote != null) ...[
+            SizedBox(height: AppSizes.heroNoteTop),
+            Text(overNote, style: AppTextStyles.heroNote, textAlign: TextAlign.center, maxLines: 1),
+          ],
           SizedBox(height: AppSizes.progressBarTop),
           // 첫 주 예외에서는 바를 그리지 않지만 같은 높이를 유지한다 — 아래 버튼이 움직이지 않도록.
           SizedBox(

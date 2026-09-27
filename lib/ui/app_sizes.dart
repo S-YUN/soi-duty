@@ -25,6 +25,7 @@ abstract final class AppSizes {
   static EdgeInsets get unrecordedCardPadding => EdgeInsets.fromLTRB(16.w, 15.w, 16.w, 12.w);
 
   // 히어로
+  static double get heroNoteTop => 8.w;
   static double get heroValueTop => 8.w;
   static double get progressBarTop => 18.w;
   static double get progressBar => 6.w;
