@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../domain/model/work_record.dart';
 import '../../domain/repository/work_record_repository.dart';
+import '../../domain/rules/work_calculator.dart';
 import '../database/app_database.dart';
 
 String dateKey(DateTime d) =>
@@ -30,7 +31,9 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
       .map((row) => row == null ? null : parseDateKey(row.value));
 
   @override
-  Future<void> save(WorkRecord record) => _db.transaction(() async {
+  Future<void> save(WorkRecord input) => _db.transaction(() async {
+        // 쉬는 날의 공제·연차의 시각 같은 모순은 여기 한 곳에서 걷어낸다.
+        final record = sanitizeRecord(input);
         await _db.into(_db.workRecords).insertOnConflictUpdate(_toCompanion(record));
         final first = await (_db.select(_db.settings)..where((s) => s.key.equals(firstRecordDateKey)))
             .getSingleOrNull();
@@ -51,6 +54,8 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
         clockIn: row.clockIn,
         clockOut: row.clockOut,
         type: row.type,
+        deductionMinutes: row.deductionMinutes,
+        deductionReason: row.deductionReason,
       );
 
   static WorkRecordsCompanion _toCompanion(WorkRecord r) => WorkRecordsCompanion.insert(
@@ -58,5 +63,7 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
         clockIn: Value(r.clockIn),
         clockOut: Value(r.clockOut),
         type: r.type,
+        deductionMinutes: Value(r.deductionMinutes),
+        deductionReason: Value(r.deductionReason),
       );
 }

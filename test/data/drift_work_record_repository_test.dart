@@ -87,4 +87,13 @@ void main() {
     expect(dateKey(d(3)), '2026-09-03');
     expect(parseDateKey('2026-09-03'), d(3));
   });
+
+  test('공제·사유가 왕복되고, 연차로 저장하면 공제·시각이 지워진다', () async {
+    await repo.save(rec(14, inH: 9, outH: 15, ded: 180, reason: '조기퇴근 공문'));
+    final saved = (await repo.watchAll().first).single;
+    expect((saved.deductionMinutes, saved.deductionReason), (180, '조기퇴근 공문'));
+    await repo.save(rec(14, inH: 9, outH: 15, type: WorkType.dayOff, ded: 180, reason: 'x'));
+    final r = (await repo.watchAll().first).single;
+    expect((r.clockIn, r.deductionMinutes, r.deductionReason), (null, 0, null));
+  });
 }
