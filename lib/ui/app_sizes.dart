@@ -165,6 +165,14 @@ abstract final class AppSizes {
   static double get wheelColonPadding => 2.w;
   static double get wheelPeriodGap => 8.w;
   static double get calcTop => 16.w;
+  // 시간공제 — 휠 박스 안 사유 입력칸·설명 줄
+  static double get reasonFieldTop => 12.w;
+  static EdgeInsets get reasonFieldPadding => EdgeInsets.symmetric(vertical: 12.w, horizontal: 14.w);
+  static double get reasonFieldRadius => 11.w;
+  /// 사유칸에 포커스가 가면 이만큼 아래(설명·계산 내역·저장 버튼)까지 키보드 위로 올린다.
+  static double get reasonScrollPadding => 200.w;
+  static double get deductionHelpTop => 10.w;
+  static double get holidayWorkButtonTop => 6.w;
   static double get sheetButtonsTop => 20.w;
   static double get sheetButton => 52.w;
   static double get sheetButtonRadius => 13.w;

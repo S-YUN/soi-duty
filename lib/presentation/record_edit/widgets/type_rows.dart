@@ -6,14 +6,14 @@ import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
 import '../record_edit_texts.dart';
 
-/// 미래 날짜 시트의 유형 목록 — 색 점 · 라벨 · 체크가 있는 전체 너비 행 3개. 상호배타, 같은 행 재탭이면 null.
+/// 미래 날짜 시트의 유형 목록 — 색 점 · 라벨 · 체크가 있는 전체 너비 행 4개. 상호배타, 같은 행 재탭이면 null.
 class TypeRows extends StatelessWidget {
   const TypeRows({super.key, required this.selected, required this.onChanged});
 
   final WorkType selected;
   final ValueChanged<WorkType?> onChanged;
 
-  static const _types = [WorkType.halfDay, WorkType.dayOff, WorkType.holiday];
+  static const _types = [WorkType.halfDay, WorkType.dayOff, WorkType.holiday, WorkType.businessTrip];
 
   @override
   Widget build(BuildContext context) {

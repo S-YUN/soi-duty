@@ -1,10 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../../ui/app_colors.dart';
 import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
 import '../record_edit_texts.dart';
+import 'wheel_column.dart';
 
 /// 오전/오후 · 시(1–12) · 분(0–59) 휠. 높이 176, 항목 44, 가운데 흰 띠, 위아래 페이드.
 /// 입력만 12시간제이고 [onChanged]로는 0–23시를 돌려준다.
@@ -45,59 +44,36 @@ class _TimeWheelState extends State<TimeWheel> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppSizes.wheelHeight,
-      child: Stack(
+    return WheelFrame(
+      child: Row(
         children: [
-          Center(
-            child: Container(
-              height: AppSizes.wheelItem,
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(AppSizes.wheelBandRadius),
-              ),
+          Expanded(
+            child: WheelColumn(
+              labels: _periods,
+              selected: _period,
+              controller: _periodController,
+              onSelected: (i) => _select(() => _period = i),
             ),
           ),
-          ShaderMask(
-            shaderCallback: (rect) => const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black, Colors.black, Colors.transparent],
-              stops: [0, 0.32, 0.68, 1],
-            ).createShader(rect),
-            blendMode: BlendMode.dstIn,
-            child: Row(
-              children: [
-                Expanded(
-                  child: _column(
-                    labels: _periods,
-                    selected: _period,
-                    controller: _periodController,
-                    onSelected: (i) => _period = i,
-                  ),
-                ),
-                SizedBox(width: AppSizes.wheelPeriodGap),
-                Expanded(
-                  child: _column(
-                    labels: [for (var h = 1; h <= 12; h++) '$h'],
-                    selected: _hour12 - 1,
-                    controller: _hourController,
-                    onSelected: (i) => _hour12 = i + 1,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSizes.wheelColonPadding),
-                  child: Text(':', style: AppTextStyles.wheelColon),
-                ),
-                Expanded(
-                  child: _column(
-                    labels: [for (var m = 0; m < 60; m++) m.toString().padLeft(2, '0')],
-                    selected: _minute,
-                    controller: _minuteController,
-                    onSelected: (i) => _minute = i,
-                  ),
-                ),
-              ],
+          SizedBox(width: AppSizes.wheelPeriodGap),
+          Expanded(
+            child: WheelColumn(
+              labels: [for (var h = 1; h <= 12; h++) '$h'],
+              selected: _hour12 - 1,
+              controller: _hourController,
+              onSelected: (i) => _select(() => _hour12 = i + 1),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSizes.wheelColonPadding),
+            child: Text(':', style: AppTextStyles.wheelColon),
+          ),
+          Expanded(
+            child: WheelColumn(
+              labels: [for (var m = 0; m < 60; m++) m.toString().padLeft(2, '0')],
+              selected: _minute,
+              controller: _minuteController,
+              onSelected: (i) => _select(() => _minute = i),
             ),
           ),
         ],
@@ -105,33 +81,8 @@ class _TimeWheelState extends State<TimeWheel> {
     );
   }
 
-  Widget _column({
-    required List<String> labels,
-    required int selected,
-    required FixedExtentScrollController controller,
-    required ValueChanged<int> onSelected,
-  }) {
-    return CupertinoPicker(
-      scrollController: controller,
-      itemExtent: AppSizes.wheelItem,
-      useMagnifier: false,
-      squeeze: 1,
-      diameterRatio: 100,
-      selectionOverlay: const SizedBox.shrink(),
-      onSelectedItemChanged: (i) {
-        setState(() => onSelected(i));
-        _emit();
-      },
-      children: [
-        for (var i = 0; i < labels.length; i++)
-          Center(
-            child: AnimatedDefaultTextStyle(
-              duration: AppDurations.wheelItem,
-              style: i == selected ? AppTextStyles.wheelSelected : AppTextStyles.wheelItem,
-              child: Text(labels[i]),
-            ),
-          ),
-      ],
-    );
+  void _select(VoidCallback change) {
+    setState(change);
+    _emit();
   }
 }

@@ -6,14 +6,14 @@ import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
 import '../record_edit_texts.dart';
 
-/// 반차 / 연차 / 공휴일 3열. 상호배타, 같은 칩 재탭이면 null.
+/// 반차 / 연차 / 공휴일 / 출장 4열. 상호배타, 같은 칩 재탭이면 null.
 class TypeChips extends StatelessWidget {
   const TypeChips({super.key, required this.selected, required this.onChanged});
 
   final WorkType selected;
   final ValueChanged<WorkType?> onChanged;
 
-  static const _types = [WorkType.halfDay, WorkType.dayOff, WorkType.holiday];
+  static const _types = [WorkType.halfDay, WorkType.dayOff, WorkType.holiday, WorkType.businessTrip];
 
   @override
   Widget build(BuildContext context) {
