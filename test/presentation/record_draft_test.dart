@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:soi_duty/domain/model/work_record.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/record_edit/record_draft.dart';
@@ -83,7 +84,7 @@ void main() {
     final draft = RecordDraft.fromRecord(date: d(14), today: today, record: null)
         .withTime(EditingRow.clockIn, 22, 0)
         .withTime(EditingRow.clockOut, 2, 0);
-    expect(draft.isValid, isFalse);
+    expect(draft.isValid(rules), isFalse);
   });
 
   test('빈 normal 판정', () {
@@ -120,6 +121,102 @@ void main() {
       final draft = RecordDraft.fromRecord(date: d(14), today: today, record: null);
       final values = calcLines(draft, rules).map((l) => l.value).toList();
       expect(values, ['—', '1h', '8h', '—']);
+    });
+  });
+
+  RecordDraft mk({required DateTime date, DateTime? today, WorkRecord? record}) =>
+      RecordDraft.fromRecord(date: date, today: today ?? d(16), record: record);
+
+  group('유형 전용 모드', () {
+    test('미래는 유형 전용', () => expect(mk(date: d(18)).isTypeOnly, isTrue));
+    test('출근 전 오늘도 유형 전용', () => expect(mk(date: d(16)).isTypeOnly, isTrue));
+    test('유형만 찍힌 오늘도 유형 전용', () => expect(mk(date: d(16), record: rec(16, type: WorkType.dayOff)).isTypeOnly, isTrue));
+    test('퇴근 완료 오늘은 아님', () => expect(mk(date: d(16), record: rec(16, inH: 9, outH: 18)).isTypeOnly, isFalse));
+    test('과거는 아님', () => expect(mk(date: d(14)).isTypeOnly, isFalse));
+  });
+
+  group('공휴일 근무', () {
+    test('공휴일은 기본으로 시각 행 대신 버튼, 펼치면 시각 행', () {
+      final x = mk(date: d(14), record: rec(14, type: WorkType.holiday));
+      expect((x.showsTimeRows, x.showsHolidayWorkButton), (false, true));
+      final y = x.expandHolidayWork();
+      expect((y.showsTimeRows, y.showsHolidayWorkButton), (true, false));
+    });
+    test('시각이 있는 공휴일은 펼친 채로 열린다', () {
+      expect(mk(date: d(14), record: rec(14, inH: 10, outH: 15, type: WorkType.holiday)).showsTimeRows, isTrue);
+    });
+    test('미래 공휴일엔 버튼 없음', () {
+      expect(mk(date: d(18), record: rec(18, type: WorkType.holiday)).showsHolidayWorkButton, isFalse);
+    });
+    test('펼친 공휴일 저장 시 시각이 남는다', () {
+      final x = mk(date: d(14), record: rec(14, type: WorkType.holiday))
+          .expandHolidayWork()
+          .withTime(EditingRow.clockIn, 10, 0)
+          .withTime(EditingRow.clockOut, 15, 0);
+      final r = x.toRecord();
+      expect((r.type, r.clockIn, r.clockOut), (WorkType.holiday, d(14, 10), d(14, 15)));
+    });
+    test('공휴일 계산 내역: 근무 · 점심 공제(없음 (공휴일))', () {
+      final x = mk(date: d(14), record: rec(14, inH: 10, outH: 15, type: WorkType.holiday));
+      expect(calcLines(x, rules).map((l) => (l.label, l.value)).toList(), [('근무', '5h'), ('점심 공제', '없음 (공휴일)')]);
+    });
+  });
+
+  group('시간공제', () {
+    test('평일 일반·반차만 공제 행', () {
+      expect(mk(date: d(14)).showsDeductionRow, isTrue);
+      expect(mk(date: d(14), record: rec(14, type: WorkType.halfDay)).showsDeductionRow, isTrue);
+      expect(mk(date: d(19), today: d(20)).showsDeductionRow, isFalse); // 주말
+      expect(mk(date: d(14), record: rec(14, type: WorkType.holiday)).showsDeductionRow, isFalse);
+    });
+    test('반차 4h 초과는 무효', () {
+      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 13, type: WorkType.halfDay)).withDeduction(250);
+      expect(x.isDeductionValid(rules), isFalse);
+      expect(x.isValid(rules), isFalse);
+    });
+    test('toRecord: 공제·사유 반영, 공제 0이면 사유 없음', () {
+      final base = mk(date: d(14), record: rec(14, inH: 9, outH: 15));
+      final r = base.withDeduction(120).withReason('공문').toRecord();
+      expect((r.deductionMinutes, r.deductionReason), (120, '공문'));
+      expect(base.withReason('공문').toRecord().deductionReason, isNull);
+    });
+    test('기록의 공제·사유를 들고 열린다', () {
+      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 90, reason: '공문'));
+      expect((x.deductionMinutes, x.deductionReason), (90, '공문'));
+    });
+    test('연차로 바꾸면 공제가 저장되지 않는다', () {
+      expect(mk(date: d(14), record: rec(14, ded: 60)).withType(WorkType.dayOff).toRecord().deductionMinutes, 0);
+    });
+    test('공제만 있는 normal은 빈 기록이 아니다', () {
+      expect(mk(date: d(18)).withDeduction(60).isEmptyNormal, isFalse);
+      expect(mk(date: d(18)).isEmptyNormal, isTrue);
+    });
+    test('휠은 10분 내림 위치에서 열리고 값은 그대로', () {
+      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 167)).toggleEditing(EditingRow.deduction, rules);
+      expect(x.editing, EditingRow.deduction);
+      expect(x.deductionMinutes, 167);
+      expect(x.deductionWheelStart(rules), 160);
+      expect((x.clockIn, x.clockOut), (d(14, 9), d(14, 15)));
+    });
+    test('유형 전용 모드에서 공제 휠을 펴면 저장 버튼', () {
+      final x = mk(date: d(18));
+      expect(x.showsSaveButton, isFalse);
+      expect(x.toggleEditing(EditingRow.deduction, rules).showsSaveButton, isTrue);
+    });
+    test('계산 내역에 시간공제 줄과 공제 반영 기준', () {
+      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 120));
+      expect(calcLines(x, rules).map((l) => (l.label, l.value)).toList(), [
+        ('근무', '5h'),
+        ('점심 공제', '1h'),
+        ('시간공제', '−2h'),
+        ('기준', '6h'),
+        ('기준 대비', '−1h'),
+      ]);
+    });
+    test('공제 표시 문구', () {
+      expect(RecordEditTexts.deduction(0), '없음');
+      expect(RecordEditTexts.deduction(150), '2시간 30분');
+      expect(RecordEditTexts.deduction(30), '30분');
     });
   });
 }

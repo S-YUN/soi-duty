@@ -233,7 +233,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
               _inset(
                 Padding(
                   padding: EdgeInsets.only(top: AppSizes.calcTop),
-                  child: draft.isValid
+                  child: draft.isValid(rules)
                       ? CalcRows(lines: calcLines(draft, rules))
                       : Text(
                           RecordEditTexts.invalidRange,
@@ -249,7 +249,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                 SheetButton(
                   label: RecordEditTexts.save,
                   primary: true,
-                  onTap: draft.isValid ? _save : null,
+                  onTap: draft.isValid(rules) ? _save : null,
                 ),
               ),
             ],
