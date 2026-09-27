@@ -111,4 +111,31 @@ void main() {
       expect(painted, closeTo(natural, 0.5), reason: '폭 $width: 그려진 $painted / 자연 $natural');
     });
   }
+
+  testWidgets('범례 4개가 폭 320에서 넘치지 않는다', (tester) async {
+    SizeConfig.init(320);
+    tester.view.physicalSize = const Size(320 * 3, 900 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    final state = buildMonthState(
+      records: [rec(11, type: WorkType.businessTrip)],
+      firstRecordDate: DateTime(2026, 8, 20),
+      now: d(16, 12),
+      rules: rules,
+      month: DateTime(2026, 9),
+    );
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: MonthView(state: state, canGoPrev: true, canGoNext: true, onCellTap: (_) {}, onPrev: () {}, onNext: () {}),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.takeException(), isNull);
+    expect(find.text('출장'), findsOneWidget);
+    final circle = tester
+        .widget<Container>(find.ancestor(of: find.text('11'), matching: find.byType(Container)).first)
+        .decoration! as BoxDecoration;
+    expect(circle.color, AppColors.typeColors(WorkType.businessTrip).$1);
+  });
 }

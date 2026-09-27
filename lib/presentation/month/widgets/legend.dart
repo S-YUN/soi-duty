@@ -5,7 +5,7 @@ import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
 import '../month_texts.dart';
 
-/// 캘린더 아래 범례: 반차 / 연차 / 공휴일 색상 칩.
+/// 캘린더 아래 범례: 반차 / 연차 / 공휴일 / 출장 색상 칩.
 class Legend extends StatelessWidget {
   const Legend({super.key});
 

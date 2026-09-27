@@ -70,4 +70,25 @@ void main() {
     expect(cell(s, d(14)).isBeforeFirstWeek, isFalse);
     expect(cell(s, d(15)).value, const MonthCellValue.unrecorded());
   });
+
+  test('공휴일 근무 · 출장 · 공제', () {
+    final s = build([
+      rec(14, inH: 9, outH: 15, ded: 120), // 실근무 5h, 기준 6h → −1h
+      rec(15, inH: 10, outH: 15, type: WorkType.holiday),
+      rec(16, inH: 9, type: WorkType.holiday),
+      rec(11, type: WorkType.businessTrip),
+    ]);
+    expect(cell(s, d(14)).value, const MonthCellValue.delta(-60));
+    expect(cell(s, d(15)).type, WorkType.holiday);
+    expect(cell(s, d(15)).value, const MonthCellValue.weekendActual(300));
+    expect(cell(s, d(16)).value, const MonthCellValue.working());
+    expect(cell(s, d(16)).isTodayWorking, isTrue);
+    expect(cell(s, d(11)).type, WorkType.businessTrip);
+    expect(cell(s, d(11)).value, const MonthCellValue.none());
+  });
+
+  test('범례에 출장, 잠금 토스트는 한 문구', () {
+    expect(MonthTexts.legend.map((e) => e.$2).toList(), ['반차', '연차', '공휴일', '출장']);
+    expect(MonthTexts.todayInProgressToast, '오늘 기록은 퇴근한 뒤에 수정할 수 있어요');
+  });
 }

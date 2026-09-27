@@ -8,6 +8,7 @@ part 'month_state.freezed.dart';
 sealed class MonthCellValue with _$MonthCellValue {
   const factory MonthCellValue.none() = MonthCellNone;
   const factory MonthCellValue.delta(int minutes) = MonthCellDelta;
+  /// 주말·공휴일 근무 — 기준 대비 없이 근무시간
   const factory MonthCellValue.weekendActual(int minutes) = MonthCellWeekendActual;
   const factory MonthCellValue.working() = MonthCellWorking;
   const factory MonthCellValue.unrecorded() = MonthCellUnrecorded;

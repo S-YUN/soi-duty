@@ -43,7 +43,11 @@ MonthCell _cell(
   final hasBoth = r?.clockIn != null && r?.clockOut != null;
 
   final MonthCellValue value;
-  if (type == WorkType.dayOff || type == WorkType.holiday) {
+  if (type == WorkType.holiday && hasBoth && !beforeFirstWeek) {
+    value = MonthCellValue.weekendActual(actualMinutes(r!, rules) ?? 0); // 공휴일 근무 — 주말처럼 부호 없는 근무시간
+  } else if (type == WorkType.holiday && date == today && r?.clockIn != null) {
+    value = const MonthCellValue.working();
+  } else if (type != null && isOffType(type)) {
     value = const MonthCellValue.none();
   } else if (weekend) {
     value = hasBoth ? MonthCellValue.weekendActual(actualMinutes(r!, rules) ?? 0) : const MonthCellValue.none();
