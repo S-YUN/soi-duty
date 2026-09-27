@@ -8,9 +8,8 @@ abstract final class WeekTexts {
   static const dash = '—';
   static const none = '';
 
-  /// 출퇴근이 덜 찍힌 오늘을 탭했을 때. 연차·공휴일로 찍힌 오늘은 되돌리기 안내.
-  static String todayInProgressToast(WeekDay day) =>
-      day.kind == WeekDayKind.off ? '오늘 연차·공휴일은 오늘 탭에서 되돌릴 수 있어요' : '오늘 기록은 퇴근한 뒤에 수정할 수 있어요';
+  /// 근무 중인 오늘을 탭했을 때. 퇴근은 오늘 화면이 찍는다.
+  static const todayInProgressToast = '오늘 기록은 퇴근한 뒤에 수정할 수 있어요';
   static const _dow = ['월', '화', '수', '목', '금', '토', '일'];
 
   static String dow(DateTime d) => _dow[d.weekday - DateTime.monday];
@@ -28,7 +27,7 @@ abstract final class WeekTexts {
     return target == null ? none : '/ ${formatHm(target)}';
   }
 
-  /// 목표 아래 한 줄. 첫 주 예외면 왜 목표가 없는지, 아니면 그 주의 연차·반차·공휴일 개수 (없으면 빈 문자열).
+  /// 목표 아래 한 줄. 첫 주 예외면 왜 목표가 없는지, 아니면 그 주의 연차·반차·공휴일·출장 개수와 공제 합 (없으면 빈 문자열).
   static String summaryDetail(WeekState s) {
     final w = s.summary;
     if (w.isFirstWeekException) {
@@ -39,6 +38,8 @@ abstract final class WeekTexts {
       if (w.dayOffCount > 0) '연차 ${w.dayOffCount}',
       if (w.halfDayCount > 0) '반차 ${w.halfDayCount}',
       if (w.holidayCount > 0) '공휴일 ${w.holidayCount}',
+      if (w.businessTripCount > 0) '출장 ${w.businessTripCount}',
+      if (w.deductionMinutes > 0) '공제 ${formatHm(w.deductionMinutes)}',
     ].join(' · ');
   }
 
@@ -50,19 +51,28 @@ abstract final class WeekTexts {
   }
 
   static String main(WeekDay day) => switch (day.kind) {
-        WeekDayKind.recorded || WeekDayKind.weekendRecorded => formatHm(day.actualMinutes ?? 0),
+        WeekDayKind.recorded || WeekDayKind.weekendRecorded || WeekDayKind.holidayRecorded =>
+          formatHm(day.actualMinutes ?? 0),
         WeekDayKind.working => '근무 중',
         WeekDayKind.unrecorded || WeekDayKind.partial => '기록 없음',
         WeekDayKind.off => none, // 연차·공휴일은 배지만
         WeekDayKind.future || WeekDayKind.beforeWork || WeekDayKind.weekendEmpty => dash,
       };
 
+  /// 메모 줄. 시간공제 사유가 있으면 뒤에 붙인다 (한 줄 말줄임은 위젯이).
   static String note(WeekDay day) {
+    final base = _baseNote(day);
+    final reason = day.record?.deductionReason;
+    if (reason == null) return base;
+    return base.isEmpty ? reason : '$base · $reason';
+  }
+
+  static String _baseNote(WeekDay day) {
     final r = day.record;
     switch (day.kind) {
       case WeekDayKind.recorded:
         return formatClockRange(r!.clockIn!, r.clockOut!);
-      case WeekDayKind.weekendRecorded:
+      case WeekDayKind.weekendRecorded || WeekDayKind.holidayRecorded:
         return '주 40시간 제외 · ${formatClockRange(r!.clockIn!, r.clockOut!)}';
       case WeekDayKind.working:
         return '${formatClock(r!.clockIn!)} 출근';
@@ -91,13 +101,21 @@ abstract final class WeekTexts {
         WeekDayKind.partial ||
         WeekDayKind.off =>
           dash,
-        WeekDayKind.future || WeekDayKind.weekendRecorded || WeekDayKind.weekendEmpty => none,
+        WeekDayKind.future ||
+        WeekDayKind.weekendRecorded ||
+        WeekDayKind.holidayRecorded ||
+        WeekDayKind.weekendEmpty =>
+          none,
       };
 
-  /// 배지. 반차는 kind와 무관하게 record.type으로 (미래 반차 포함).
-  static WorkType? badge(WeekDay day) {
-    final t = day.record?.type;
-    return t == null || t == WorkType.normal ? null : t;
+  /// 배지. 유형(일반 제외, 미래 포함) + 시간공제.
+  static List<WeekBadge> badges(WeekDay day) {
+    final r = day.record;
+    if (r == null) return const [];
+    return [
+      if (r.type != WorkType.normal) WeekBadge(badgeLabel(r.type), type: r.type),
+      if (r.deductionMinutes > 0) WeekBadge('공제 ${formatHm(r.deductionMinutes)}'),
+    ];
   }
 
   static String badgeLabel(WorkType t) => switch (t) {

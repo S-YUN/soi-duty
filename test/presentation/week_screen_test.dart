@@ -39,15 +39,20 @@ void main() {
       monday: d(14),
     );
     DateTime? tapped;
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
-      home: Scaffold(
-        body: WeekView(state: state, rules: rules, onDayTap: (d) => tapped = d, onPrev: () {}, onNext: () {}),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: WeekView(state: state, rules: rules, onDayTap: (d) => tapped = d, onPrev: () {}, onNext: () {}),
+        ),
       ),
-    ));
+    );
     await tester.pump(const Duration(milliseconds: 500));
 
-    final heights = tester.widgetList(find.byType(WeekDayRow)).map((w) => tester.getSize(find.byWidget(w)).height).toSet();
+    final heights = tester
+        .widgetList(find.byType(WeekDayRow))
+        .map((w) => tester.getSize(find.byWidget(w)).height)
+        .toSet();
     expect(heights.length, 1, reason: '행 높이: $heights');
     final valueLine = AppTextStyles.rowValue(AppColors.ink).fontSize! * 1.6;
     expect(tester.getSize(find.text('+2h 56m')).height, lessThan(valueLine), reason: '± 값이 한 줄에 들어가야 한다');
@@ -56,4 +61,52 @@ void main() {
     await tester.tap(find.text('근무 중'));
     expect(tapped, d(16));
   });
+
+  for (final width in [320.0, 360.0, 600.0]) {
+    testWidgets('배지 둘·긴 사유가 있어도 7행 높이가 같고 폭 $width에서 넘치지 않는다', (tester) async {
+      SizeConfig.init(width);
+      tester.view.physicalSize = Size(width * 3, 900 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      final state = buildWeekState(
+        records: [
+          rec(
+            14,
+            inH: 9,
+            inM: 5,
+            outH: 21,
+            outM: 1,
+            type: WorkType.halfDay,
+            ded: 150,
+            reason: '조기퇴근 공문 스무 자까지 꽉 채운 사유',
+          ),
+          rec(15, inH: 10, outH: 15, type: WorkType.holiday),
+          rec(16, inH: 9, inM: 12),
+          rec(17, type: WorkType.businessTrip),
+        ],
+        firstRecordDate: d(7),
+        now: d(16, 12),
+        rules: rules,
+        monday: d(14),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: WeekView(state: state, rules: rules, onDayTap: (_) {}, onPrev: () {}, onNext: () {}),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(tester.takeException(), isNull);
+      final heights = tester
+          .widgetList(find.byType(WeekDayRow))
+          .map((w) => tester.getSize(find.byWidget(w)).height)
+          .toSet();
+      expect(heights.length, 1, reason: '행 높이: $heights');
+      expect(find.text('공제 2h 30m'), findsOneWidget);
+      expect(find.text('출장'), findsOneWidget);
+    });
+  }
 }

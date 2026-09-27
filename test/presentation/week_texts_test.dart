@@ -80,4 +80,45 @@ void main() {
     expect(WeekTexts.note(day(14)), '출근 없음 · 18:00 퇴근');
     expect(WeekTexts.note(day(16)), '아직 출근 전');
   });
+
+  group('출장 · 시간공제 · 공휴일 근무', () {
+    WeekDay dayOf(WeekState s, int date) => s.days.firstWhere((x) => x.date.day == date);
+
+    test('요약 줄: 출장·공제 포함, 0 생략', () {
+      final s = build([
+        rec(14, type: WorkType.dayOff),
+        rec(15, inH: 13, outH: 17, type: WorkType.halfDay),
+        rec(16, type: WorkType.holiday),
+        rec(17, type: WorkType.businessTrip),
+        rec(18, ded: 150),
+      ]);
+      expect(WeekTexts.summaryDetail(s), '연차 1 · 반차 1 · 공휴일 1 · 출장 1 · 공제 2h 30m');
+      expect(WeekTexts.summaryDetail(build([rec(18, ded: 60)])), '공제 1h');
+    });
+
+    test('배지: 반차 + 공제, 공휴일 근무는 공휴일만', () {
+      final s = build([rec(15, inH: 13, outH: 17, type: WorkType.halfDay, ded: 150), rec(14, inH: 10, outH: 15, type: WorkType.holiday)]);
+      expect(WeekTexts.badges(dayOf(s, 15)).map((b) => (b.type, b.label)).toList(), [
+        (WorkType.halfDay, '반차'),
+        (null, '공제 2h 30m'),
+      ]);
+      expect(WeekTexts.badges(dayOf(s, 14)).map((b) => b.label).toList(), ['공휴일']);
+    });
+
+    test('메모: 사유가 뒤에 붙는다, 시각 없으면 사유만', () {
+      final s = build([rec(14, inH: 9, outH: 15, ded: 180, reason: '조기퇴근 공문'), rec(18, ded: 60, reason: '공문')]);
+      expect(WeekTexts.note(dayOf(s, 14)), '09:00 – 15:00 · 조기퇴근 공문');
+      expect(WeekTexts.note(dayOf(s, 18)), '공문');
+    });
+
+    test('공휴일 근무 행: 근무시간, 주 40시간 제외 메모, ± 비움', () {
+      final s = build([rec(14, inH: 10, outH: 15, type: WorkType.holiday)]);
+      final day = dayOf(s, 14);
+      expect(WeekTexts.main(day), '5h');
+      expect(WeekTexts.note(day), '주 40시간 제외 · 10:00 – 15:00');
+      expect(WeekTexts.value(day), '');
+    });
+
+    test('잠금 토스트는 한 문구', () => expect(WeekTexts.todayInProgressToast, '오늘 기록은 퇴근한 뒤에 수정할 수 있어요'));
+  });
 }

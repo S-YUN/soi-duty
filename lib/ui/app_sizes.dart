@@ -99,6 +99,9 @@ abstract final class AppSizes {
   static double get rowValueWidth => 76.w;
   /// 메모 줄의 고정 높이. 최소 높이로 두면 빈 메모와 글자가 든 메모의 줄 높이가 1px 달라 행이 어긋난다.
   static double get rowNoteHeight => 20.w;
+  /// 값·배지 줄 고정 높이. 글자 줄 높이는 정수로 반올림되고(320: 14 · 402: 18 · 600: 21) 배지는 비율대로 줄어
+  /// (14.2 · 18 · 21.8) 기기 폭마다 어느 쪽이 크냐가 바뀐다 — 둘 다 들어가는 값으로 고정해 7행 높이를 맞춘다.
+  static double get rowMainLine => 18.5.w;
   static double get rowNoteTop => 3.w;
   static double get rowDowTop => 1.w;
   static double get rowBadgeGap => 6.w;

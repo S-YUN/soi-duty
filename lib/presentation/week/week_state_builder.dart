@@ -39,7 +39,11 @@ WeekDay _day(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime today, Wo
   final WeekDayKind kind;
   if (isWeekend(date)) {
     kind = hasBoth ? WeekDayKind.weekendRecorded : WeekDayKind.weekendEmpty;
-  } else if (r != null && (r.type == WorkType.dayOff || r.type == WorkType.holiday)) {
+  } else if (r != null && r.type == WorkType.holiday && hasBoth) {
+    kind = WeekDayKind.holidayRecorded;
+  } else if (r != null && r.type == WorkType.holiday && isToday && r.clockIn != null) {
+    kind = WeekDayKind.working;
+  } else if (r != null && isOffType(r.type)) {
     kind = WeekDayKind.off;
   } else if (date.isAfter(today)) {
     kind = WeekDayKind.future;

@@ -31,6 +31,8 @@ abstract final class AppColors {
   static const tripBackground = Color(0xFFD3DDE3);
   static const tripBorder = Color(0xFFC3D0D8);
   static const tripText = Color(0xFF3F5866);
+  static const deductionBackground = Color(0xFFE6E8E2); // 주간 행 "공제 2h" 배지 — 유형이 아니라 중립색
+  static const deductionText = Color(0xFF4F5549);
   static const checkboxBorder = Color(0xFFCFD3CA);
   static const dotInactive = Color(0xFFC3C7BE);
   static const hairline = Color(0xFFDCDFD8);

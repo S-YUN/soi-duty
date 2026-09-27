@@ -77,4 +77,26 @@ void main() {
     expect(s.excludedMinutes, 120);
     expect(s.summary.workedMinutes, 480);
   });
+
+  test('공휴일 근무 · 출장 · 잠금', () {
+    final s = build([
+      rec(14, inH: 10, outH: 15, type: WorkType.holiday),
+      rec(15, type: WorkType.holiday),
+      rec(17, type: WorkType.businessTrip),
+      rec(19, inH: 10, outH: 12),
+    ]);
+    expect(day(s, 14).kind, WeekDayKind.holidayRecorded);
+    expect(day(s, 14).actualMinutes, 300);
+    expect(day(s, 14).deltaMinutes, isNull);
+    expect(day(s, 15).kind, WeekDayKind.off);
+    expect(day(s, 17).kind, WeekDayKind.off);
+    expect(s.excludedMinutes, 300 + 120);
+    expect(day(s, 16).isTodayWorking, isFalse); // 출근 전 오늘은 잠그지 않는다
+  });
+
+  test('오늘 공휴일 출근 → 근무 중', () {
+    final s = build([rec(16, inH: 9, type: WorkType.holiday)]);
+    expect(day(s, 16).kind, WeekDayKind.working);
+    expect(day(s, 16).isTodayWorking, isTrue);
+  });
 }

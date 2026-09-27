@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/model/work_record.dart';
+import '../../domain/model/work_type.dart';
 import '../../domain/rules/week_summary.dart';
 
 part 'week_state.freezed.dart';
@@ -14,7 +15,17 @@ enum WeekDayKind {
   off,
   future,
   weekendRecorded,
+  /// 공휴일에 출퇴근까지 찍힘 — 주말 근무처럼 근무시간만, ± 없음
+  holidayRecorded,
   weekendEmpty,
+}
+
+/// 주간 행 배지. [type]이 null이면 시간공제 배지.
+class WeekBadge {
+  const WeekBadge(this.label, {this.type});
+
+  final String label;
+  final WorkType? type;
 }
 
 @freezed

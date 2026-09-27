@@ -25,7 +25,7 @@ class _WeekDayRowState extends State<WeekDayRow> {
   Widget build(BuildContext context) {
     final day = widget.day;
     final weekend = day.date.weekday >= DateTime.saturday;
-    final badge = WeekTexts.badge(day);
+    final badges = WeekTexts.badges(day);
     final main = WeekTexts.main(day);
     final delta = day.deltaMinutes;
 
@@ -34,17 +34,19 @@ class _WeekDayRowState extends State<WeekDayRow> {
       WeekDayKind.unrecorded ||
       WeekDayKind.partial ||
       WeekDayKind.beforeWork ||
-      WeekDayKind.off =>
-        AppTextStyles.rowMainDim,
-      WeekDayKind.recorded || WeekDayKind.working || WeekDayKind.weekendRecorded => AppTextStyles.rowMain,
+      WeekDayKind.off => AppTextStyles.rowMainDim,
+      WeekDayKind.recorded ||
+      WeekDayKind.working ||
+      WeekDayKind.weekendRecorded ||
+      WeekDayKind.holidayRecorded => AppTextStyles.rowMain,
     };
     final valueColor = delta == null
         ? AppColors.subtle
         : delta > 0
-            ? AppColors.brand
-            : delta < 0
-                ? AppColors.minus
-                : AppColors.subtle;
+        ? AppColors.brand
+        : delta < 0
+        ? AppColors.minus
+        : AppColors.subtle;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -58,8 +60,8 @@ class _WeekDayRowState extends State<WeekDayRow> {
         color: _pressed
             ? AppColors.listRow
             : day.isToday
-                ? AppColors.todayRow
-                : Colors.transparent,
+            ? AppColors.todayRow
+            : Colors.transparent,
         child: Row(
           children: [
             SizedBox(
@@ -77,28 +79,30 @@ class _WeekDayRowState extends State<WeekDayRow> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      // 비어 있어도 그려서 줄 높이를 유지한다 — 배지만 있는 연차·공휴일 행이 낮아지지 않게.
-                      Text(main, style: mainStyle, maxLines: 1),
-                      if (badge != null) ...[
-                        if (main.isNotEmpty) SizedBox(width: AppSizes.rowBadgeGap),
-                        TypeTag(
-                          type: badge,
-                          label: WeekTexts.badgeLabel(badge),
-                          padding: AppSizes.rowBadgePadding,
-                          radius: AppSizes.rowBadgeRadius,
-                          style: AppTextStyles.rowBadge,
-                        ),
+                  SizedBox(
+                    height: AppSizes.rowMainLine,
+                    child: Row(
+                      children: [
+                        // 비어 있어도 그려서 줄 높이를 유지한다 — 배지만 있는 연차·공휴일 행이 낮아지지 않게.
+                        Text(main, style: mainStyle, maxLines: 1),
+                        for (var i = 0; i < badges.length; i++) ...[
+                          if (i > 0 || main.isNotEmpty) SizedBox(width: AppSizes.rowBadgeGap),
+                          _badge(badges[i]),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                   SizedBox(height: AppSizes.rowNoteTop),
                   SizedBox(
                     height: AppSizes.rowNoteHeight,
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(WeekTexts.note(day), style: AppTextStyles.rowNote, maxLines: 1),
+                      child: Text(
+                        WeekTexts.note(day),
+                        style: AppTextStyles.rowNote,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                 ],
@@ -118,6 +122,21 @@ class _WeekDayRowState extends State<WeekDayRow> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _badge(WeekBadge badge) {
+    final type = badge.type;
+    final (background, foreground) = type == null
+        ? (AppColors.deductionBackground, AppColors.deductionText)
+        : AppColors.typeColors(type);
+    return TypeTag(
+      background: background,
+      foreground: foreground,
+      label: badge.label,
+      padding: AppSizes.rowBadgePadding,
+      radius: AppSizes.rowBadgeRadius,
+      style: AppTextStyles.rowBadge,
     );
   }
 }

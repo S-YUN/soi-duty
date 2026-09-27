@@ -35,7 +35,7 @@ class WeekScreen extends ConsumerWidget {
         onDayTap: (date) {
           final day = state.days.firstWhere((d) => d.date == date);
           // 오늘은 오늘 화면 버튼이 찍는다. 퇴근까지 찍히기 전엔 시트 대신 안내만.
-          if (day.isTodayWorking) return showAppToast(context, WeekTexts.todayInProgressToast(day));
+          if (day.isTodayWorking) return showAppToast(context, WeekTexts.todayInProgressToast);
           showRecordEditSheet(context, date);
         },
         onPrev: selected.prev,
