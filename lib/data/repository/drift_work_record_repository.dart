@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/repository/work_record_repository.dart';
 import '../../domain/rules/work_calculator.dart';
+import '../../domain/rules/work_rules.dart';
 import '../database/app_database.dart';
 
 String dateKey(DateTime d) =>
@@ -14,11 +15,14 @@ DateTime parseDateKey(String key) {
 }
 
 class DriftWorkRecordRepository implements WorkRecordRepository {
-  DriftWorkRecordRepository(this._db);
+  DriftWorkRecordRepository(this._db, {this.rules = const WorkRules()});
 
   static const firstRecordDateKey = 'first_record_date';
 
   final AppDatabase _db;
+
+  /// 저장 직전 정리([sanitizeRecord])에 쓰는 규칙 — 시간공제 한도.
+  final WorkRules rules;
 
   @override
   Stream<List<WorkRecord>> watchAll() =>
@@ -33,7 +37,7 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
   @override
   Future<void> save(WorkRecord input) => _db.transaction(() async {
         // 쉬는 날의 공제·연차의 시각 같은 모순은 여기 한 곳에서 걷어낸다.
-        final record = sanitizeRecord(input);
+        final record = sanitizeRecord(input, rules);
         await _db.into(_db.workRecords).insertOnConflictUpdate(_toCompanion(record));
         final first = await (_db.select(_db.settings)..where((s) => s.key.equals(firstRecordDateKey)))
             .getSingleOrNull();

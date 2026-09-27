@@ -47,13 +47,17 @@ class TodayController extends _$TodayController {
         return r.copyWith(clockIn: t);
       });
 
-  /// 근무 중 → 출근 전. 실수로 찍은 출근을 없던 일로 — 반차 체크도 함께 풀린다 (기록 삭제).
-  /// 공휴일 근무였으면 공휴일 표시는 남기고 시각만 비운다.
+  /// 근무 중 → 출근 전. 실수로 찍은 출근을 없던 일로 — 반차 체크도 함께 풀린다.
+  /// 공휴일 표시와 미리 넣은 시간공제는 남기고 시각만 비운다. 남길 게 없으면 기록을 지운다.
   Future<void> cancelClockIn() async {
     final current = await future;
-    if (current.isHoliday) return _saveToday((r, _) => r.copyWith(clockIn: null, clockOut: null));
-    final today = dateOnly(ref.read(clockProvider)());
-    await ref.read(workRecordRepositoryProvider).delete(today);
+    final record = current.record;
+    if (record == null) return;
+    final type = record.type == WorkType.holiday ? WorkType.holiday : WorkType.normal;
+    final next = record.copyWith(clockIn: null, clockOut: null, type: type);
+    final repo = ref.read(workRecordRepositoryProvider);
+    if (next.type == WorkType.normal && next.deductionMinutes == 0) return repo.delete(record.date);
+    await repo.save(next);
   }
 
   /// 퇴근 완료 → 근무 중. type은 유지.

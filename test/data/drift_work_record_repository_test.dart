@@ -96,4 +96,9 @@ void main() {
     final r = (await repo.watchAll().first).single;
     expect((r.clockIn, r.deductionMinutes, r.deductionReason), (null, 0, null));
   });
+
+  test('반차 + 5h 공제를 저장하면 4h로 잘린다', () async {
+    await repo.save(rec(14, type: WorkType.halfDay, ded: 300));
+    expect((await repo.watchAll().first).single.deductionMinutes, 240);
+  });
 }

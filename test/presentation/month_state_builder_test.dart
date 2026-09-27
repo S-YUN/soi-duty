@@ -91,4 +91,9 @@ void main() {
     expect(MonthTexts.legend.map((e) => e.$2).toList(), ['반차', '연차', '공휴일', '출장']);
     expect(MonthTexts.todayInProgressToast, '오늘 기록은 퇴근한 뒤에 수정할 수 있어요');
   });
+
+  test('공제로 기준이 0이 된 날은 미기록 표시 없음', () {
+    final s = build([rec(14, ded: 480)]);
+    expect(cell(s, d(14)).value, const MonthCellValue.none());
+  });
 }

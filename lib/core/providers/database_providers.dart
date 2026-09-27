@@ -18,7 +18,7 @@ AppDatabase appDatabase(Ref ref) {
 
 @Riverpod(keepAlive: true)
 WorkRecordRepository workRecordRepository(Ref ref) =>
-    DriftWorkRecordRepository(ref.watch(appDatabaseProvider));
+    DriftWorkRecordRepository(ref.watch(appDatabaseProvider), rules: ref.watch(workRulesProvider));
 
 @Riverpod(keepAlive: true)
 WorkRules workRules(Ref ref) => const WorkRules();

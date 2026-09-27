@@ -203,10 +203,12 @@ void main() {
       expect(x.deductionWheelStart(rules), 160);
       expect((x.clockIn, x.clockOut), (d(14, 9), d(14, 15)));
     });
-    test('유형 전용 모드에서 공제 휠을 펴면 저장 버튼', () {
+    test('유형 전용 모드에서 공제 휠을 펴면 저장 버튼, 접어도 남는다', () {
       final x = mk(date: d(18));
       expect(x.showsSaveButton, isFalse);
-      expect(x.toggleEditing(EditingRow.deduction, rules).showsSaveButton, isTrue);
+      final opened = x.toggleEditing(EditingRow.deduction, rules).withDeduction(120);
+      expect(opened.showsSaveButton, isTrue);
+      expect(opened.toggleEditing(EditingRow.deduction, rules).showsSaveButton, isTrue);
     });
     test('계산 내역에 시간공제 줄과 공제 반영 기준', () {
       final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 120));

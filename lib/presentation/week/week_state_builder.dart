@@ -43,7 +43,8 @@ WeekDay _day(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime today, Wo
     kind = WeekDayKind.holidayRecorded;
   } else if (r != null && r.type == WorkType.holiday && isToday && r.clockIn != null) {
     kind = WeekDayKind.working;
-  } else if (r != null && isOffType(r.type)) {
+  } else if (r != null && (isOffType(r.type) || (!hasBoth && dayStandardMinutes(r, rules) == 0))) {
+    // 쉬는 날, 그리고 시간공제로 기준이 0이 된 날(시각 없음)은 누락이 아니다 — 배지만.
     kind = WeekDayKind.off;
   } else if (date.isAfter(today)) {
     kind = WeekDayKind.future;

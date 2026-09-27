@@ -501,18 +501,22 @@ void main() {
 
   group('sanitizeRecord', () {
     test('쉬는 날은 공제·사유를 지우고, 연차·출장은 시각도 지운다', () {
-      final dayOff = sanitizeRecord(rec(14, inH: 9, outH: 18, type: WorkType.dayOff, ded: 60, reason: 'x'));
+      final dayOff = sanitizeRecord(rec(14, inH: 9, outH: 18, type: WorkType.dayOff, ded: 60, reason: 'x'), rules);
       expect((dayOff.clockIn, dayOff.clockOut, dayOff.deductionMinutes, dayOff.deductionReason), (null, null, 0, null));
-      final trip = sanitizeRecord(rec(14, inH: 9, outH: 18, type: WorkType.businessTrip));
+      final trip = sanitizeRecord(rec(14, inH: 9, outH: 18, type: WorkType.businessTrip), rules);
       expect((trip.clockIn, trip.clockOut), (null, null));
-      final holiday = sanitizeRecord(rec(14, inH: 10, outH: 15, type: WorkType.holiday, ded: 60));
+      final holiday = sanitizeRecord(rec(14, inH: 10, outH: 15, type: WorkType.holiday, ded: 60), rules);
       expect((holiday.clockIn, holiday.deductionMinutes), (d(14, 10), 0));
     });
-    test('주말은 공제 없음', () => expect(sanitizeRecord(rec(19, ded: 60)).deductionMinutes, 0));
+    test('주말은 공제 없음', () => expect(sanitizeRecord(rec(19, ded: 60), rules).deductionMinutes, 0));
+    test('반차 공제는 4h로 잘린다 — 어떤 저장 경로로도 한도를 넘지 않게', () {
+      expect(sanitizeRecord(rec(14, type: WorkType.halfDay, ded: 300), rules).deductionMinutes, 240);
+      expect(sanitizeRecord(rec(14, ded: 530), rules).deductionMinutes, 480);
+    });
     test('공제 0이면 사유 null, 빈 사유는 null, 앞뒤 공백 제거', () {
-      expect(sanitizeRecord(rec(14, reason: '공문')).deductionReason, isNull);
-      expect(sanitizeRecord(rec(14, ded: 60, reason: '  ')).deductionReason, isNull);
-      expect(sanitizeRecord(rec(14, ded: 60, reason: ' 공문 ')).deductionReason, '공문');
+      expect(sanitizeRecord(rec(14, reason: '공문'), rules).deductionReason, isNull);
+      expect(sanitizeRecord(rec(14, ded: 60, reason: '  '), rules).deductionReason, isNull);
+      expect(sanitizeRecord(rec(14, ded: 60, reason: ' 공문 '), rules).deductionReason, '공문');
     });
   });
 

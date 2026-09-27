@@ -21,6 +21,7 @@ class RecordDraft {
     this.deductionMinutes = 0,
     this.deductionReason = '',
     this.showsHolidayWork = false,
+    this.deductionOpened = false,
     this.editing,
   });
 
@@ -61,6 +62,9 @@ class RecordDraft {
   /// 공휴일에 "이 날 근무한 시간 입력"을 펼쳤는지. 초안 상태일 뿐 저장값이 아니다.
   final bool showsHolidayWork;
 
+  /// 이 시트에서 시간공제 행을 한 번이라도 펼쳤는지 — 유형 전용 모드에서 접은 뒤에도 저장 버튼을 남긴다.
+  final bool deductionOpened;
+
   /// 휠이 펼쳐진 행
   final EditingRow? editing;
 
@@ -84,8 +88,8 @@ class RecordDraft {
       !showsDeductionRow || calc.isValidDeduction(type, deductionMinutes, rules);
   bool isValid(WorkRules rules) => calc.isValidClockRange(clockIn, clockOut) && isDeductionValid(rules);
 
-  /// 유형 전용 모드는 유형 탭이 곧 저장이라 버튼이 없지만, 공제를 편집할 때는 저장이 필요하다.
-  bool get showsSaveButton => showsTimeRows || (isTypeOnly && editing == EditingRow.deduction);
+  /// 유형 전용 모드는 유형 탭이 곧 저장이라 버튼이 없지만, 공제를 편집하면(휠을 다시 접어도) 저장이 필요하다.
+  bool get showsSaveButton => showsTimeRows || (isTypeOnly && deductionOpened);
   bool get hasAnyTime => clockIn != null || clockOut != null;
 
   DateTime? timeOf(EditingRow row) => switch (row) {
@@ -97,15 +101,20 @@ class RecordDraft {
   /// 공제 휠이 열리는 위치 — 휠 단위(10분)로 내림. 퇴근 시 자동 공제된 2h 47m도 돌리기 전엔 그대로 둔다.
   int deductionWheelStart(WorkRules rules) => deductionMinutes - deductionMinutes % rules.deductionStepMinutes;
 
-  /// 저장할 기록. 시각 행이 없으면 시각을 비우고, 공제 행이 없으면 공제를 비운다. 나머지 정리는 [calc.sanitizeRecord].
-  WorkRecord toRecord() => calc.sanitizeRecord(WorkRecord(
-        date: date,
-        type: type,
-        clockIn: showsTimeRows ? clockIn : null,
-        clockOut: showsTimeRows ? clockOut : null,
-        deductionMinutes: showsDeductionRow ? deductionMinutes : 0,
-        deductionReason: deductionReason,
-      ));
+  /// 저장할 기록. 시각 행이 없으면 시각을 비우고, 공제 행이 없으면 공제를 비운다. 사유는 다듬고, 공제가 없으면 버린다.
+  /// 한도(반차 4h 등) 정리는 저장소의 sanitizeRecord가 모든 저장에서 한 번 더 한다.
+  WorkRecord toRecord() {
+    final deduction = showsDeductionRow ? deductionMinutes : 0;
+    final reason = deductionReason.trim();
+    return WorkRecord(
+      date: date,
+      type: type,
+      clockIn: showsTimeRows ? clockIn : null,
+      clockOut: showsTimeRows ? clockOut : null,
+      deductionMinutes: deduction,
+      deductionReason: deduction == 0 || reason.isEmpty ? null : reason,
+    );
+  }
 
   /// 시각·공제 없는 normal — 저장 대신 삭제한다.
   bool get isEmptyNormal {
@@ -125,7 +134,7 @@ class RecordDraft {
   /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 시각 행을 펼 때 값이 없으면 [WorkRules]의 기본 시각(출근 08:00 · 퇴근 17:00).
   RecordDraft toggleEditing(EditingRow row, WorkRules rules) {
     if (editing == row) return _copy(editing: null);
-    if (row == EditingRow.deduction) return _copy(editing: row);
+    if (row == EditingRow.deduction) return _copy(editing: row, deductionOpened: true);
     final defaultMinutes = row == EditingRow.clockIn ? rules.defaultClockInMinutes : rules.defaultClockOutMinutes;
     final current = timeOf(row) ?? DateTime(date.year, date.month, date.day, 0, defaultMinutes);
     return _copy(
@@ -150,6 +159,7 @@ class RecordDraft {
     int? deductionMinutes,
     String? deductionReason,
     bool? showsHolidayWork,
+    bool? deductionOpened,
     Object? editing = _Keep.editing,
   }) =>
       RecordDraft(
@@ -163,6 +173,7 @@ class RecordDraft {
         deductionMinutes: deductionMinutes ?? this.deductionMinutes,
         deductionReason: deductionReason ?? this.deductionReason,
         showsHolidayWork: showsHolidayWork ?? this.showsHolidayWork,
+        deductionOpened: deductionOpened ?? this.deductionOpened,
         editing: identical(editing, _Keep.editing) ? this.editing : editing as EditingRow?,
       );
 }

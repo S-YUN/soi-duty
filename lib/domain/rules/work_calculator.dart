@@ -99,9 +99,11 @@ int closingDeduction(WorkRecord r, DateTime clockOut, WorkRules rules) {
 bool isValidDeduction(WorkType type, int minutes, WorkRules rules) =>
     minutes >= 0 && minutes <= standardMinutes(type, rules);
 
-/// 저장 직전 불변식. 쉬는 날·주말은 공제 없음, 연차·출장은 시각 없음, 공제 0이면 사유 없음.
-WorkRecord sanitizeRecord(WorkRecord r) {
-  final deduction = canDeduct(r.date, r.type) ? r.deductionMinutes : 0;
+/// 저장 직전 불변식. 쉬는 날·주말은 공제 없음, 공제는 그날 기본 기준(반차 4h)까지, 연차·출장은 시각 없음,
+/// 공제 0이면 사유 없음. 저장소가 모든 저장에서 부른다 — 반차 전환·유형 자동 저장 같은 경로도 한도를 넘지 못한다.
+WorkRecord sanitizeRecord(WorkRecord r, WorkRules rules) {
+  final deduction =
+      canDeduct(r.date, r.type) ? r.deductionMinutes.clamp(0, standardMinutes(r.type, rules)) : 0;
   final reason = r.deductionReason?.trim();
   final dropTimes = r.type == WorkType.dayOff || r.type == WorkType.businessTrip;
   return r.copyWith(

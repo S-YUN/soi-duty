@@ -47,7 +47,8 @@ MonthCell _cell(
     value = MonthCellValue.weekendActual(actualMinutes(r!, rules) ?? 0); // 공휴일 근무 — 주말처럼 부호 없는 근무시간
   } else if (type == WorkType.holiday && date == today && r?.clockIn != null) {
     value = const MonthCellValue.working();
-  } else if (type != null && isOffType(type)) {
+  } else if ((type != null && isOffType(type)) || (r != null && !hasBoth && dayStandardMinutes(r, rules) == 0)) {
+    // 쉬는 날, 그리고 시간공제로 기준이 0이 된 날(시각 없음)은 누락 표시를 하지 않는다.
     value = const MonthCellValue.none();
   } else if (weekend) {
     value = hasBoth ? MonthCellValue.weekendActual(actualMinutes(r!, rules) ?? 0) : const MonthCellValue.none();

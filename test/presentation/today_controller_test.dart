@@ -234,4 +234,22 @@ void main() {
       expect((await records()).single.deductionMinutes, 0);
     });
   });
+
+  test('미리 넣은 공제는 출근 취소해도 남는다', () async {
+    await db.into(db.workRecords).insert(
+          WorkRecordsCompanion.insert(
+            date: '2026-09-16',
+            type: WorkType.normal,
+            deductionMinutes: const Value(120),
+            deductionReason: const Value('조기퇴근 공문'),
+          ),
+        );
+    await container.read(todayControllerProvider.future);
+    await notifier().clockIn();
+    await waitFor((s) => s.phase == TodayPhase.working);
+    await notifier().cancelClockIn();
+    final s = await waitFor((s) => s.phase == TodayPhase.before);
+    expect((s.record?.deductionMinutes, s.record?.deductionReason), (120, '조기퇴근 공문'));
+    expect(s.record?.clockIn, isNull);
+  });
 }

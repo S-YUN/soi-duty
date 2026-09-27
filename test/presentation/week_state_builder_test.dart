@@ -99,4 +99,10 @@ void main() {
     expect(day(s, 16).kind, WeekDayKind.working);
     expect(day(s, 16).isTodayWorking, isTrue);
   });
+
+  test('공제로 기준이 0이 된 날은 기록 없음이 아니라 쉬는 날처럼', () {
+    final s = build([rec(14, ded: 480), rec(15, type: WorkType.halfDay, ded: 240)]);
+    expect(day(s, 14).kind, WeekDayKind.off);
+    expect(day(s, 15).kind, WeekDayKind.off);
+  });
 }
