@@ -123,11 +123,10 @@ List<WorkRecord> _records(SeedScenario scenario, DateTime today) {
           records.add(full(d, inH: 9, inM: (n % 4) * 7, outH: 18, outM: (n % 5) * 9));
         }
       }
-      // 지난 주에 출장·시간공제(사유 있음/없음), 2주 전 월요일엔 공휴일 근무 — 날짜 변동과 무관하게 항상 보이게 덮어쓴다.
+      // 지난 주에 출장·시간공제 둘, 2주 전 월요일엔 공휴일 근무 — 날짜 변동과 무관하게 항상 보이게 덮어쓴다.
       final fixed = {
         addDays(lastMonday, 1): WorkRecord(date: addDays(lastMonday, 1), type: WorkType.businessTrip),
-        addDays(lastMonday, 2): full(addDays(lastMonday, 2), outH: 16)
-            .copyWith(deductionMinutes: 120, deductionReason: '조기퇴근 공문'),
+        addDays(lastMonday, 2): full(addDays(lastMonday, 2), outH: 16).copyWith(deductionMinutes: 120),
         addDays(lastMonday, 3): full(addDays(lastMonday, 3), outH: 17).copyWith(deductionMinutes: 60),
         addDays(lastMonday, -7): WorkRecord(
           date: addDays(lastMonday, -7),

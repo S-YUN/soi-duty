@@ -39,7 +39,7 @@ void main() {
     final r = (await repo.watchAll().first).single;
     expect(r.type, WorkType.halfDay);
     expect((r.clockIn, r.clockOut), (d(14, 13), d(14, 17)));
-    expect((r.deductionMinutes, r.deductionReason), (0, null));
+    expect(r.deductionMinutes, 0);
     expect(await repo.watchFirstRecordDate().first, d(14));
     await db.close();
   });

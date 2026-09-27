@@ -63,7 +63,7 @@ void main() {
   });
 
   for (final width in [320.0, 360.0, 600.0]) {
-    testWidgets('배지 둘·긴 사유가 있어도 7행 높이가 같고 폭 $width에서 넘치지 않는다', (tester) async {
+    testWidgets('배지 둘이 있어도 7행 높이가 같고 폭 $width에서 넘치지 않는다', (tester) async {
       SizeConfig.init(width);
       tester.view.physicalSize = Size(width * 3, 900 * 3);
       tester.view.devicePixelRatio = 3;
@@ -79,7 +79,6 @@ void main() {
             outM: 1,
             type: WorkType.halfDay,
             ded: 150,
-            reason: '조기퇴근 공문 스무 자까지 꽉 채운 사유',
           ),
           rec(15, inH: 10, outH: 15, type: WorkType.holiday),
           rec(16, inH: 9, inM: 12),
@@ -105,7 +104,7 @@ void main() {
           .map((w) => tester.getSize(find.byWidget(w)).height)
           .toSet();
       expect(heights.length, 1, reason: '행 높이: $heights');
-      expect(find.text('공제 2h 30m'), findsOneWidget);
+      expect(find.text('2h 30m 공제'), findsOneWidget);
       expect(find.text('출장'), findsOneWidget);
     });
   }

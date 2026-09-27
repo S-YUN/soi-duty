@@ -100,15 +100,9 @@ void main() {
       final s = build([rec(15, inH: 13, outH: 17, type: WorkType.halfDay, ded: 150), rec(14, inH: 10, outH: 15, type: WorkType.holiday)]);
       expect(WeekTexts.badges(dayOf(s, 15)).map((b) => (b.type, b.label)).toList(), [
         (WorkType.halfDay, '반차'),
-        (null, '공제 2h 30m'),
+        (null, '2h 30m 공제'),
       ]);
       expect(WeekTexts.badges(dayOf(s, 14)).map((b) => b.label).toList(), ['공휴일']);
-    });
-
-    test('메모: 사유가 뒤에 붙는다, 시각 없으면 사유만', () {
-      final s = build([rec(14, inH: 9, outH: 15, ded: 180, reason: '조기퇴근 공문'), rec(18, ded: 60, reason: '공문')]);
-      expect(WeekTexts.note(dayOf(s, 14)), '09:00 – 15:00 · 조기퇴근 공문');
-      expect(WeekTexts.note(dayOf(s, 18)), '공문');
     });
 
     test('공휴일 근무 행: 근무시간, 주 40시간 제외 메모, ± 비움', () {

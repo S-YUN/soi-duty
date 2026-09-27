@@ -9,6 +9,7 @@ import 'package:soi_duty/core/providers/database_providers.dart';
 import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/presentation/record_edit/record_edit_sheet.dart';
+import 'package:soi_duty/presentation/record_edit/record_edit_texts.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/deduction_sheet.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/time_wheel.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/type_rows.dart';
@@ -244,17 +245,14 @@ void main() {
       expect(find.byType(DeductionSheet), findsOneWidget);
     }
 
-    testWidgets('시간공제는 작은 시트 — 2시간 30분 + 사유, 확인하면 행에 반영, 저장하면 기록', (tester) async {
+    testWidgets('시간공제는 작은 시트 — 설명 + 휠만, 2시간 30분 확인하면 행에 반영, 저장하면 기록', (tester) async {
       await insert(14, inH: 9, outH: 15);
       await pumpSheet(tester, d(14));
       await openDeduction(tester);
-      expect(find.text('연차·반차로 안 되는 시간을 직접 넣어 이 날 기준시간에서 빼요'), findsOneWidget);
+      expect(find.text(RecordEditTexts.deductionHelp), findsOneWidget);
+      expect(find.byType(TextField), findsNothing); // 사유 입력은 뺐다
       await spin(tester, '0', 2);
       await spin(tester, '00', 3);
-      await tester.enterText(find.byType(TextField), '조기퇴근 공문');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-      expect(tester.testTextInput.isVisible, isFalse);
 
       await tester.tap(find.text('확인'));
       await tester.pumpAndSettle();
@@ -264,8 +262,7 @@ void main() {
 
       await tester.tap(find.text('저장'));
       await tester.pumpAndSettle();
-      final row = await only();
-      expect((row.deductionMinutes, row.deductionReason), (150, '조기퇴근 공문'));
+      expect((await only()).deductionMinutes, 150);
       await unmount(tester);
     });
 
@@ -279,17 +276,6 @@ void main() {
       expect(find.byType(DeductionSheet), findsNothing);
       expect(find.byType(RecordEditSheet), findsOneWidget);
       expect(find.text('없음'), findsOneWidget);
-      await unmount(tester);
-    });
-
-    testWidgets('사유 입력 중 휠을 돌리면 키보드가 내려간다', (tester) async {
-      await insert(14, inH: 9, outH: 15);
-      await pumpSheet(tester, d(14));
-      await openDeduction(tester);
-      await tester.showKeyboard(find.byType(TextField));
-      expect(tester.testTextInput.isVisible, isTrue);
-      await spin(tester, '0', 1);
-      expect(tester.testTextInput.isVisible, isFalse);
       await unmount(tester);
     });
 
@@ -361,22 +347,6 @@ void main() {
       await tester.tap(find.text('저장'));
       await tester.pumpAndSettle();
       expect((await only()).deductionMinutes, 167);
-      await unmount(tester);
-    });
-
-    testWidgets('작은 화면에서 키보드가 올라오면 사유칸과 확인 버튼이 스크롤 없이 보인다', (tester) async {
-      SizeConfig.init(320);
-      await insert(14, inH: 9, outH: 15);
-      await pumpSheet(tester, d(14));
-      tester.view.physicalSize = const Size(320 * 3, 568 * 3);
-      await tester.pumpAndSettle();
-      await openDeduction(tester);
-      tester.view.viewInsets = const FakeViewPadding(bottom: 300 * 3);
-      await tester.showKeyboard(find.byType(TextField));
-      await tester.pumpAndSettle();
-      const keyboardTop = 568.0 - 300;
-      expect(tester.getRect(find.byType(TextField)).bottom, lessThanOrEqualTo(keyboardTop));
-      expect(tester.getRect(find.text('확인')).bottom, lessThanOrEqualTo(keyboardTop));
       await unmount(tester);
     });
 

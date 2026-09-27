@@ -37,8 +37,11 @@ abstract final class RecordEditTexts {
   static const deductionLabel = '시간공제';
   static const confirm = '확인';
   static const deductionNone = '없음';
-  static const reasonHint = '사유 (선택) 예: 조기퇴근 공문';
-  static const deductionHelp = '연차·반차로 안 되는 시간을 직접 넣어 이 날 기준시간에서 빼요';
+  // 폭 320에서도 줄마다 끊기지 않게 짧게 세 줄로.
+  static const deductionHelp =
+      '연차·반차로 처리되지 않는 시간을 빼요.\n'
+      '예) 회사 공지로 2시간 일찍 퇴근 → 2시간\n'
+      '뺀 만큼 그날 채울 시간이 줄어요.';
   static const halfDayDeductionTooLong = '반차인 날은 4시간까지 뺄 수 있어요';
   static const holidayWorkButton = '+ 이 날 근무한 시간 입력';
   static const holidayNote = '공휴일 근무는 주 40시간에 포함되지 않아요';

@@ -88,13 +88,12 @@ void main() {
     expect(parseDateKey('2026-09-03'), d(3));
   });
 
-  test('공제·사유가 왕복되고, 연차로 저장하면 공제·시각이 지워진다', () async {
-    await repo.save(rec(14, inH: 9, outH: 15, ded: 180, reason: '조기퇴근 공문'));
-    final saved = (await repo.watchAll().first).single;
-    expect((saved.deductionMinutes, saved.deductionReason), (180, '조기퇴근 공문'));
-    await repo.save(rec(14, inH: 9, outH: 15, type: WorkType.dayOff, ded: 180, reason: 'x'));
+  test('공제가 왕복되고, 연차로 저장하면 공제·시각이 지워진다', () async {
+    await repo.save(rec(14, inH: 9, outH: 15, ded: 180));
+    expect((await repo.watchAll().first).single.deductionMinutes, 180);
+    await repo.save(rec(14, inH: 9, outH: 15, type: WorkType.dayOff, ded: 180));
     final r = (await repo.watchAll().first).single;
-    expect((r.clockIn, r.deductionMinutes, r.deductionReason), (null, 0, null));
+    expect((r.clockIn, r.deductionMinutes), (null, 0));
   });
 
   test('반차 + 5h 공제를 저장하면 4h로 잘린다', () async {

@@ -96,7 +96,7 @@ final class WorkRecordRepositoryProvider
 }
 
 String _$workRecordRepositoryHash() =>
-    r'5cfa3b14836f283ceed12a9cf03085b0a342301e';
+    r'483b1112ad8207dca51102f2a2c5a87ee29c8c7b';
 
 @ProviderFor(workRules)
 final workRulesProvider = WorkRulesProvider._();

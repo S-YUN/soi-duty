@@ -12,7 +12,6 @@ WorkRecord rec(
   int? outM,
   WorkType type = WorkType.normal,
   int ded = 0,
-  String? reason,
 }) =>
     WorkRecord(
       date: d(day),
@@ -20,5 +19,4 @@ WorkRecord rec(
       clockOut: outH == null ? null : d(day, outH, outM ?? 0),
       type: type,
       deductionMinutes: ded,
-      deductionReason: reason,
     );

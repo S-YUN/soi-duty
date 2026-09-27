@@ -68,16 +68,6 @@
             "default_dart": "const CustomExpression('0')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deduction_reason",
-            "getter_name": "deductionReason",
-            "moor_type": "string",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
@@ -132,7 +122,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"work_records\" (\"date\" TEXT NOT NULL, \"clock_in\" INTEGER NULL, \"clock_out\" INTEGER NULL, \"type\" TEXT NOT NULL, \"deduction_minutes\" INTEGER NOT NULL DEFAULT 0, \"deduction_reason\" TEXT NULL, PRIMARY KEY (\"date\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"work_records\" (\"date\" TEXT NOT NULL, \"clock_in\" INTEGER NULL, \"clock_out\" INTEGER NULL, \"type\" TEXT NOT NULL, \"deduction_minutes\" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (\"date\"));"
         }
       ]
     },

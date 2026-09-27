@@ -59,15 +59,7 @@ abstract final class WeekTexts {
         WeekDayKind.future || WeekDayKind.beforeWork || WeekDayKind.weekendEmpty => dash,
       };
 
-  /// 메모 줄. 시간공제 사유가 있으면 뒤에 붙인다 (한 줄 말줄임은 위젯이).
   static String note(WeekDay day) {
-    final base = _baseNote(day);
-    final reason = day.record?.deductionReason;
-    if (reason == null) return base;
-    return base.isEmpty ? reason : '$base · $reason';
-  }
-
-  static String _baseNote(WeekDay day) {
     final r = day.record;
     switch (day.kind) {
       case WeekDayKind.recorded:
@@ -114,7 +106,7 @@ abstract final class WeekTexts {
     if (r == null) return const [];
     return [
       if (r.type != WorkType.normal) WeekBadge(badgeLabel(r.type), type: r.type),
-      if (r.deductionMinutes > 0) WeekBadge('공제 ${formatHm(r.deductionMinutes)}'),
+      if (r.deductionMinutes > 0) WeekBadge('${formatHm(r.deductionMinutes)} 공제'),
     ];
   }
 

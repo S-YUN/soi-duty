@@ -12,7 +12,6 @@ class WorkRecords extends Table {
   DateTimeColumn get clockOut => dateTime().nullable()();
   TextColumn get type => textEnum<WorkType>()();
   IntColumn get deductionMinutes => integer().withDefault(const Constant(0))();
-  TextColumn get deductionReason => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {date};
@@ -37,10 +36,9 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onUpgrade: (m, from, to) async {
-          // v2: 시간공제 (2026-09-27). 기존 행은 공제 0 · 사유 null.
+          // v2: 시간공제 (2026-09-27). 기존 행은 공제 0.
           if (from < 2) {
             await m.addColumn(workRecords, workRecords.deductionMinutes);
-            await m.addColumn(workRecords, workRecords.deductionReason);
           }
         },
       );

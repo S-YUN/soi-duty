@@ -50,14 +50,6 @@ class WorkRecords extends Table with TableInfo {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> deductionReason = GeneratedColumn<String>(
-    'deduction_reason',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: 'NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     date,
@@ -65,7 +57,6 @@ class WorkRecords extends Table with TableInfo {
     clockOut,
     type,
     deductionMinutes,
-    deductionReason,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;

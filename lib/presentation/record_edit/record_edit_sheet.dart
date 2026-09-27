@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -63,7 +61,6 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   Future<void> _save() => _saveDraft(_draft!);
 
   Future<void> _saveDraft(RecordDraft draft) async {
-    FocusScope.of(context).unfocus(); // 키보드 잔상 없이 닫는다
     await ref.read(recordEditControllerProvider.notifier).save(draft);
     if (mounted) _close();
   }
@@ -71,16 +68,15 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   /// 시간공제 행 탭 — 작은 시트를 겹쳐 띄운다. 과거·퇴근한 오늘은 초안만 바꾸고(저장 버튼으로 마무리),
   /// 유형 전용 모드(미래·출근 전 오늘)는 유형 행처럼 작은 시트의 저장이 곧 저장이다.
   Future<void> _editDeduction(RecordDraft draft, WorkRules rules) async {
-    final input = await showDeductionSheet(
+    final minutes = await showDeductionSheet(
       context,
       minutes: draft.deductionMinutes,
-      reason: draft.deductionReason,
       maxHours: standardMinutes(draft.type, rules) ~/ 60,
       stepMinutes: rules.deductionStepMinutes,
       confirmLabel: draft.isTypeOnly ? RecordEditTexts.save : RecordEditTexts.confirm,
     );
-    if (input == null || !mounted) return;
-    final next = _draft!.withDeduction(input.minutes).withReason(input.reason);
+    if (minutes == null || !mounted) return;
+    final next = _draft!.withDeduction(minutes);
     if (next.isTypeOnly) return _saveDraft(next);
     _update(next);
   }
@@ -124,149 +120,139 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   @override
   Widget build(BuildContext context) {
     final rules = ref.watch(workRulesProvider);
-    // 키보드(사유 입력)가 올라오면 그만큼 시트를 올린다.
-    final bottomInset = math.max(MediaQuery.viewPaddingOf(context).bottom, MediaQuery.viewInsetsOf(context).bottom);
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     final records = ref.watch(allRecordsProvider).value;
     if (records == null && _draft == null) return const SizedBox.shrink();
     final draft = _draft ??= _initialDraft(records!);
     final editing = draft.editing;
 
-    // 시트 빈 곳을 누르면 키보드를 내린다 (사유 입력칸의 onTapOutside가 못 잡는 시트 안쪽 여백).
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.sheetRadius)),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.sheetShadow,
-              offset: AppSizes.sheetShadowOffset,
-              blurRadius: AppSizes.sheetShadowBlur,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.sheetRadius)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.sheetShadow,
+            offset: AppSizes.sheetShadowOffset,
+            blurRadius: AppSizes.sheetShadowBlur,
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(top: AppSizes.sheetPadding.top, bottom: AppSizes.sheetPadding.bottom + bottomInset),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: AppSizes.sheetHandleWidth,
+                height: AppSizes.sheetHandleHeight,
+                margin: EdgeInsets.only(bottom: AppSizes.sheetHandleBottom),
+                decoration: BoxDecoration(
+                  color: AppColors.hairline,
+                  borderRadius: BorderRadius.circular(AppSizes.pill),
+                ),
+              ),
             ),
-          ],
-        ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(top: AppSizes.sheetPadding.top, bottom: AppSizes.sheetPadding.bottom + bottomInset),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  width: AppSizes.sheetHandleWidth,
-                  height: AppSizes.sheetHandleHeight,
-                  margin: EdgeInsets.only(bottom: AppSizes.sheetHandleBottom),
-                  decoration: BoxDecoration(
-                    color: AppColors.hairline,
-                    borderRadius: BorderRadius.circular(AppSizes.pill),
+            _inset(Text(RecordEditTexts.title(draft), style: AppTextStyles.sheetTitle)),
+            if (draft.isWeekend) _inset(_Note(RecordEditTexts.weekendNote)),
+            // 미래·출근 전 오늘은 유형만 고르는 자리 — 안내 한 줄 + 전체 너비 행. 과거는 시각 행 위의 칩.
+            if (draft.isTypeOnly && draft.showsTypeChips) ...[
+              SizedBox(height: AppSizes.sheetSubtitleTop),
+              _inset(Text(RecordEditTexts.futureNote, style: AppTextStyles.sheetSubtitle)),
+              SizedBox(height: AppSizes.typeRowsTop),
+              _inset(TypeRows(selected: draft.type, onChanged: (t) => _onTypeChanged(draft, t))),
+            ] else if (draft.showsTypeChips)
+              _inset(
+                Padding(
+                  padding: AppSizes.chipsMargin,
+                  child: TypeChips(selected: draft.type, onChanged: (t) => _onTypeChanged(draft, t)),
+                ),
+              ),
+            // 공휴일은 대부분 쉬는 날 — 근무 입력은 한 번 더 눌러야 펼쳐진다.
+            if (draft.showsHolidayWorkButton)
+              Padding(
+                padding: EdgeInsets.only(top: AppSizes.holidayWorkButtonTop),
+                child: Center(
+                  child: QuietTextButton(
+                    label: RecordEditTexts.holidayWorkButton,
+                    onTap: () => _update(draft.expandHolidayWork()),
                   ),
                 ),
               ),
-              _inset(Text(RecordEditTexts.title(draft), style: AppTextStyles.sheetTitle)),
-              if (draft.isWeekend) _inset(_Note(RecordEditTexts.weekendNote)),
-              // 미래·출근 전 오늘은 유형만 고르는 자리 — 안내 한 줄 + 전체 너비 행. 과거는 시각 행 위의 칩.
-              if (draft.isTypeOnly && draft.showsTypeChips) ...[
-                SizedBox(height: AppSizes.sheetSubtitleTop),
-                _inset(Text(RecordEditTexts.futureNote, style: AppTextStyles.sheetSubtitle)),
-                SizedBox(height: AppSizes.typeRowsTop),
-                _inset(TypeRows(selected: draft.type, onChanged: (t) => _onTypeChanged(draft, t))),
-              ] else if (draft.showsTypeChips)
-                _inset(
-                  Padding(
-                    padding: AppSizes.chipsMargin,
-                    child: TypeChips(selected: draft.type, onChanged: (t) => _onTypeChanged(draft, t)),
-                  ),
+            if (draft.showsTimeRows && draft.type == WorkType.holiday) _inset(_Note(RecordEditTexts.holidayNote)),
+            if (draft.showsTimeRows) ...[
+              _inset(
+                outdent: AppSizes.timeRowOutdent,
+                Column(
+                  children: [
+                    for (final row in const [EditingRow.clockIn, EditingRow.clockOut])
+                      TimeRow(
+                        label: row == EditingRow.clockIn ? RecordEditTexts.clockIn : RecordEditTexts.clockOut,
+                        value: RecordEditTexts.time(draft.timeOf(row)),
+                        selected: editing == row,
+                        onTap: () => _update(draft.toggleEditing(row, rules)),
+                      ),
+                  ],
                 ),
-              // 공휴일은 대부분 쉬는 날 — 근무 입력은 한 번 더 눌러야 펼쳐진다.
-              if (draft.showsHolidayWorkButton)
-                Padding(
-                  padding: EdgeInsets.only(top: AppSizes.holidayWorkButtonTop),
-                  child: Center(
-                    child: QuietTextButton(
-                      label: RecordEditTexts.holidayWorkButton,
-                      onTap: () => _update(draft.expandHolidayWork()),
-                    ),
-                  ),
-                ),
-              if (draft.showsTimeRows && draft.type == WorkType.holiday) _inset(_Note(RecordEditTexts.holidayNote)),
-              if (draft.showsTimeRows) ...[
+              ),
+              if (editing == EditingRow.clockIn || editing == EditingRow.clockOut)
                 _inset(
-                  outdent: AppSizes.timeRowOutdent,
-                  Column(
+                  _WheelBox(
+                    title: RecordEditTexts.wheelTitle(editing!),
                     children: [
-                      for (final row in const [EditingRow.clockIn, EditingRow.clockOut])
-                        TimeRow(
-                          label: row == EditingRow.clockIn ? RecordEditTexts.clockIn : RecordEditTexts.clockOut,
-                          value: RecordEditTexts.time(draft.timeOf(row)),
-                          selected: editing == row,
-                          onTap: () => _update(draft.toggleEditing(row, rules)),
-                        ),
+                      TimeWheel(
+                        key: ValueKey(editing),
+                        hour: draft.timeOf(editing)!.hour,
+                        minute: draft.timeOf(editing)!.minute,
+                        onChanged: (h, m) => _update(draft.withTime(editing, h, m)),
+                      ),
                     ],
                   ),
                 ),
-                if (editing == EditingRow.clockIn || editing == EditingRow.clockOut)
-                  _inset(
-                    _WheelBox(
-                      title: RecordEditTexts.wheelTitle(editing!),
-                      children: [
-                        TimeWheel(
-                          key: ValueKey(editing),
-                          hour: draft.timeOf(editing)!.hour,
-                          minute: draft.timeOf(editing)!.minute,
-                          onChanged: (h, m) => _update(draft.withTime(editing, h, m)),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-              if (draft.showsDeductionRow) ...[
-                if (draft.isTypeOnly) SizedBox(height: AppSizes.typeRowsTop),
-                _inset(
-                  outdent: AppSizes.timeRowOutdent,
-                  TimeRow(
-                    label: RecordEditTexts.deductionLabel,
-                    value: RecordEditTexts.deduction(draft.deductionMinutes),
-                    selected: false,
-                    onTap: () => _editDeduction(draft, rules),
-                  ),
-                ),
-              ],
-              if (draft.showsCalcRows || !draft.isValid(rules))
-                _inset(
-                  Padding(
-                    padding: EdgeInsets.only(top: AppSizes.calcTop),
-                    child: !draft.isDeductionValid(rules)
-                        ? Text(RecordEditTexts.halfDayDeductionTooLong, style: AppTextStyles.calcError)
-                        : !draft.isValid(rules)
-                        ? Text(RecordEditTexts.invalidRange, style: AppTextStyles.calcError)
-                        : CalcRows(lines: calcLines(draft, rules)),
-                  ),
-                ),
-              // 저장은 시각 행이 있을 때만 — 연차·공휴일·출장·유형 전용 모드는 탭(작은 시트의 저장)이 곧 저장이다.
-              // 닫기는 아래로 내리기·바깥 탭.
-              if (draft.showsSaveButton) ...[
-                SizedBox(height: AppSizes.sheetButtonsTop),
-                _inset(
-                  SheetButton(label: RecordEditTexts.save, primary: true, onTap: draft.isValid(rules) ? _save : null),
-                ),
-              ],
-              if (draft.existing)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _delete,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: AppSizes.deleteLinkTop),
-                    child: Text(
-                      RecordEditTexts.deleteLink,
-                      style: AppTextStyles.deleteLink,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
             ],
-          ),
+            if (draft.showsDeductionRow) ...[
+              if (draft.isTypeOnly) SizedBox(height: AppSizes.typeRowsTop),
+              _inset(
+                outdent: AppSizes.timeRowOutdent,
+                TimeRow(
+                  label: RecordEditTexts.deductionLabel,
+                  value: RecordEditTexts.deduction(draft.deductionMinutes),
+                  selected: false,
+                  onTap: () => _editDeduction(draft, rules),
+                ),
+              ),
+            ],
+            if (draft.showsCalcRows || !draft.isValid(rules))
+              _inset(
+                Padding(
+                  padding: EdgeInsets.only(top: AppSizes.calcTop),
+                  child: !draft.isDeductionValid(rules)
+                      ? Text(RecordEditTexts.halfDayDeductionTooLong, style: AppTextStyles.calcError)
+                      : !draft.isValid(rules)
+                      ? Text(RecordEditTexts.invalidRange, style: AppTextStyles.calcError)
+                      : CalcRows(lines: calcLines(draft, rules)),
+                ),
+              ),
+            // 저장은 시각 행이 있을 때만 — 연차·공휴일·출장·유형 전용 모드는 탭(작은 시트의 저장)이 곧 저장이다.
+            // 닫기는 아래로 내리기·바깥 탭.
+            if (draft.showsSaveButton) ...[
+              SizedBox(height: AppSizes.sheetButtonsTop),
+              _inset(
+                SheetButton(label: RecordEditTexts.save, primary: true, onTap: draft.isValid(rules) ? _save : null),
+              ),
+            ],
+            if (draft.existing)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _delete,
+                child: Padding(
+                  padding: EdgeInsets.only(top: AppSizes.deleteLinkTop),
+                  child: Text(RecordEditTexts.deleteLink, style: AppTextStyles.deleteLink, textAlign: TextAlign.center),
+                ),
+              ),
+          ],
         ),
       ),
     );

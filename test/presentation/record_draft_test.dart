@@ -179,15 +179,12 @@ void main() {
       expect(x.isDeductionValid(rules), isFalse);
       expect(x.isValid(rules), isFalse);
     });
-    test('toRecord: 공제·사유 반영, 공제 0이면 사유 없음', () {
+    test('toRecord: 공제 반영', () {
       final base = mk(date: d(14), record: rec(14, inH: 9, outH: 15));
-      final r = base.withDeduction(120).withReason('공문').toRecord();
-      expect((r.deductionMinutes, r.deductionReason), (120, '공문'));
-      expect(base.withReason('공문').toRecord().deductionReason, isNull);
+      expect(base.withDeduction(120).toRecord().deductionMinutes, 120);
     });
-    test('기록의 공제·사유를 들고 열린다', () {
-      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 90, reason: '공문'));
-      expect((x.deductionMinutes, x.deductionReason), (90, '공문'));
+    test('기록의 공제를 들고 열린다', () {
+      expect(mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 90)).deductionMinutes, 90);
     });
     test('연차로 바꾸면 공제가 저장되지 않는다', () {
       expect(mk(date: d(14), record: rec(14, ded: 60)).withType(WorkType.dayOff).toRecord().deductionMinutes, 0);

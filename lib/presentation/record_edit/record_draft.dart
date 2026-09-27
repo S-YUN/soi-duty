@@ -19,7 +19,6 @@ class RecordDraft {
     this.clockIn,
     this.clockOut,
     this.deductionMinutes = 0,
-    this.deductionReason = '',
     this.showsHolidayWork = false,
     this.editing,
   });
@@ -35,7 +34,6 @@ class RecordDraft {
       clockIn: record?.clockIn,
       clockOut: record?.clockOut,
       deductionMinutes: record?.deductionMinutes ?? 0,
-      deductionReason: record?.deductionReason ?? '',
       showsHolidayWork: hasTime,
     );
   }
@@ -54,9 +52,6 @@ class RecordDraft {
 
   /// 시간공제(분). 0이면 없음
   final int deductionMinutes;
-
-  /// 시간공제 사유. ''이면 없음
-  final String deductionReason;
 
   /// 공휴일에 "이 날 근무한 시간 입력"을 펼쳤는지. 초안 상태일 뿐 저장값이 아니다.
   final bool showsHolidayWork;
@@ -94,20 +89,15 @@ class RecordDraft {
 
   DateTime? timeOf(EditingRow row) => row == EditingRow.clockIn ? clockIn : clockOut;
 
-  /// 저장할 기록. 시각 행이 없으면 시각을 비우고, 공제 행이 없으면 공제를 비운다. 사유는 다듬고, 공제가 없으면 버린다.
+  /// 저장할 기록. 시각 행이 없으면 시각을 비우고, 공제 행이 없으면 공제를 비운다.
   /// 한도(반차 4h 등) 정리는 저장소의 sanitizeRecord가 모든 저장에서 한 번 더 한다.
-  WorkRecord toRecord() {
-    final deduction = showsDeductionRow ? deductionMinutes : 0;
-    final reason = deductionReason.trim();
-    return WorkRecord(
-      date: date,
-      type: type,
-      clockIn: showsTimeRows ? clockIn : null,
-      clockOut: showsTimeRows ? clockOut : null,
-      deductionMinutes: deduction,
-      deductionReason: deduction == 0 || reason.isEmpty ? null : reason,
-    );
-  }
+  WorkRecord toRecord() => WorkRecord(
+        date: date,
+        type: type,
+        clockIn: showsTimeRows ? clockIn : null,
+        clockOut: showsTimeRows ? clockOut : null,
+        deductionMinutes: showsDeductionRow ? deductionMinutes : 0,
+      );
 
   /// 시각·공제 없는 normal — 저장 대신 삭제한다.
   bool get isEmptyNormal {
@@ -121,7 +111,6 @@ class RecordDraft {
     return _copy(type: type, showsHolidayWork: type == this.type ? null : false);
   }
   RecordDraft withDeduction(int minutes) => _copy(deductionMinutes: minutes);
-  RecordDraft withReason(String text) => _copy(deductionReason: text);
   RecordDraft expandHolidayWork() => _copy(showsHolidayWork: true);
 
   /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 시각 행을 펼 때 값이 없으면 [WorkRules]의 기본 시각(출근 08:00 · 퇴근 17:00).
@@ -149,7 +138,6 @@ class RecordDraft {
     Object? clockIn = _Keep.time,
     Object? clockOut = _Keep.time,
     int? deductionMinutes,
-    String? deductionReason,
     bool? showsHolidayWork,
     Object? editing = _Keep.editing,
   }) =>
@@ -162,7 +150,6 @@ class RecordDraft {
         clockIn: identical(clockIn, _Keep.time) ? this.clockIn : clockIn as DateTime?,
         clockOut: identical(clockOut, _Keep.time) ? this.clockOut : clockOut as DateTime?,
         deductionMinutes: deductionMinutes ?? this.deductionMinutes,
-        deductionReason: deductionReason ?? this.deductionReason,
         showsHolidayWork: showsHolidayWork ?? this.showsHolidayWork,
         editing: identical(editing, _Keep.editing) ? this.editing : editing as EditingRow?,
       );

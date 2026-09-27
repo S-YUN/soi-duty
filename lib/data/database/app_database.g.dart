@@ -61,17 +61,6 @@ class $WorkRecordsTable extends WorkRecords
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _deductionReasonMeta = const VerificationMeta(
-    'deductionReason',
-  );
-  @override
-  late final GeneratedColumn<String> deductionReason = GeneratedColumn<String>(
-    'deduction_reason',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   @override
   List<GeneratedColumn> get $columns => [
     date,
@@ -79,7 +68,6 @@ class $WorkRecordsTable extends WorkRecords
     clockOut,
     type,
     deductionMinutes,
-    deductionReason,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -122,15 +110,6 @@ class $WorkRecordsTable extends WorkRecords
         ),
       );
     }
-    if (data.containsKey('deduction_reason')) {
-      context.handle(
-        _deductionReasonMeta,
-        deductionReason.isAcceptableOrUnknown(
-          data['deduction_reason']!,
-          _deductionReasonMeta,
-        ),
-      );
-    }
     return context;
   }
 
@@ -162,10 +141,6 @@ class $WorkRecordsTable extends WorkRecords
         DriftSqlType.int,
         data['${effectivePrefix}deduction_minutes'],
       )!,
-      deductionReason: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}deduction_reason'],
-      ),
     );
   }
 
@@ -185,14 +160,12 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
   final DateTime? clockOut;
   final WorkType type;
   final int deductionMinutes;
-  final String? deductionReason;
   const WorkRecordRow({
     required this.date,
     this.clockIn,
     this.clockOut,
     required this.type,
     required this.deductionMinutes,
-    this.deductionReason,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -210,9 +183,6 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
       );
     }
     map['deduction_minutes'] = Variable<int>(deductionMinutes);
-    if (!nullToAbsent || deductionReason != null) {
-      map['deduction_reason'] = Variable<String>(deductionReason);
-    }
     return map;
   }
 
@@ -227,9 +197,6 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
           : Value(clockOut),
       type: Value(type),
       deductionMinutes: Value(deductionMinutes),
-      deductionReason: deductionReason == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deductionReason),
     );
   }
 
@@ -246,7 +213,6 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
         serializer.fromJson<String>(json['type']),
       ),
       deductionMinutes: serializer.fromJson<int>(json['deductionMinutes']),
-      deductionReason: serializer.fromJson<String?>(json['deductionReason']),
     );
   }
   @override
@@ -260,7 +226,6 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
         $WorkRecordsTable.$convertertype.toJson(type),
       ),
       'deductionMinutes': serializer.toJson<int>(deductionMinutes),
-      'deductionReason': serializer.toJson<String?>(deductionReason),
     };
   }
 
@@ -270,16 +235,12 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
     Value<DateTime?> clockOut = const Value.absent(),
     WorkType? type,
     int? deductionMinutes,
-    Value<String?> deductionReason = const Value.absent(),
   }) => WorkRecordRow(
     date: date ?? this.date,
     clockIn: clockIn.present ? clockIn.value : this.clockIn,
     clockOut: clockOut.present ? clockOut.value : this.clockOut,
     type: type ?? this.type,
     deductionMinutes: deductionMinutes ?? this.deductionMinutes,
-    deductionReason: deductionReason.present
-        ? deductionReason.value
-        : this.deductionReason,
   );
   WorkRecordRow copyWithCompanion(WorkRecordsCompanion data) {
     return WorkRecordRow(
@@ -290,9 +251,6 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
       deductionMinutes: data.deductionMinutes.present
           ? data.deductionMinutes.value
           : this.deductionMinutes,
-      deductionReason: data.deductionReason.present
-          ? data.deductionReason.value
-          : this.deductionReason,
     );
   }
 
@@ -303,21 +261,14 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
           ..write('clockIn: $clockIn, ')
           ..write('clockOut: $clockOut, ')
           ..write('type: $type, ')
-          ..write('deductionMinutes: $deductionMinutes, ')
-          ..write('deductionReason: $deductionReason')
+          ..write('deductionMinutes: $deductionMinutes')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-    date,
-    clockIn,
-    clockOut,
-    type,
-    deductionMinutes,
-    deductionReason,
-  );
+  int get hashCode =>
+      Object.hash(date, clockIn, clockOut, type, deductionMinutes);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -326,8 +277,7 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
           other.clockIn == this.clockIn &&
           other.clockOut == this.clockOut &&
           other.type == this.type &&
-          other.deductionMinutes == this.deductionMinutes &&
-          other.deductionReason == this.deductionReason);
+          other.deductionMinutes == this.deductionMinutes);
 }
 
 class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
@@ -336,7 +286,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
   final Value<DateTime?> clockOut;
   final Value<WorkType> type;
   final Value<int> deductionMinutes;
-  final Value<String?> deductionReason;
   final Value<int> rowid;
   const WorkRecordsCompanion({
     this.date = const Value.absent(),
@@ -344,7 +293,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     this.clockOut = const Value.absent(),
     this.type = const Value.absent(),
     this.deductionMinutes = const Value.absent(),
-    this.deductionReason = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WorkRecordsCompanion.insert({
@@ -353,7 +301,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     this.clockOut = const Value.absent(),
     required WorkType type,
     this.deductionMinutes = const Value.absent(),
-    this.deductionReason = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : date = Value(date),
        type = Value(type);
@@ -363,7 +310,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     Expression<DateTime>? clockOut,
     Expression<String>? type,
     Expression<int>? deductionMinutes,
-    Expression<String>? deductionReason,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -372,7 +318,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
       if (clockOut != null) 'clock_out': clockOut,
       if (type != null) 'type': type,
       if (deductionMinutes != null) 'deduction_minutes': deductionMinutes,
-      if (deductionReason != null) 'deduction_reason': deductionReason,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -383,7 +328,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     Value<DateTime?>? clockOut,
     Value<WorkType>? type,
     Value<int>? deductionMinutes,
-    Value<String?>? deductionReason,
     Value<int>? rowid,
   }) {
     return WorkRecordsCompanion(
@@ -392,7 +336,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
       clockOut: clockOut ?? this.clockOut,
       type: type ?? this.type,
       deductionMinutes: deductionMinutes ?? this.deductionMinutes,
-      deductionReason: deductionReason ?? this.deductionReason,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -417,9 +360,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     if (deductionMinutes.present) {
       map['deduction_minutes'] = Variable<int>(deductionMinutes.value);
     }
-    if (deductionReason.present) {
-      map['deduction_reason'] = Variable<String>(deductionReason.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -434,7 +374,6 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
           ..write('clockOut: $clockOut, ')
           ..write('type: $type, ')
           ..write('deductionMinutes: $deductionMinutes, ')
-          ..write('deductionReason: $deductionReason, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -668,7 +607,6 @@ typedef $$WorkRecordsTableCreateCompanionBuilder =
       Value<DateTime?> clockOut,
       required WorkType type,
       Value<int> deductionMinutes,
-      Value<String?> deductionReason,
       Value<int> rowid,
     });
 typedef $$WorkRecordsTableUpdateCompanionBuilder =
@@ -678,7 +616,6 @@ typedef $$WorkRecordsTableUpdateCompanionBuilder =
       Value<DateTime?> clockOut,
       Value<WorkType> type,
       Value<int> deductionMinutes,
-      Value<String?> deductionReason,
       Value<int> rowid,
     });
 
@@ -716,11 +653,6 @@ class $$WorkRecordsTableFilterComposer
     column: $table.deductionMinutes,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get deductionReason => $composableBuilder(
-    column: $table.deductionReason,
-    builder: (column) => ColumnFilters(column),
-  );
 }
 
 class $$WorkRecordsTableOrderingComposer
@@ -756,11 +688,6 @@ class $$WorkRecordsTableOrderingComposer
     column: $table.deductionMinutes,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get deductionReason => $composableBuilder(
-    column: $table.deductionReason,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$WorkRecordsTableAnnotationComposer
@@ -786,11 +713,6 @@ class $$WorkRecordsTableAnnotationComposer
 
   GeneratedColumn<int> get deductionMinutes => $composableBuilder(
     column: $table.deductionMinutes,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get deductionReason => $composableBuilder(
-    column: $table.deductionReason,
     builder: (column) => column,
   );
 }
@@ -831,7 +753,6 @@ class $$WorkRecordsTableTableManager
                 Value<DateTime?> clockOut = const Value.absent(),
                 Value<WorkType> type = const Value.absent(),
                 Value<int> deductionMinutes = const Value.absent(),
-                Value<String?> deductionReason = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkRecordsCompanion(
                 date: date,
@@ -839,7 +760,6 @@ class $$WorkRecordsTableTableManager
                 clockOut: clockOut,
                 type: type,
                 deductionMinutes: deductionMinutes,
-                deductionReason: deductionReason,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -849,7 +769,6 @@ class $$WorkRecordsTableTableManager
                 Value<DateTime?> clockOut = const Value.absent(),
                 required WorkType type,
                 Value<int> deductionMinutes = const Value.absent(),
-                Value<String?> deductionReason = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkRecordsCompanion.insert(
                 date: date,
@@ -857,7 +776,6 @@ class $$WorkRecordsTableTableManager
                 clockOut: clockOut,
                 type: type,
                 deductionMinutes: deductionMinutes,
-                deductionReason: deductionReason,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
