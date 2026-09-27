@@ -196,19 +196,12 @@ void main() {
       expect(mk(date: d(18)).withDeduction(60).isEmptyNormal, isFalse);
       expect(mk(date: d(18)).isEmptyNormal, isTrue);
     });
-    test('휠은 10분 내림 위치에서 열리고 값은 그대로', () {
-      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 167)).toggleEditing(EditingRow.deduction, rules);
-      expect(x.editing, EditingRow.deduction);
-      expect(x.deductionMinutes, 167);
-      expect(x.deductionWheelStart(rules), 160);
-      expect((x.clockIn, x.clockOut), (d(14, 9), d(14, 15)));
-    });
-    test('유형 전용 모드에서 공제 휠을 펴면 저장 버튼, 접어도 남는다', () {
-      final x = mk(date: d(18));
-      expect(x.showsSaveButton, isFalse);
-      final opened = x.toggleEditing(EditingRow.deduction, rules).withDeduction(120);
-      expect(opened.showsSaveButton, isTrue);
-      expect(opened.toggleEditing(EditingRow.deduction, rules).showsSaveButton, isTrue);
+    test('출·퇴근 휠을 펴면 계산 내역을 숨긴다 — 시트가 화면을 넘지 않게', () {
+      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15));
+      expect(x.showsCalcRows, isTrue);
+      final opened = x.toggleEditing(EditingRow.clockIn, rules);
+      expect(opened.showsCalcRows, isFalse);
+      expect(opened.toggleEditing(EditingRow.clockIn, rules).showsCalcRows, isTrue);
     });
     test('계산 내역에 시간공제 줄과 공제 반영 기준', () {
       final x = mk(date: d(14), record: rec(14, inH: 9, outH: 15, ded: 120));

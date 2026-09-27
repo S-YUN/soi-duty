@@ -9,9 +9,10 @@ import 'package:soi_duty/core/providers/database_providers.dart';
 import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/presentation/record_edit/record_edit_sheet.dart';
-import 'package:soi_duty/presentation/record_edit/widgets/duration_wheel.dart';
+import 'package:soi_duty/presentation/record_edit/widgets/deduction_sheet.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/time_wheel.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/type_rows.dart';
+import 'package:soi_duty/ui/app_colors.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/fonts.dart';
@@ -236,23 +237,30 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('공제 휠로 2시간 30분 + 사유를 넣고 저장', (tester) async {
-      await insert(14, inH: 9, outH: 15);
-      await pumpSheet(tester, d(14));
+    /// 시간공제 행을 눌러 작은 시트를 연다.
+    Future<void> openDeduction(WidgetTester tester) async {
       await tester.tap(find.text('시간공제').first);
       await tester.pumpAndSettle();
-      expect(find.text('뺄 시간'), findsOneWidget);
-      expect(find.byType(DurationWheel), findsOneWidget);
-      expect(find.text('연차·반차로 안 되는 시간을 직접 넣어 이 날 기준시간에서 빼요'), findsOneWidget);
+      expect(find.byType(DeductionSheet), findsOneWidget);
+    }
 
+    testWidgets('시간공제는 작은 시트 — 2시간 30분 + 사유, 확인하면 행에 반영, 저장하면 기록', (tester) async {
+      await insert(14, inH: 9, outH: 15);
+      await pumpSheet(tester, d(14));
+      await openDeduction(tester);
+      expect(find.text('연차·반차로 안 되는 시간을 직접 넣어 이 날 기준시간에서 빼요'), findsOneWidget);
       await spin(tester, '0', 2);
       await spin(tester, '00', 3);
-      expect(find.text('2시간 30분'), findsOneWidget);
-
       await tester.enterText(find.byType(TextField), '조기퇴근 공문');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
       expect(tester.testTextInput.isVisible, isFalse);
+
+      await tester.tap(find.text('확인'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DeductionSheet), findsNothing);
+      expect(find.text('2시간 30분'), findsOneWidget);
+      expect((await only()).deductionMinutes, 0); // 원래 시트의 저장 전까지는 초안
 
       await tester.tap(find.text('저장'));
       await tester.pumpAndSettle();
@@ -261,11 +269,23 @@ void main() {
       await unmount(tester);
     });
 
+    testWidgets('작은 시트를 그냥 닫으면 아무것도 안 바뀐다', (tester) async {
+      await insert(14, inH: 9, outH: 15);
+      await pumpSheet(tester, d(14));
+      await openDeduction(tester);
+      await spin(tester, '0', 2);
+      await tester.tapAt(const Offset(200, 20)); // 바깥 탭
+      await tester.pumpAndSettle();
+      expect(find.byType(DeductionSheet), findsNothing);
+      expect(find.byType(RecordEditSheet), findsOneWidget);
+      expect(find.text('없음'), findsOneWidget);
+      await unmount(tester);
+    });
+
     testWidgets('사유 입력 중 휠을 돌리면 키보드가 내려간다', (tester) async {
       await insert(14, inH: 9, outH: 15);
       await pumpSheet(tester, d(14));
-      await tester.tap(find.text('시간공제').first);
-      await tester.pumpAndSettle();
+      await openDeduction(tester);
       await tester.showKeyboard(find.byType(TextField));
       expect(tester.testTextInput.isVisible, isTrue);
       await spin(tester, '0', 1);
@@ -273,28 +293,27 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('휠이 한도를 막는다 — 일반은 8시간에서 분이 00으로, 반차는 4시간까지만', (tester) async {
+    testWidgets('휠이 한도를 막는다 — 일반은 8시간에서 분이 00으로', (tester) async {
       await insert(14, inH: 9, outH: 15);
       await pumpSheet(tester, d(14));
-      await tester.tap(find.text('시간공제').first);
-      await tester.pumpAndSettle();
-      await spin(tester, '00', 3); // 30분
-      await spin(tester, '0', 8); // 8시간 → 분은 00으로
-      expect(find.text('8시간'), findsOneWidget);
+      await openDeduction(tester);
+      await spin(tester, '00', 3);
+      await spin(tester, '0', 8);
       await spin(tester, '00', 2); // 8시간에서 분을 올려도 00으로 돌아온다
+      await tester.tap(find.text('확인'));
+      await tester.pumpAndSettle();
       expect(find.text('8시간'), findsOneWidget);
-      expect(find.text('반차인 날은 4시간까지 뺄 수 있어요'), findsNothing);
       await unmount(tester);
     });
 
     testWidgets('반차 날 휠은 4시간까지, 6시간 공제 후 반차로 바꾸면 저장 불가', (tester) async {
       await insert(14, inH: 9, outH: 13, type: WorkType.halfDay);
       await pumpSheet(tester, d(14));
-      await tester.tap(find.text('시간공제').first);
+      await openDeduction(tester);
+      await spin(tester, '0', 7);
+      await tester.tap(find.text('확인'));
       await tester.pumpAndSettle();
-      await spin(tester, '0', 7); // 끝까지 돌려도 4시간에서 멈춘다
       expect(find.text('4시간'), findsOneWidget);
-      expect(find.text('반차인 날은 4시간까지 뺄 수 있어요'), findsNothing);
       await unmount(tester);
 
       await insert(15, inH: 9, outH: 18, ded: 360);
@@ -308,17 +327,17 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('미래: 행 4개 + 공제 행, 공제를 펴면 저장 버튼', (tester) async {
+    testWidgets('미래: 행 4개 + 공제 행, 작은 시트의 저장이 곧 저장이고 둘 다 닫힌다', (tester) async {
       await pumpSheet(tester, d(23));
       expect(find.byType(TypeRows), findsOneWidget);
       expect(find.text('출장'), findsOneWidget);
       expect(find.text('저장'), findsNothing);
-      await tester.tap(find.text('시간공제').first);
-      await tester.pumpAndSettle();
-      expect(find.text('저장'), findsOneWidget);
+      await openDeduction(tester);
       await spin(tester, '0', 2);
       await tester.tap(find.text('저장'));
       await tester.pumpAndSettle();
+      expect(find.byType(DeductionSheet), findsNothing);
+      expect(find.byType(RecordEditSheet), findsNothing);
       final row = await only();
       expect((row.type, row.deductionMinutes), (WorkType.normal, 120));
       await unmount(tester);
@@ -332,11 +351,12 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('자동 공제 2h 47m은 행에 그대로, 휠을 안 돌리면 저장해도 그대로', (tester) async {
+    testWidgets('자동 공제 2h 47m은 휠을 안 돌리고 확인하면 그대로', (tester) async {
       await insert(14, inH: 9, outH: 15, ded: 167);
       await pumpSheet(tester, d(14));
       expect(find.text('2시간 47분'), findsOneWidget);
-      await tester.tap(find.text('시간공제').first);
+      await openDeduction(tester);
+      await tester.tap(find.text('확인'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('저장'));
       await tester.pumpAndSettle();
@@ -344,23 +364,46 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('작은 화면에서 키보드가 올라와도 저장 버튼이 보이고 눌린다', (tester) async {
+    testWidgets('작은 화면에서 키보드가 올라오면 사유칸과 확인 버튼이 스크롤 없이 보인다', (tester) async {
       SizeConfig.init(320);
       await insert(14, inH: 9, outH: 15);
       await pumpSheet(tester, d(14));
       tester.view.physicalSize = const Size(320 * 3, 568 * 3);
+      await tester.pumpAndSettle();
+      await openDeduction(tester);
       tester.view.viewInsets = const FakeViewPadding(bottom: 300 * 3);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('시간공제').first);
-      await tester.pumpAndSettle();
       await tester.showKeyboard(find.byType(TextField));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('저장'));
+      const keyboardTop = 568.0 - 300;
+      expect(tester.getRect(find.byType(TextField)).bottom, lessThanOrEqualTo(keyboardTop));
+      expect(tester.getRect(find.text('확인')).bottom, lessThanOrEqualTo(keyboardTop));
+      await unmount(tester);
+    });
+
+    testWidgets('출근 휠을 펴도 시트 위에 여백이 남고, 계산 내역은 접었을 때만', (tester) async {
+      await insert(14, inH: 9, outH: 18);
+      await pumpSheet(tester, d(14));
+      expect(find.text('기준 대비'), findsOneWidget);
+      await tester.tap(find.text('출근'));
       await tester.pumpAndSettle();
-      expect(tester.getRect(find.text('저장')).bottom, lessThanOrEqualTo(568 - 300));
-      await tester.tap(find.text('저장'));
+      expect(find.text('기준 대비'), findsNothing);
+      expect(tester.getRect(find.byType(RecordEditSheet)).top, greaterThan(120));
+      await tester.tap(find.text('출근'));
       await tester.pumpAndSettle();
-      expect(find.byType(RecordEditSheet), findsNothing);
+      expect(find.text('기준 대비'), findsOneWidget);
+      await unmount(tester);
+    });
+
+    testWidgets('선택된 행은 배경을 칠하지 않는다 — 회색은 휠 박스 하나', (tester) async {
+      await insert(14, inH: 9, outH: 18);
+      await pumpSheet(tester, d(14));
+      await tester.tap(find.text('출근'));
+      await tester.pumpAndSettle();
+      final tinted = tester
+          .widgetList<Container>(find.ancestor(of: find.text('출근'), matching: find.byType(Container)))
+          .map((c) => (c.decoration as BoxDecoration?)?.color)
+          .where((c) => c == AppColors.cardInner);
+      expect(tinted, isEmpty);
       await unmount(tester);
     });
   });

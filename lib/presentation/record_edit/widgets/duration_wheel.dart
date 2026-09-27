@@ -57,10 +57,13 @@ class _DurationWheelState extends State<DurationWheel> {
 
   @override
   Widget build(BuildContext context) {
+    // 숫자 열은 고정 폭으로 가운데에 모은다 — 단위("시간"·"분")가 숫자 바로 옆에 붙어 읽히게.
     return WheelFrame(
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
+          SizedBox(
+            width: AppSizes.durationWheelColumn,
             child: WheelColumn(
               labels: [for (var h = 0; h <= widget.maxHours; h++) '$h'],
               selected: _hour,
@@ -69,8 +72,9 @@ class _DurationWheelState extends State<DurationWheel> {
             ),
           ),
           Text(RecordEditTexts.hourUnit, style: AppTextStyles.wheelUnit),
-          SizedBox(width: AppSizes.wheelPeriodGap),
-          Expanded(
+          SizedBox(width: AppSizes.durationWheelGap),
+          SizedBox(
+            width: AppSizes.durationWheelColumn,
             child: WheelColumn(
               labels: [for (var i = 0; i < _stepCount; i++) (i * widget.stepMinutes).toString().padLeft(2, '0')],
               selected: _step,

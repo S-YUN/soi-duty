@@ -35,7 +35,7 @@ abstract final class RecordEditTexts {
   static const pm = '오후';
   static const dash = '—';
   static const deductionLabel = '시간공제';
-  static const deductionWheelTitle = '뺄 시간';
+  static const confirm = '확인';
   static const deductionNone = '없음';
   static const reasonHint = '사유 (선택) 예: 조기퇴근 공문';
   static const deductionHelp = '연차·반차로 안 되는 시간을 직접 넣어 이 날 기준시간에서 빼요';
@@ -61,11 +61,7 @@ abstract final class RecordEditTexts {
   /// "연차로 바꿀까요?" / "공휴일로 바꿀까요?"
   static String replaceTimesTitle(WorkType t) => '${chipLabel(t)}로 바꿀까요?';
 
-  static String wheelTitle(EditingRow row) => switch (row) {
-        EditingRow.clockIn => clockInTitle,
-        EditingRow.clockOut => clockOutTitle,
-        EditingRow.deduction => deductionWheelTitle,
-      };
+  static String wheelTitle(EditingRow row) => row == EditingRow.clockIn ? clockInTitle : clockOutTitle;
 
   /// "2시간 30분" / "30분" / "없음"
   static String deduction(int minutes) => minutes == 0 ? deductionNone : formatKoreanDuration(minutes);

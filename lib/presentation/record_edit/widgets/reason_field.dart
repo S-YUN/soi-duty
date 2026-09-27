@@ -52,7 +52,7 @@ class _ReasonFieldState extends State<ReasonField> {
         counterText: '',
         isDense: true,
         filled: true,
-        fillColor: AppColors.card,
+        fillColor: AppColors.cardInner,
         contentPadding: AppSizes.reasonFieldPadding,
         border: border,
         enabledBorder: border,

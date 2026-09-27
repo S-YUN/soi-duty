@@ -3,7 +3,7 @@ import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart' as calc;
 import '../../domain/rules/work_rules.dart';
 
-enum EditingRow { clockIn, clockOut, deduction }
+enum EditingRow { clockIn, clockOut }
 
 /// nullable 필드의 copyWith 센티널.
 enum _Keep { time, editing }
@@ -21,7 +21,6 @@ class RecordDraft {
     this.deductionMinutes = 0,
     this.deductionReason = '',
     this.showsHolidayWork = false,
-    this.deductionOpened = false,
     this.editing,
   });
 
@@ -62,9 +61,6 @@ class RecordDraft {
   /// 공휴일에 "이 날 근무한 시간 입력"을 펼쳤는지. 초안 상태일 뿐 저장값이 아니다.
   final bool showsHolidayWork;
 
-  /// 이 시트에서 시간공제 행을 한 번이라도 펼쳤는지 — 유형 전용 모드에서 접은 뒤에도 저장 버튼을 남긴다.
-  final bool deductionOpened;
-
   /// 휠이 펼쳐진 행
   final EditingRow? editing;
 
@@ -88,18 +84,15 @@ class RecordDraft {
       !showsDeductionRow || calc.isValidDeduction(type, deductionMinutes, rules);
   bool isValid(WorkRules rules) => calc.isValidClockRange(clockIn, clockOut) && isDeductionValid(rules);
 
-  /// 유형 전용 모드는 유형 탭이 곧 저장이라 버튼이 없지만, 공제를 편집하면(휠을 다시 접어도) 저장이 필요하다.
-  bool get showsSaveButton => showsTimeRows || (isTypeOnly && deductionOpened);
+  /// 저장 버튼은 시각 행이 있을 때만 — 유형 전용 모드는 유형 탭·시간공제 작은 시트의 저장이 곧 저장이다.
+  bool get showsSaveButton => showsTimeRows;
+
+  /// 계산 내역은 휠을 접었을 때만. 휠(약 180)과 계산 내역(약 130)이 같이 펼쳐지면 시트가 화면을 채워
+  /// 바텀시트가 닫히지 않는다. 돌리는 동안 바뀐 시각은 위 행에 실시간으로 보인다.
+  bool get showsCalcRows => showsTimeRows && editing == null;
   bool get hasAnyTime => clockIn != null || clockOut != null;
 
-  DateTime? timeOf(EditingRow row) => switch (row) {
-        EditingRow.clockIn => clockIn,
-        EditingRow.clockOut => clockOut,
-        EditingRow.deduction => null,
-      };
-
-  /// 공제 휠이 열리는 위치 — 휠 단위(10분)로 내림. 퇴근 시 자동 공제된 2h 47m도 돌리기 전엔 그대로 둔다.
-  int deductionWheelStart(WorkRules rules) => deductionMinutes - deductionMinutes % rules.deductionStepMinutes;
+  DateTime? timeOf(EditingRow row) => row == EditingRow.clockIn ? clockIn : clockOut;
 
   /// 저장할 기록. 시각 행이 없으면 시각을 비우고, 공제 행이 없으면 공제를 비운다. 사유는 다듬고, 공제가 없으면 버린다.
   /// 한도(반차 4h 등) 정리는 저장소의 sanitizeRecord가 모든 저장에서 한 번 더 한다.
@@ -134,7 +127,6 @@ class RecordDraft {
   /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 시각 행을 펼 때 값이 없으면 [WorkRules]의 기본 시각(출근 08:00 · 퇴근 17:00).
   RecordDraft toggleEditing(EditingRow row, WorkRules rules) {
     if (editing == row) return _copy(editing: null);
-    if (row == EditingRow.deduction) return _copy(editing: row, deductionOpened: true);
     final defaultMinutes = row == EditingRow.clockIn ? rules.defaultClockInMinutes : rules.defaultClockOutMinutes;
     final current = timeOf(row) ?? DateTime(date.year, date.month, date.day, 0, defaultMinutes);
     return _copy(
@@ -159,7 +151,6 @@ class RecordDraft {
     int? deductionMinutes,
     String? deductionReason,
     bool? showsHolidayWork,
-    bool? deductionOpened,
     Object? editing = _Keep.editing,
   }) =>
       RecordDraft(
@@ -173,7 +164,6 @@ class RecordDraft {
         deductionMinutes: deductionMinutes ?? this.deductionMinutes,
         deductionReason: deductionReason ?? this.deductionReason,
         showsHolidayWork: showsHolidayWork ?? this.showsHolidayWork,
-        deductionOpened: deductionOpened ?? this.deductionOpened,
         editing: identical(editing, _Keep.editing) ? this.editing : editing as EditingRow?,
       );
 }

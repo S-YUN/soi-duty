@@ -8,6 +8,7 @@ import '../../core/providers/database_providers.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
+import '../../domain/rules/work_rules.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
 import '../../ui/app_text_styles.dart';
@@ -17,8 +18,7 @@ import 'record_draft.dart';
 import 'record_edit_controller.dart';
 import 'record_edit_texts.dart';
 import 'widgets/calc_rows.dart';
-import 'widgets/duration_wheel.dart';
-import 'widgets/reason_field.dart';
+import 'widgets/deduction_sheet.dart';
 import 'widgets/time_row.dart';
 import 'widgets/time_wheel.dart';
 import 'widgets/type_chips.dart';
@@ -66,6 +66,23 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
     FocusScope.of(context).unfocus(); // 키보드 잔상 없이 닫는다
     await ref.read(recordEditControllerProvider.notifier).save(draft);
     if (mounted) _close();
+  }
+
+  /// 시간공제 행 탭 — 작은 시트를 겹쳐 띄운다. 과거·퇴근한 오늘은 초안만 바꾸고(저장 버튼으로 마무리),
+  /// 유형 전용 모드(미래·출근 전 오늘)는 유형 행처럼 작은 시트의 저장이 곧 저장이다.
+  Future<void> _editDeduction(RecordDraft draft, WorkRules rules) async {
+    final input = await showDeductionSheet(
+      context,
+      minutes: draft.deductionMinutes,
+      reason: draft.deductionReason,
+      maxHours: standardMinutes(draft.type, rules) ~/ 60,
+      stepMinutes: rules.deductionStepMinutes,
+      confirmLabel: draft.isTypeOnly ? RecordEditTexts.save : RecordEditTexts.confirm,
+    );
+    if (input == null || !mounted) return;
+    final next = _draft!.withDeduction(input.minutes).withReason(input.reason);
+    if (next.isTypeOnly) return _saveDraft(next);
+    _update(next);
   }
 
   /// 칩 탭. 연차·공휴일·출장은 그 자리에서 저장하고 닫는다 — 시각이 있던 날은 지워진다고 한 번 묻는다.
@@ -211,36 +228,12 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                   TimeRow(
                     label: RecordEditTexts.deductionLabel,
                     value: RecordEditTexts.deduction(draft.deductionMinutes),
-                    selected: editing == EditingRow.deduction,
-                    onTap: () => _update(draft.toggleEditing(EditingRow.deduction, rules)),
+                    selected: false,
+                    onTap: () => _editDeduction(draft, rules),
                   ),
                 ),
-                if (editing == EditingRow.deduction)
-                  _inset(
-                    _WheelBox(
-                      title: RecordEditTexts.deductionWheelTitle,
-                      children: [
-                        DurationWheel(
-                          // 반차로 바꾸면 한도(4h)가 달라지므로 휠을 새로 만든다.
-                          key: ValueKey(draft.type),
-                          minutes: draft.deductionWheelStart(rules),
-                          maxHours: standardMinutes(draft.type, rules) ~/ 60,
-                          stepMinutes: rules.deductionStepMinutes,
-                          onChanged: (m) => _update(draft.withDeduction(m)),
-                        ),
-                        SizedBox(height: AppSizes.reasonFieldTop),
-                        ReasonField(initial: draft.deductionReason, onChanged: (t) => _update(draft.withReason(t))),
-                        SizedBox(height: AppSizes.deductionHelpTop),
-                        Text(
-                          RecordEditTexts.deductionHelp,
-                          style: AppTextStyles.deductionHelp,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
               ],
-              if (draft.showsTimeRows || !draft.isValid(rules))
+              if (draft.showsCalcRows || !draft.isValid(rules))
                 _inset(
                   Padding(
                     padding: EdgeInsets.only(top: AppSizes.calcTop),
@@ -251,7 +244,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                         : CalcRows(lines: calcLines(draft, rules)),
                   ),
                 ),
-              // 저장은 시각 행이 있거나 공제를 펼쳤을 때만 — 연차·공휴일·출장·미래 유형은 탭이 곧 저장이다.
+              // 저장은 시각 행이 있을 때만 — 연차·공휴일·출장·유형 전용 모드는 탭(작은 시트의 저장)이 곧 저장이다.
               // 닫기는 아래로 내리기·바깥 탭.
               if (draft.showsSaveButton) ...[
                 SizedBox(height: AppSizes.sheetButtonsTop),
