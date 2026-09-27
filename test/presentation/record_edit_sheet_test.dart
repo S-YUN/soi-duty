@@ -273,17 +273,38 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('반차에 5시간 공제는 저장 불가', (tester) async {
+    testWidgets('휠이 한도를 막는다 — 일반은 8시간에서 분이 00으로, 반차는 4시간까지만', (tester) async {
+      await insert(14, inH: 9, outH: 15);
+      await pumpSheet(tester, d(14));
+      await tester.tap(find.text('시간공제').first);
+      await tester.pumpAndSettle();
+      await spin(tester, '00', 3); // 30분
+      await spin(tester, '0', 8); // 8시간 → 분은 00으로
+      expect(find.text('8시간'), findsOneWidget);
+      await spin(tester, '00', 2); // 8시간에서 분을 올려도 00으로 돌아온다
+      expect(find.text('8시간'), findsOneWidget);
+      expect(find.text('반차인 날은 4시간까지 뺄 수 있어요'), findsNothing);
+      await unmount(tester);
+    });
+
+    testWidgets('반차 날 휠은 4시간까지, 6시간 공제 후 반차로 바꾸면 저장 불가', (tester) async {
       await insert(14, inH: 9, outH: 13, type: WorkType.halfDay);
       await pumpSheet(tester, d(14));
       await tester.tap(find.text('시간공제').first);
       await tester.pumpAndSettle();
-      await spin(tester, '0', 5);
+      await spin(tester, '0', 7); // 끝까지 돌려도 4시간에서 멈춘다
+      expect(find.text('4시간'), findsOneWidget);
+      expect(find.text('반차인 날은 4시간까지 뺄 수 있어요'), findsNothing);
+      await unmount(tester);
+
+      await insert(15, inH: 9, outH: 18, ded: 360);
+      await pumpSheet(tester, d(15));
+      await tester.tap(find.text('반차'));
+      await tester.pumpAndSettle();
       expect(find.text('반차인 날은 4시간까지 뺄 수 있어요'), findsOneWidget);
       await tester.tap(find.text('저장'));
       await tester.pumpAndSettle();
       expect(find.byType(RecordEditSheet), findsOneWidget);
-      expect((await only()).deductionMinutes, 0);
       await unmount(tester);
     });
 

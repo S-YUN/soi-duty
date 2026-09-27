@@ -221,8 +221,10 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                       title: RecordEditTexts.deductionWheelTitle,
                       children: [
                         DurationWheel(
+                          // 반차로 바꾸면 한도(4h)가 달라지므로 휠을 새로 만든다.
+                          key: ValueKey(draft.type),
                           minutes: draft.deductionWheelStart(rules),
-                          maxHours: rules.dailyStandardMinutes ~/ 60,
+                          maxHours: standardMinutes(draft.type, rules) ~/ 60,
                           stepMinutes: rules.deductionStepMinutes,
                           onChanged: (m) => _update(draft.withDeduction(m)),
                         ),
