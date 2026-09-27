@@ -7,22 +7,30 @@ import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
 import '../today_state.dart';
 import '../today_texts.dart';
+import 'soi_checkbox.dart';
 import 'summary_row.dart';
 import 'type_badge.dart';
 
-/// 상태 카드 상단 블록. 높이 104 고정, 내용만 상태별로 바뀐다.
+/// 상태 카드 상단 블록. 최소 높이 104, 내용만 상태별로 바뀐다.
+/// 평일 근무 중엔 "남은 시간 공제하고 퇴근" 줄이 붙어 그만큼 늘어날 수 있다 (2026-09-27).
 class StatusBlock extends StatelessWidget {
-  const StatusBlock({super.key, required this.state, required this.rules});
+  const StatusBlock({
+    super.key,
+    required this.state,
+    required this.rules,
+    this.deductRemaining = false,
+    this.onDeductRemainingChanged,
+  });
 
   final TodayState state;
   final WorkRules rules;
-
+  final bool deductRemaining;
+  final ValueChanged<bool>? onDeductRemainingChanged;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppSizes.statusBlock,
-      width: double.infinity,
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: AppSizes.statusBlock, minWidth: double.infinity),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: _children(),
@@ -44,6 +52,13 @@ class StatusBlock extends StatelessWidget {
           _DotLine(active: true, text: TodayTexts.clockInLine(state), style: AppTextStyles.statusClock),
           gap,
           Text(TodayTexts.workingLine(state), style: AppTextStyles.statusLine, textAlign: TextAlign.center, maxLines: 1),
+          if (state.canDeductOnClockOut && onDeductRemainingChanged != null)
+            SoiCheckbox(
+              label: TodayTexts.deductRemaining,
+              checked: deductRemaining,
+              onChanged: onDeductRemainingChanged!,
+              shape: SoiCheckShape.square,
+            ),
         ];
       case TodayScreenState.done:
         // 제목 없이 요약만 — "오늘 퇴근 완료"는 아래 버튼이 이미 말한다.

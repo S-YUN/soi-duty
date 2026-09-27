@@ -13,21 +13,15 @@ class TypeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDayOff = type == WorkType.dayOff;
+    final (background, foreground) = AppColors.typeColors(type);
     return Container(
       padding: AppSizes.badgePadding,
       decoration: BoxDecoration(
-        color: isDayOff ? AppColors.dayOffBackground : AppColors.holidayBackground,
+        color: background,
         borderRadius: BorderRadius.circular(AppSizes.pill),
-        border: Border.all(
-          color: isDayOff ? AppColors.dayOffBorder : AppColors.holidayBorder,
-          width: AppSizes.badgeBorder,
-        ),
+        border: Border.all(color: AppColors.typeBorder(type), width: AppSizes.badgeBorder),
       ),
-      child: Text(
-        TodayTexts.badgeLabel(type),
-        style: AppTextStyles.badge.copyWith(color: isDayOff ? AppColors.dayOffText : AppColors.holidayText),
-      ),
+      child: Text(TodayTexts.badgeLabel(type), style: AppTextStyles.badge.copyWith(color: foreground)),
     );
   }
 }

@@ -62,4 +62,12 @@ abstract final class AppColors {
         WorkType.businessTrip => (tripBackground, tripText),
         WorkType.normal => (chipNeutral, subtle),
       };
+
+  /// 오늘 화면 배지 테두리 (연차·공휴일·출장).
+  static Color typeBorder(WorkType t) => switch (t) {
+        WorkType.dayOff => dayOffBorder,
+        WorkType.holiday => holidayBorder,
+        WorkType.businessTrip => tripBorder,
+        WorkType.halfDay || WorkType.normal => const Color(0x00000000),
+      };
 }

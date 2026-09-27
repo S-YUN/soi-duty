@@ -25,7 +25,7 @@ TodayState buildTodayState({
   };
 
   final type = record?.type ?? WorkType.normal;
-  final dayType = (type == WorkType.dayOff || type == WorkType.holiday) ? type : null;
+  final dayType = isOffType(type) ? type : null;
 
   final week = weekSummary(
     records: records,
@@ -57,6 +57,7 @@ TodayState buildTodayState({
     expectedClockOut: expected,
     todayShareMinutes: share,
     weekRemainingBeforeToday: remaining,
+    todayStandardMinutes: dayStandardMinutes(record, rules),
     isFirstWorkday: isFirstWorkday(records, today),
     isLastWorkday: isLastWorkday(records, today),
     todayActual: phase == TodayPhase.done ? actualMinutes(record!, rules) : null,

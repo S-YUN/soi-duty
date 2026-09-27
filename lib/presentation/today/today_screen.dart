@@ -30,7 +30,7 @@ class TodayScreen extends ConsumerWidget {
         rules: rules,
         callbacks: TodayCallbacks(
           onClockIn: controller.clockIn,
-          onClockOut: controller.clockOut,
+          onClockOut: (deduct) => controller.clockOut(deductRemaining: deduct),
           onHalfDayChanged: controller.setHalfDay,
           onDayTypeChanged: controller.setDayType,
           onRevert: controller.revert,

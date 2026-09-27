@@ -97,4 +97,24 @@ void main() {
     expect(mon.isFirstWeek, isFalse);
     expect(mon.week.remainingMinutes, 2400);
   });
+
+  test('출장 오늘 → dayType businessTrip', () {
+    expect(build([...past, rec(16, type: WorkType.businessTrip)]).dayType, WorkType.businessTrip);
+  });
+
+  test('공휴일 출근 → working, 공제 체크 없음', () {
+    final s = build([...past, rec(16, inH: 9, type: WorkType.holiday)]);
+    expect(s.phase, TodayPhase.working);
+    expect(s.canDeductOnClockOut, isFalse);
+  });
+
+  test('평일 근무 중 → 공제 체크 있음, 첫 주 예외엔 없음', () {
+    expect(build([...past, rec(16, inH: 9)]).canDeductOnClockOut, isTrue);
+    expect(build([rec(16, inH: 9)], first: d(16)).canDeductOnClockOut, isFalse);
+  });
+
+  test('todayStandardMinutes = 8h − 오늘 공제', () {
+    expect(build([...past, rec(16, ded: 120)]).todayStandardMinutes, 360);
+    expect(build(past).todayStandardMinutes, 480);
+  });
 }

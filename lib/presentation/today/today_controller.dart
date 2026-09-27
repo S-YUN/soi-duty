@@ -22,16 +22,21 @@ class TodayController extends _$TodayController {
   }
 
   Future<void> clockIn() => _saveToday((r, now) {
-        final type = (r.type == WorkType.dayOff || r.type == WorkType.holiday) ? WorkType.normal : r.type;
+        // 연차·출장이면 되돌리고 출근, 공휴일은 그대로 두고 출근(공휴일 근무).
+        final type = (r.type == WorkType.dayOff || r.type == WorkType.businessTrip) ? WorkType.normal : r.type;
         return r.copyWith(clockIn: now, type: type);
       });
 
-  Future<void> clockOut() => _saveToday((r, now) => r.copyWith(clockOut: now));
+  /// [deductRemaining]: 당일 공문 — 기본 기준에서 일한 만큼 빼고 나머지를 시간공제로 저장.
+  Future<void> clockOut({bool deductRemaining = false}) => _saveToday((r, now) => r.copyWith(
+        clockOut: now,
+        deductionMinutes: deductRemaining ? closingDeduction(r, now, ref.read(workRulesProvider)) : r.deductionMinutes,
+      ));
 
   Future<void> setHalfDay(bool on) =>
       _saveToday((r, _) => r.copyWith(type: on ? WorkType.halfDay : WorkType.normal));
 
-  /// dayOff / holiday / null(→ normal). 출근 전 상태에서만 UI가 호출한다.
+  /// dayOff / holiday / businessTrip / null(→ normal). 출근 전 상태에서만 UI가 호출한다.
   Future<void> setDayType(WorkType? type) => _saveToday((r, _) => r.copyWith(type: type ?? WorkType.normal));
 
   Future<void> revert() => setDayType(null);
@@ -43,7 +48,10 @@ class TodayController extends _$TodayController {
       });
 
   /// 근무 중 → 출근 전. 실수로 찍은 출근을 없던 일로 — 반차 체크도 함께 풀린다 (기록 삭제).
+  /// 공휴일 근무였으면 공휴일 표시는 남기고 시각만 비운다.
   Future<void> cancelClockIn() async {
+    final current = await future;
+    if (current.isHoliday) return _saveToday((r, _) => r.copyWith(clockIn: null, clockOut: null));
     final today = dateOnly(ref.read(clockProvider)());
     await ref.read(workRecordRepositoryProvider).delete(today);
   }

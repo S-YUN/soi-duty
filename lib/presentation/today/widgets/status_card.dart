@@ -28,7 +28,8 @@ class TodayCallbacks {
   });
 
   final VoidCallback onClockIn;
-  final VoidCallback onClockOut;
+  /// 인자: "남은 시간 공제하고 퇴근" 체크 여부
+  final ValueChanged<bool> onClockOut;
   final ValueChanged<bool> onHalfDayChanged;
   final ValueChanged<WorkType?> onDayTypeChanged;
   final VoidCallback onRevert;
@@ -46,12 +47,29 @@ class TodayCallbacks {
 /// 보조 슬롯은 시각적으로는 높이 40·위 간격 10이지만, 텍스트 버튼(시간 수정·되돌리기 등)의
 /// 탭 영역을 44(minTapHeight)까지 확보하기 위해 레이아웃 박스 자체를 44로 잡고
 /// 위 간격과 카드 하단 패딩을 각각 2씩 줄여 총 높이는 그대로 유지한다.
-class StatusCard extends StatelessWidget {
+class StatusCard extends StatefulWidget {
   const StatusCard({super.key, required this.state, required this.rules, required this.callbacks});
 
   final TodayState state;
   final WorkRules rules;
   final TodayCallbacks callbacks;
+
+  @override
+  State<StatusCard> createState() => _StatusCardState();
+}
+
+class _StatusCardState extends State<StatusCard> {
+  /// "남은 시간 공제하고 퇴근" — 저장하지 않는 화면 상태. 근무 중을 벗어나면 꺼진다.
+  var _deductRemaining = false;
+
+  TodayState get state => widget.state;
+  TodayCallbacks get callbacks => widget.callbacks;
+
+  @override
+  void didUpdateWidget(StatusCard old) {
+    super.didUpdateWidget(old);
+    if (!state.canDeductOnClockOut) _deductRemaining = false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +80,16 @@ class StatusCard extends StatelessWidget {
       decoration: AppDecorations.card,
       child: Column(
         children: [
-          StatusBlock(state: state, rules: rules),
-          PrimaryButton(label: TodayTexts.buttonLabel(state), onPressed: _primaryAction),
+          StatusBlock(
+            state: state,
+            rules: widget.rules,
+            deductRemaining: _deductRemaining,
+            onDeductRemainingChanged: (v) => setState(() => _deductRemaining = v),
+          ),
+          PrimaryButton(
+            label: TodayTexts.buttonLabel(state, deductRemaining: _deductRemaining),
+            onPressed: _primaryAction,
+          ),
           SizedBox(height: AppSizes.secondarySlotGap - AppSizes.secondarySlotHitInset),
           // 레이아웃 높이 자체를 44(minTapHeight)로 잡아 히트 영역을 진짜로 확보한다.
           // 위 gap과 아래 카드 패딩에서 각각 인셋만큼 빼서 슬롯의 시각적 중심은 그대로 둔다.
@@ -75,8 +101,10 @@ class StatusCard extends StatelessWidget {
 
   VoidCallback? get _primaryAction => switch (state.screenState) {
         TodayScreenState.beforeWork => callbacks.onClockIn,
-        TodayScreenState.working => callbacks.onClockOut,
-        TodayScreenState.done || TodayScreenState.dayType => null,
+        TodayScreenState.working => () => callbacks.onClockOut(_deductRemaining),
+        // 공휴일에도 일할 수 있다 — 유형은 공휴일 그대로 출근만 찍는다. 연차·출장은 되돌리기 후 출근.
+        TodayScreenState.dayType => state.dayType == WorkType.holiday ? callbacks.onClockIn : null,
+        TodayScreenState.done => null,
       };
 
   Widget _secondary() {
@@ -99,12 +127,19 @@ class StatusCard extends StatelessWidget {
               onChanged: (_) => callbacks.onDayTypeChanged(WorkType.holiday),
               shape: SoiCheckShape.round,
             ),
+            SizedBox(width: AppSizes.dayTypeGap),
+            SoiCheckbox(
+              label: TodayTexts.businessTrip,
+              checked: false,
+              onChanged: (_) => callbacks.onDayTypeChanged(WorkType.businessTrip),
+              shape: SoiCheckShape.round,
+            ),
           ],
         );
       case TodayScreenState.working:
         final edit = QuietTextButton(label: TodayTexts.editClockIn, onTap: callbacks.onEditClockIn);
         final cancel = QuietTextButton(label: TodayTexts.cancelClockIn, onTap: callbacks.onCancelClockIn);
-        if (state.isWeekend) return _pair(edit, cancel);
+        if (state.isWeekend || state.isHoliday) return _pair(edit, cancel);
         return _row([
           SoiCheckbox(
             label: TodayTexts.halfDay,

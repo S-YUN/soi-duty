@@ -32,6 +32,8 @@ abstract class TodayState with _$TodayState {
     int? todayShareMinutes,
     /// 이번 주 남은 시간 (오늘 진행분 제외). 0 이하면 이미 채움
     int? weekRemainingBeforeToday,
+    /// 오늘 기준시간 (8h − 공제, 반차 4h − 공제). 안내 문구 기준선
+    required int todayStandardMinutes,
     required bool isFirstWorkday,
     required bool isLastWorkday,
     int? todayActual,
@@ -43,6 +45,10 @@ abstract class TodayState with _$TodayState {
 
   bool get isWeekend => calc.isWeekend(date);
   bool get isFirstWeek => week.isFirstWeekException;
+  bool get isHoliday => record?.type == WorkType.holiday;
+
+  /// 근무 중에 "남은 시간 공제하고 퇴근"을 보여줄지. 주말·공휴일 근무엔 기준이 없고, 첫 주엔 목표가 없다.
+  bool get canDeductOnClockOut => phase == TodayPhase.working && !isWeekend && !isHoliday && !isFirstWeek;
 
   /// 이번 주 이미 채워서 퇴근 시각 대신 안내를 띄우는 상태
   bool get isWeekFilled => (weekRemainingBeforeToday ?? 1) <= 0;

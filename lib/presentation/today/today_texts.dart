@@ -8,8 +8,11 @@ abstract final class TodayTexts {
   static const tabs = ['오늘', '주간', '월간'];
   static const beforeWork = '아직 출근 전';
   static const halfDay = '오늘 반차';
-  static const dayOff = '오늘은 연차';
-  static const holiday = '오늘은 공휴일';
+  // 출근 전 라디오. 셋이 한 줄에 들어가야 해서 "오늘은"을 뺐다 — 폭 402에서도 30px 넘쳤다 (2026-09-27).
+  static const dayOff = '연차';
+  static const holiday = '공휴일';
+  static const businessTrip = '출장';
+  static const deductRemaining = '남은 시간 공제하고 퇴근';
   static const editTime = '시간 수정';
   static const editClockIn = '출근 변경';
   static const clockInSheetTitle = '출근 시각';
@@ -59,8 +62,9 @@ abstract final class TodayTexts {
     if (s.isFirstWorkday) return firstDay;
     final share = s.todayShareMinutes;
     if (share == null || s.isHalfDay) return onPace;
-    if (share < rules.dailyStandardMinutes - paceBandMinutes) return ahead;
-    if (share > rules.dailyStandardMinutes + paceBandMinutes) return behind;
+    // 기준선은 그날 기준시간 — 시간공제가 있는 날은 8h가 아니라 8h − 공제와 비교한다.
+    if (share < s.todayStandardMinutes - paceBandMinutes) return ahead;
+    if (share > s.todayStandardMinutes + paceBandMinutes) return behind;
     return onPace;
   }
 
@@ -76,18 +80,23 @@ abstract final class TodayTexts {
   /// 안내 문구 판정 기준선 (±30분)
   static const paceBandMinutes = 30;
 
-  static String buttonLabel(TodayState s) => switch (s.screenState) {
+  static String buttonLabel(TodayState s, {bool deductRemaining = false}) => switch (s.screenState) {
     TodayScreenState.beforeWork || TodayScreenState.dayType => '출근하기',
-    TodayScreenState.working => '퇴근하기',
+    TodayScreenState.working => deductRemaining ? '공제하고 퇴근하기' : '퇴근하기',
     TodayScreenState.done => '오늘 퇴근 완료',
   };
 
-  static String dayTypeMessage(WorkType type) => type == WorkType.dayOff
-      ? '오늘은 연차입니다\n근무 기록을 남기지 않습니다'
-      : '오늘은 공휴일입니다\n행복한 휴일 되세요';
+  static String dayTypeMessage(WorkType type) => switch (type) {
+    WorkType.dayOff => '오늘은 연차입니다\n근무 기록을 남기지 않습니다',
+    WorkType.businessTrip => '오늘은 출장입니다\n8시간 근무로 인정돼요',
+    _ => '오늘은 공휴일입니다\n행복한 휴일 되세요',
+  };
 
-  static String badgeLabel(WorkType type) =>
-      type == WorkType.dayOff ? '연차' : '공휴일';
+  static String badgeLabel(WorkType type) => switch (type) {
+    WorkType.dayOff => '연차',
+    WorkType.businessTrip => '출장',
+    _ => '공휴일',
+  };
 
   static String unrecordedTitle(int count) => '기록 안 된 날 $count개';
 }

@@ -106,6 +106,29 @@ void main() {
     expect(TodayTexts.dayTypeMessage(WorkType.holiday), '오늘은 공휴일입니다\n행복한 휴일 되세요');
   });
 
+  test('안내 기준선은 그날 기준시간 — 공제 2h 날 오늘 몫 6h면 페이스 좋아요', () {
+    // 월·화 8h씩, 수요일 2h 공제 → 오늘 몫 = 24h/3 − 2h = 6h. 8h 기준이면 "일찍"이 나온다.
+    final s = buildTodayState(
+      records: [rec(14, inH: 9, outH: 18), rec(15, inH: 9, outH: 18), rec(16, ded: 120)],
+      firstRecordDate: d(7),
+      now: d(16, 8),
+      rules: rules,
+    );
+    expect(s.todayShareMinutes, 360);
+    expect(TodayTexts.encouragement(s, rules), '이번 주 페이스 좋아요');
+  });
+
+  test('공제 체크 시 버튼 문구', () {
+    final working = buildTodayState(records: [rec(16, inH: 9)], firstRecordDate: d(7), now: d(16, 12), rules: rules);
+    expect(TodayTexts.buttonLabel(working), '퇴근하기');
+    expect(TodayTexts.buttonLabel(working, deductRemaining: true), '공제하고 퇴근하기');
+  });
+
+  test('출장 문구·배지', () {
+    expect(TodayTexts.dayTypeMessage(WorkType.businessTrip), '오늘은 출장입니다\n8시간 근무로 인정돼요');
+    expect(TodayTexts.badgeLabel(WorkType.businessTrip), '출장');
+  });
+
   test('기록 안 된 날 타이틀', () {
     expect(TodayTexts.unrecordedTitle(2), '기록 안 된 날 2개');
   });

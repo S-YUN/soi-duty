@@ -21,7 +21,7 @@ const rules = WorkRules();
 
 TodayCallbacks noop() => TodayCallbacks(
   onClockIn: () {},
-  onClockOut: () {},
+  onClockOut: (_) {},
   onHalfDayChanged: (_) {},
   onDayTypeChanged: (_) {},
   onRevert: () {},
@@ -82,18 +82,108 @@ void main() {
     '첫 주 예외': stateOf([rec(16, inH: 9, inM: 12)], first: d(16)),
   };
 
-  testWidgets('다섯 상태에서 주 버튼의 Y 좌표가 같다', (tester) async {
+  // 평일 근무 중은 "남은 시간 공제하고 퇴근" 줄만큼 상태 블록이 늘어날 수 있다 (2026-09-27) — 그 상태만 "같거나 아래".
+  testWidgets('주 버튼의 Y 좌표: 공제 체크가 없는 상태끼리는 같고, 평일 근무 중은 같거나 아래', (tester) async {
     tester.view.physicalSize = const Size(402 * 3, 874 * 3);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
     final ys = <String, double>{};
-    for (final entry in fixtures.entries) {
+    for (final entry in {...fixtures, '공휴일 근무 중': stateOf([...past, rec(16, inH: 9, type: WorkType.holiday)])}.entries) {
       await pumpView(tester, entry.value);
       ys[entry.key] = tester.getTopLeft(find.byType(PrimaryButton)).dy;
     }
-    final distinct = ys.values.toSet();
-    expect(distinct.length, 1, reason: '버튼 Y가 상태마다 다름: $ys');
+    final working = ys.remove('근무 중')!;
+    expect(ys.values.toSet().length, 1, reason: '버튼 Y가 상태마다 다름: $ys');
+    expect(working, greaterThanOrEqualTo(ys.values.first));
+  });
+
+  testWidgets('출근 전 라디오 3개가 폭 320에서 넘치지 않는다', (tester) async {
+    SizeConfig.init(320);
+    tester.view.physicalSize = const Size(320 * 3, 640 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await pumpView(tester, fixtures['출근 전']!);
+    expect(tester.takeException(), isNull);
+    expect(find.text('출장'), findsOneWidget);
+  });
+
+  testWidgets('공휴일 상태는 출근하기가 눌리고, 연차·출장은 안 눌린다', (tester) async {
+    Future<bool> tapClockIn(TodayState state) async {
+      var tapped = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: TodayView(
+              state: state,
+              rules: rules,
+              callbacks: TodayCallbacks(
+                onClockIn: () => tapped = true,
+                onClockOut: (_) {},
+                onHalfDayChanged: (_) {},
+                onDayTypeChanged: (_) {},
+                onRevert: () {},
+                onEditTime: () {},
+                onEditClockIn: () {},
+                onCancelClockIn: () {},
+                onCancelClockOut: () {},
+                onUnrecordedTap: (_) {},
+                onDateLongPress: null,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.byType(PrimaryButton));
+      return tapped;
+    }
+
+    expect(await tapClockIn(stateOf([...past, rec(16, type: WorkType.holiday)])), isTrue);
+    expect(await tapClockIn(stateOf([...past, rec(16, type: WorkType.dayOff)])), isFalse);
+    expect(await tapClockIn(stateOf([...past, rec(16, type: WorkType.businessTrip)])), isFalse);
+  });
+
+  testWidgets('공제 체크를 켜면 버튼이 바뀌고 퇴근 콜백에 true', (tester) async {
+    bool? deduct;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: TodayView(
+            state: fixtures['근무 중']!,
+            rules: rules,
+            callbacks: TodayCallbacks(
+              onClockIn: () {},
+              onClockOut: (v) => deduct = v,
+              onHalfDayChanged: (_) {},
+              onDayTypeChanged: (_) {},
+              onRevert: () {},
+              onEditTime: () {},
+              onEditClockIn: () {},
+              onCancelClockIn: () {},
+              onCancelClockOut: () {},
+              onUnrecordedTap: (_) {},
+              onDateLongPress: null,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('남은 시간 공제하고 퇴근'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('공제하고 퇴근하기'), findsOneWidget);
+    await tester.tap(find.byType(PrimaryButton));
+    expect(deduct, isTrue);
+  });
+
+  testWidgets('공휴일 근무 중엔 반차·공제 체크가 없다', (tester) async {
+    await pumpView(tester, stateOf([...past, rec(16, inH: 9, type: WorkType.holiday)]));
+    expect(find.text('오늘 반차'), findsNothing);
+    expect(find.text('남은 시간 공제하고 퇴근'), findsNothing);
+    expect(find.text('출근 취소'), findsOneWidget);
   });
 
   testWidgets('기록 누락이 없으면 카드가 없고, 있으면 있다', (tester) async {
@@ -115,8 +205,9 @@ void main() {
   testWidgets('상태별 버튼 라벨과 보조 슬롯', (tester) async {
     await pumpView(tester, fixtures['출근 전']!);
     expect(find.text('출근하기'), findsOneWidget);
-    expect(find.text('오늘은 연차'), findsOneWidget);
-    expect(find.text('오늘은 공휴일'), findsOneWidget);
+    expect(find.text('연차'), findsOneWidget);
+    expect(find.text('공휴일'), findsOneWidget);
+    expect(find.text('출장'), findsOneWidget);
 
     await pumpView(tester, fixtures['근무 중']!);
     expect(find.text('퇴근하기'), findsOneWidget);
@@ -145,7 +236,7 @@ void main() {
             rules: rules,
             callbacks: TodayCallbacks(
               onClockIn: () => clockedIn = true,
-              onClockOut: () {},
+              onClockOut: (_) {},
               onHalfDayChanged: (_) {},
               onDayTypeChanged: (_) {},
               onRevert: () {},
@@ -175,7 +266,7 @@ void main() {
             rules: rules,
             callbacks: TodayCallbacks(
               onClockIn: () {},
-              onClockOut: () {},
+              onClockOut: (_) {},
               onHalfDayChanged: (v) => halfDay = v,
               onDayTypeChanged: (_) {},
               onRevert: () {},
@@ -193,7 +284,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(
-      tester.getSize(find.byType(SoiCheckbox)).height,
+      tester.getSize(find.ancestor(of: find.text('오늘 반차'), matching: find.byType(SoiCheckbox))).height,
       greaterThanOrEqualTo(AppSizes.minTapHeight),
     );
 
@@ -215,7 +306,7 @@ void main() {
             rules: rules,
             callbacks: TodayCallbacks(
               onClockIn: () {},
-              onClockOut: () {},
+              onClockOut: (_) {},
               onHalfDayChanged: (_) {},
               onDayTypeChanged: (_) {},
               onRevert: () => reverted = true,
