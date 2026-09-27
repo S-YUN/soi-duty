@@ -537,7 +537,7 @@ TodayTexts.buttonLabel(TodayState s, {bool deductRemaining = false})
   test('출장 상태 문구·배지', ...); // '오늘은 출장입니다\n8시간 근무로 인정돼요', '출장'
 ```
 `today_view_test.dart` (기존 네 상태 카드 높이 동일 테스트 확장):
-  - 근무 중(체크박스 줄 포함) 카드 높이가 출근 전·퇴근 완료·연차와 같은지.
+  - 카드 높이 동일 테스트는 출근 전·퇴근 완료·연차·공제 체크 없는 근무 중(공휴일 근무)에만 적용하고, 공제 체크가 보이는 근무 중은 "같거나 크다"로 완화.
   - 출근 전 보조 슬롯 라디오 3개가 폭 320에서 overflow 없이 그려지는지 (`tester.takeException()` null).
   - 공휴일 상태에서 주 버튼이 활성(탭 시 `onClockIn` 호출), 연차·출장 상태에선 비활성.
   - 체크박스를 탭하면 버튼이 "공제하고 퇴근하기"로 바뀌고, 버튼 탭 시 `onClockOut(true)`.
@@ -611,7 +611,7 @@ TodayTexts.buttonLabel(TodayState s, {bool deductRemaining = false})
     - 출근 전 슬롯: 라디오 3개(`dayOff`·`holiday`·`businessTrip`), 간격 `AppSizes.dayTypeGap`. 폭 320 테스트가 overflow를 내면 `AppSizes.dayTypeGapTight`(12) 토큰을 추가해 쓰고, 그래도 넘치면 라벨을 `'연차'/'공휴일'/'출장'`으로 줄인다(texts에 짧은 라벨 상수).
     - 근무 중 슬롯: 공휴일이면 주말처럼 `_pair(edit, cancel)`.
   - `StatusBlock`에 `deductRemaining`·`onDeductRemainingChanged` 파라미터. working일 때 `state.canDeductOnClockOut`이면 세 번째 줄로 `SoiCheckbox(label: TodayTexts.deductRemaining, checked: ..., shape: SoiCheckShape.square)`.
-    - 높이 104 안에 들어가야 한다: 두 줄(각 ≈22) + 체크박스(히트 44). 간격을 `AppSizes.statusBlockGapTight`(4)로 줄이고, 그래도 넘치면 체크박스를 `SizedBox(height: 36)`에 넣고 히트 영역은 `SoiCheckbox`의 `minHeight`를 파라미터(`minHeight: AppSizes.statusCheckHeight`)로 받게 한다. 판정은 Step 1의 카드 높이 테스트.
+    - 간격은 기존 `statusBlockGap` 그대로. 104를 넘으면 근무 중(공제 체크 노출)일 때만 블록이 자연스럽게 늘어나도 된다 — 출근 순간 버튼이 몇 px 내려가는 정도라 문제 삼지 않는다. `StatusBlock`의 고정 `height`를 `minHeight` 제약으로 바꾼다.
   - `TodayCallbacks.onClockOut`을 `ValueChanged<bool>`로, `today_screen.dart`에서 `onClockOut: (deduct) => controller.clockOut(deductRemaining: deduct)`.
 
 - [ ] **Step 7: 통과 확인** — `flutter test test/presentation/today_*` PASS, `flutter analyze` 0.
