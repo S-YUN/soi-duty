@@ -28,6 +28,9 @@ abstract final class AppColors {
   static const holidayText = Color(0xFF7A4536);
   static const halfDayBackground = Color(0xFFE5DCBB);
   static const halfDayText = Color(0xFF6A5C2E);
+  static const tripBackground = Color(0xFFD3DDE3);
+  static const tripBorder = Color(0xFFC3D0D8);
+  static const tripText = Color(0xFF3F5866);
   static const checkboxBorder = Color(0xFFCFD3CA);
   static const dotInactive = Color(0xFFC3C7BE);
   static const hairline = Color(0xFFDCDFD8);
@@ -56,6 +59,7 @@ abstract final class AppColors {
         WorkType.halfDay => (halfDayBackground, halfDayText),
         WorkType.dayOff => (dayOffBackground, dayOffText),
         WorkType.holiday => (holidayBackground, holidayText),
+        WorkType.businessTrip => (tripBackground, tripText),
         WorkType.normal => (chipNeutral, subtle),
       };
 }

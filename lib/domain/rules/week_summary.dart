@@ -13,6 +13,9 @@ abstract class WeekSummary with _$WeekSummary {
     required int halfDayCount,
     required int dayOffCount,
     required int holidayCount,
+    required int businessTripCount,
+    /// 그 주 평일 시간공제 합
+    required int deductionMinutes,
     required bool isFirstWeekException,
   }) = _WeekSummary;
 }

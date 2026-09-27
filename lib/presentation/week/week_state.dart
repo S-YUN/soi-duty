@@ -26,8 +26,8 @@ abstract class WeekDay with _$WeekDay {
     int? actualMinutes,
     int? deltaMinutes,
     required bool isToday,
-    /// 오늘인데 출퇴근이 덜 찍힘 — 탭해도 시트 대신 안내만.
-    required bool isTodayInProgress,
+    /// 오늘 근무 중(출근만 찍힘) — 탭해도 시트 대신 안내만.
+    required bool isTodayWorking,
   }) = _WeekDay;
 }
 
@@ -39,7 +39,7 @@ abstract class WeekState with _$WeekState {
     required bool canGoPrev,
     required bool canGoNext,
     required WeekSummary summary,
-    required int weekendMinutes,
+    required int excludedMinutes,
     required List<WeekDay> days,
     DateTime? firstRecordDate,
   }) = _WeekState;

@@ -17,7 +17,8 @@ mixin _$WeekSummary {
 
 /// 첫 주 예외면 null
  int? get targetMinutes; int get workedMinutes;/// target − worked. target이 null이면 null
- int? get remainingMinutes; int get halfDayCount; int get dayOffCount; int get holidayCount; bool get isFirstWeekException;
+ int? get remainingMinutes; int get halfDayCount; int get dayOffCount; int get holidayCount; int get businessTripCount;/// 그 주 평일 시간공제 합
+ int get deductionMinutes; bool get isFirstWeekException;
 /// Create a copy of WeekSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +30,20 @@ $WeekSummaryCopyWith<WeekSummary> get copyWith => _$WeekSummaryCopyWithImpl<Week
 @override
 bool operator ==(Object other) {
   final _this = this as WeekSummary;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeekSummary&&(identical(other.targetMinutes, _this.targetMinutes) || other.targetMinutes == _this.targetMinutes)&&(identical(other.workedMinutes, _this.workedMinutes) || other.workedMinutes == _this.workedMinutes)&&(identical(other.remainingMinutes, _this.remainingMinutes) || other.remainingMinutes == _this.remainingMinutes)&&(identical(other.halfDayCount, _this.halfDayCount) || other.halfDayCount == _this.halfDayCount)&&(identical(other.dayOffCount, _this.dayOffCount) || other.dayOffCount == _this.dayOffCount)&&(identical(other.holidayCount, _this.holidayCount) || other.holidayCount == _this.holidayCount)&&(identical(other.isFirstWeekException, _this.isFirstWeekException) || other.isFirstWeekException == _this.isFirstWeekException));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeekSummary&&(identical(other.targetMinutes, _this.targetMinutes) || other.targetMinutes == _this.targetMinutes)&&(identical(other.workedMinutes, _this.workedMinutes) || other.workedMinutes == _this.workedMinutes)&&(identical(other.remainingMinutes, _this.remainingMinutes) || other.remainingMinutes == _this.remainingMinutes)&&(identical(other.halfDayCount, _this.halfDayCount) || other.halfDayCount == _this.halfDayCount)&&(identical(other.dayOffCount, _this.dayOffCount) || other.dayOffCount == _this.dayOffCount)&&(identical(other.holidayCount, _this.holidayCount) || other.holidayCount == _this.holidayCount)&&(identical(other.businessTripCount, _this.businessTripCount) || other.businessTripCount == _this.businessTripCount)&&(identical(other.deductionMinutes, _this.deductionMinutes) || other.deductionMinutes == _this.deductionMinutes)&&(identical(other.isFirstWeekException, _this.isFirstWeekException) || other.isFirstWeekException == _this.isFirstWeekException));
 }
 
 
 @override
 int get hashCode {
   final _this = this as WeekSummary;
-  return Object.hash(runtimeType,_this.targetMinutes,_this.workedMinutes,_this.remainingMinutes,_this.halfDayCount,_this.dayOffCount,_this.holidayCount,_this.isFirstWeekException);
+  return Object.hash(runtimeType,_this.targetMinutes,_this.workedMinutes,_this.remainingMinutes,_this.halfDayCount,_this.dayOffCount,_this.holidayCount,_this.businessTripCount,_this.deductionMinutes,_this.isFirstWeekException);
 }
 
 @override
 String toString() {
   final _this = this as WeekSummary;
-  return 'WeekSummary(targetMinutes: ${_this.targetMinutes}, workedMinutes: ${_this.workedMinutes}, remainingMinutes: ${_this.remainingMinutes}, halfDayCount: ${_this.halfDayCount}, dayOffCount: ${_this.dayOffCount}, holidayCount: ${_this.holidayCount}, isFirstWeekException: ${_this.isFirstWeekException})';
+  return 'WeekSummary(targetMinutes: ${_this.targetMinutes}, workedMinutes: ${_this.workedMinutes}, remainingMinutes: ${_this.remainingMinutes}, halfDayCount: ${_this.halfDayCount}, dayOffCount: ${_this.dayOffCount}, holidayCount: ${_this.holidayCount}, businessTripCount: ${_this.businessTripCount}, deductionMinutes: ${_this.deductionMinutes}, isFirstWeekException: ${_this.isFirstWeekException})';
 }
 
 
@@ -53,7 +54,7 @@ abstract mixin class $WeekSummaryCopyWith<$Res>  {
   factory $WeekSummaryCopyWith(WeekSummary value, $Res Function(WeekSummary) _then) = _$WeekSummaryCopyWithImpl;
 @useResult
 $Res call({
- int? targetMinutes, int workedMinutes, int? remainingMinutes, int halfDayCount, int dayOffCount, int holidayCount, bool isFirstWeekException
+ int? targetMinutes, int workedMinutes, int? remainingMinutes, int halfDayCount, int dayOffCount, int holidayCount, int businessTripCount, int deductionMinutes, bool isFirstWeekException
 });
 
 
@@ -70,7 +71,7 @@ class _$WeekSummaryCopyWithImpl<$Res>
 
 /// Create a copy of WeekSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? targetMinutes = freezed,Object? workedMinutes = null,Object? remainingMinutes = freezed,Object? halfDayCount = null,Object? dayOffCount = null,Object? holidayCount = null,Object? isFirstWeekException = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? targetMinutes = freezed,Object? workedMinutes = null,Object? remainingMinutes = freezed,Object? halfDayCount = null,Object? dayOffCount = null,Object? holidayCount = null,Object? businessTripCount = null,Object? deductionMinutes = null,Object? isFirstWeekException = null,}) {
   return _then(WeekSummary(
 targetMinutes: freezed == targetMinutes ? _self.targetMinutes : targetMinutes // ignore: cast_nullable_to_non_nullable
 as int?,workedMinutes: null == workedMinutes ? _self.workedMinutes : workedMinutes // ignore: cast_nullable_to_non_nullable
@@ -78,6 +79,8 @@ as int,remainingMinutes: freezed == remainingMinutes ? _self.remainingMinutes : 
 as int?,halfDayCount: null == halfDayCount ? _self.halfDayCount : halfDayCount // ignore: cast_nullable_to_non_nullable
 as int,dayOffCount: null == dayOffCount ? _self.dayOffCount : dayOffCount // ignore: cast_nullable_to_non_nullable
 as int,holidayCount: null == holidayCount ? _self.holidayCount : holidayCount // ignore: cast_nullable_to_non_nullable
+as int,businessTripCount: null == businessTripCount ? _self.businessTripCount : businessTripCount // ignore: cast_nullable_to_non_nullable
+as int,deductionMinutes: null == deductionMinutes ? _self.deductionMinutes : deductionMinutes // ignore: cast_nullable_to_non_nullable
 as int,isFirstWeekException: null == isFirstWeekException ? _self.isFirstWeekException : isFirstWeekException // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -164,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? targetMinutes,  int workedMinutes,  int? remainingMinutes,  int halfDayCount,  int dayOffCount,  int holidayCount,  bool isFirstWeekException)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? targetMinutes,  int workedMinutes,  int? remainingMinutes,  int halfDayCount,  int dayOffCount,  int holidayCount,  int businessTripCount,  int deductionMinutes,  bool isFirstWeekException)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WeekSummary() when $default != null:
-return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_that.halfDayCount,_that.dayOffCount,_that.holidayCount,_that.isFirstWeekException);case _:
+return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_that.halfDayCount,_that.dayOffCount,_that.holidayCount,_that.businessTripCount,_that.deductionMinutes,_that.isFirstWeekException);case _:
   return orElse();
 
 }
@@ -185,10 +188,10 @@ return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? targetMinutes,  int workedMinutes,  int? remainingMinutes,  int halfDayCount,  int dayOffCount,  int holidayCount,  bool isFirstWeekException)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? targetMinutes,  int workedMinutes,  int? remainingMinutes,  int halfDayCount,  int dayOffCount,  int holidayCount,  int businessTripCount,  int deductionMinutes,  bool isFirstWeekException)  $default,) {final _that = this;
 switch (_that) {
 case _WeekSummary():
-return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_that.halfDayCount,_that.dayOffCount,_that.holidayCount,_that.isFirstWeekException);case _:
+return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_that.halfDayCount,_that.dayOffCount,_that.holidayCount,_that.businessTripCount,_that.deductionMinutes,_that.isFirstWeekException);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +208,10 @@ return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? targetMinutes,  int workedMinutes,  int? remainingMinutes,  int halfDayCount,  int dayOffCount,  int holidayCount,  bool isFirstWeekException)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? targetMinutes,  int workedMinutes,  int? remainingMinutes,  int halfDayCount,  int dayOffCount,  int holidayCount,  int businessTripCount,  int deductionMinutes,  bool isFirstWeekException)?  $default,) {final _that = this;
 switch (_that) {
 case _WeekSummary() when $default != null:
-return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_that.halfDayCount,_that.dayOffCount,_that.holidayCount,_that.isFirstWeekException);case _:
+return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_that.halfDayCount,_that.dayOffCount,_that.holidayCount,_that.businessTripCount,_that.deductionMinutes,_that.isFirstWeekException);case _:
   return null;
 
 }
@@ -220,7 +223,7 @@ return $default(_that.targetMinutes,_that.workedMinutes,_that.remainingMinutes,_
 
 
 class _WeekSummary implements WeekSummary {
-  const _WeekSummary({this.targetMinutes, required this.workedMinutes, this.remainingMinutes, required this.halfDayCount, required this.dayOffCount, required this.holidayCount, required this.isFirstWeekException});
+  const _WeekSummary({this.targetMinutes, required this.workedMinutes, this.remainingMinutes, required this.halfDayCount, required this.dayOffCount, required this.holidayCount, required this.businessTripCount, required this.deductionMinutes, required this.isFirstWeekException});
   
 
 /// 첫 주 예외면 null
@@ -231,6 +234,9 @@ class _WeekSummary implements WeekSummary {
 @override final  int halfDayCount;
 @override final  int dayOffCount;
 @override final  int holidayCount;
+@override final  int businessTripCount;
+/// 그 주 평일 시간공제 합
+@override final  int deductionMinutes;
 @override final  bool isFirstWeekException;
 
 /// Create a copy of WeekSummary
@@ -243,18 +249,18 @@ _$WeekSummaryCopyWith<_WeekSummary> get copyWith => __$WeekSummaryCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeekSummary&&(identical(other.targetMinutes, targetMinutes) || other.targetMinutes == targetMinutes)&&(identical(other.workedMinutes, workedMinutes) || other.workedMinutes == workedMinutes)&&(identical(other.remainingMinutes, remainingMinutes) || other.remainingMinutes == remainingMinutes)&&(identical(other.halfDayCount, halfDayCount) || other.halfDayCount == halfDayCount)&&(identical(other.dayOffCount, dayOffCount) || other.dayOffCount == dayOffCount)&&(identical(other.holidayCount, holidayCount) || other.holidayCount == holidayCount)&&(identical(other.isFirstWeekException, isFirstWeekException) || other.isFirstWeekException == isFirstWeekException));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeekSummary&&(identical(other.targetMinutes, targetMinutes) || other.targetMinutes == targetMinutes)&&(identical(other.workedMinutes, workedMinutes) || other.workedMinutes == workedMinutes)&&(identical(other.remainingMinutes, remainingMinutes) || other.remainingMinutes == remainingMinutes)&&(identical(other.halfDayCount, halfDayCount) || other.halfDayCount == halfDayCount)&&(identical(other.dayOffCount, dayOffCount) || other.dayOffCount == dayOffCount)&&(identical(other.holidayCount, holidayCount) || other.holidayCount == holidayCount)&&(identical(other.businessTripCount, businessTripCount) || other.businessTripCount == businessTripCount)&&(identical(other.deductionMinutes, deductionMinutes) || other.deductionMinutes == deductionMinutes)&&(identical(other.isFirstWeekException, isFirstWeekException) || other.isFirstWeekException == isFirstWeekException));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,targetMinutes,workedMinutes,remainingMinutes,halfDayCount,dayOffCount,holidayCount,isFirstWeekException);
+    return Object.hash(runtimeType,targetMinutes,workedMinutes,remainingMinutes,halfDayCount,dayOffCount,holidayCount,businessTripCount,deductionMinutes,isFirstWeekException);
 }
 
 @override
 String toString() {
-    return 'WeekSummary(targetMinutes: $targetMinutes, workedMinutes: $workedMinutes, remainingMinutes: $remainingMinutes, halfDayCount: $halfDayCount, dayOffCount: $dayOffCount, holidayCount: $holidayCount, isFirstWeekException: $isFirstWeekException)';
+    return 'WeekSummary(targetMinutes: $targetMinutes, workedMinutes: $workedMinutes, remainingMinutes: $remainingMinutes, halfDayCount: $halfDayCount, dayOffCount: $dayOffCount, holidayCount: $holidayCount, businessTripCount: $businessTripCount, deductionMinutes: $deductionMinutes, isFirstWeekException: $isFirstWeekException)';
 }
 
 
@@ -265,7 +271,7 @@ abstract mixin class _$WeekSummaryCopyWith<$Res> implements $WeekSummaryCopyWith
   factory _$WeekSummaryCopyWith(_WeekSummary value, $Res Function(_WeekSummary) _then) = __$WeekSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- int? targetMinutes, int workedMinutes, int? remainingMinutes, int halfDayCount, int dayOffCount, int holidayCount, bool isFirstWeekException
+ int? targetMinutes, int workedMinutes, int? remainingMinutes, int halfDayCount, int dayOffCount, int holidayCount, int businessTripCount, int deductionMinutes, bool isFirstWeekException
 });
 
 
@@ -282,7 +288,7 @@ class __$WeekSummaryCopyWithImpl<$Res>
 
 /// Create a copy of WeekSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? targetMinutes = freezed,Object? workedMinutes = null,Object? remainingMinutes = freezed,Object? halfDayCount = null,Object? dayOffCount = null,Object? holidayCount = null,Object? isFirstWeekException = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? targetMinutes = freezed,Object? workedMinutes = null,Object? remainingMinutes = freezed,Object? halfDayCount = null,Object? dayOffCount = null,Object? holidayCount = null,Object? businessTripCount = null,Object? deductionMinutes = null,Object? isFirstWeekException = null,}) {
   return _then(_WeekSummary(
 targetMinutes: freezed == targetMinutes ? _self.targetMinutes : targetMinutes // ignore: cast_nullable_to_non_nullable
 as int?,workedMinutes: null == workedMinutes ? _self.workedMinutes : workedMinutes // ignore: cast_nullable_to_non_nullable
@@ -290,6 +296,8 @@ as int,remainingMinutes: freezed == remainingMinutes ? _self.remainingMinutes : 
 as int?,halfDayCount: null == halfDayCount ? _self.halfDayCount : halfDayCount // ignore: cast_nullable_to_non_nullable
 as int,dayOffCount: null == dayOffCount ? _self.dayOffCount : dayOffCount // ignore: cast_nullable_to_non_nullable
 as int,holidayCount: null == holidayCount ? _self.holidayCount : holidayCount // ignore: cast_nullable_to_non_nullable
+as int,businessTripCount: null == businessTripCount ? _self.businessTripCount : businessTripCount // ignore: cast_nullable_to_non_nullable
+as int,deductionMinutes: null == deductionMinutes ? _self.deductionMinutes : deductionMinutes // ignore: cast_nullable_to_non_nullable
 as int,isFirstWeekException: null == isFirstWeekException ? _self.isFirstWeekException : isFirstWeekException // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

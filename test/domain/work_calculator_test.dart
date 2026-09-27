@@ -40,6 +40,7 @@ void main() {
       expect(standardMinutes(WorkType.halfDay, rules), 240);
       expect(standardMinutes(WorkType.dayOff, rules), 0);
       expect(standardMinutes(WorkType.holiday, rules), 0);
+      expect(standardMinutes(WorkType.businessTrip, rules), 0);
     });
   });
 
@@ -53,9 +54,8 @@ void main() {
     test('주말: 점심 공제 없음', () {
       expect(actualMinutes(rec(19, inH: 10, outH: 14), rules), 240);
     });
-    test('연차·공휴일은 출퇴근과 무관하게 0', () {
+    test('연차는 0', () {
       expect(actualMinutes(rec(14, type: WorkType.dayOff), rules), 0);
-      expect(actualMinutes(rec(14, inH: 9, outH: 18, type: WorkType.holiday), rules), 0);
     });
     test('출퇴근 중 하나라도 없으면 null', () {
       expect(actualMinutes(rec(14, inH: 9), rules), isNull);
@@ -307,24 +307,24 @@ void main() {
         rec(16, inH: 9), // 오늘, 대상 아님
       ];
       expect(
-        unrecordedWeekdays(records: r, today: d(16), firstRecordDate: d(7)),
+        unrecordedWeekdays(rules: rules, records: r, today: d(16), firstRecordDate: d(7)),
         [d(9), d(10), d(11), d(15)],
       );
     });
 
     test('주말은 대상이 아니다', () {
       final r = [for (var day = 7; day <= 11; day++) rec(day, inH: 9, outH: 18), rec(14, inH: 9, outH: 18)];
-      expect(unrecordedWeekdays(records: r, today: d(15), firstRecordDate: d(11)), isEmpty); // 12·13 제외
+      expect(unrecordedWeekdays(rules: rules, records: r, today: d(15), firstRecordDate: d(11)), isEmpty); // 12·13 제외
     });
 
     test('연차·공휴일은 출퇴근이 없어도 누락이 아니다', () {
       final r = [rec(14, type: WorkType.dayOff), rec(15, type: WorkType.holiday)];
-      expect(unrecordedWeekdays(records: r, today: d(16), firstRecordDate: d(14)), isEmpty);
+      expect(unrecordedWeekdays(rules: rules, records: r, today: d(16), firstRecordDate: d(14)), isEmpty);
     });
 
     test('첫 기록 주 안에서는 월요일부터 — 첫 기록일이 수요일이면 월·화가 누락으로 잡힌다', () {
       expect(
-        unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)),
+        unrecordedWeekdays(rules: rules, records: [rec(16, inH: 9, outH: 18)], today: d(17), firstRecordDate: d(16)),
         [d(14), d(15)],
       );
     });
@@ -332,17 +332,17 @@ void main() {
     test('첫 주가 지나면 첫 기록 전 날들은 더 조르지 않는다 — 첫 기록일 이후만', () {
       // 첫 기록 9/16(수), 오늘 9/22(화). 14·15는 빠지고, 17·18·21만.
       expect(
-        unrecordedWeekdays(records: [rec(16, inH: 9, outH: 18)], today: d(22), firstRecordDate: d(16)),
+        unrecordedWeekdays(rules: rules, records: [rec(16, inH: 9, outH: 18)], today: d(22), firstRecordDate: d(16)),
         [d(17), d(18), d(21)],
       );
     });
 
     test('첫 기록 주 이전 주는 대상이 아니다', () {
-      expect(unrecordedWeekdays(records: [rec(14, inH: 9, outH: 18)], today: d(15), firstRecordDate: d(14)), isEmpty);
+      expect(unrecordedWeekdays(rules: rules, records: [rec(14, inH: 9, outH: 18)], today: d(15), firstRecordDate: d(14)), isEmpty);
     });
 
     test('첫 기록일이 없으면 빈 리스트', () {
-      expect(unrecordedWeekdays(records: const [], today: d(16), firstRecordDate: null), isEmpty);
+      expect(unrecordedWeekdays(rules: rules, records: const [], today: d(16), firstRecordDate: null), isEmpty);
     });
   });
 
@@ -357,7 +357,7 @@ void main() {
     });
   });
 
-  group('weekendMinutes', () {
+  group('excludedMinutes', () {
     test('그 주 토·일 실근무 합, 점심 공제 없음', () {
       final records = [
         rec(14, inH: 9, outH: 18),
@@ -365,7 +365,7 @@ void main() {
         rec(20, inH: 10, outH: 11), // 일
         rec(12, inH: 10, outH: 12), // 지난주 토
       ];
-      expect(weekendMinutes(records, d(14), rules), 270 + 60);
+      expect(excludedMinutes(records, d(14), rules), 270 + 60);
     });
   });
 
@@ -385,13 +385,143 @@ void main() {
     test('2027-02: 2/1 월요일, 28일 → 딱 4주', () => expect(calendarDays(DateTime(2027, 2)).length, 28));
   });
 
-  test('isTodayInProgress: 오늘이고 출퇴근이 덜 찍혔을 때만', () {
-    expect(isTodayInProgress(null, d(16), d(16, 12)), isTrue);
-    expect(isTodayInProgress(rec(16, inH: 9), d(16), d(16, 12)), isTrue);
-    expect(isTodayInProgress(rec(16, type: WorkType.dayOff), d(16), d(16, 12)), isTrue);
-    expect(isTodayInProgress(rec(16, inH: 9, outH: 18), d(16), d(16, 12)), isFalse);
-    expect(isTodayInProgress(null, d(15), d(16, 12)), isFalse); // 어제
-    expect(isTodayInProgress(null, d(17), d(16, 12)), isFalse); // 내일
+  group('공휴일 근무', () {
+    test('점심 공제 없음', () {
+      expect(deductsLunch(rec(14, type: WorkType.holiday)), isFalse);
+      expect(actualMinutes(rec(14, inH: 10, outH: 15, type: WorkType.holiday), rules), 300);
+    });
+    test('시각 없는 공휴일은 0', () => expect(actualMinutes(rec(14, type: WorkType.holiday), rules), 0));
+    test('기준 대비 없음', () => expect(deltaMinutes(rec(14, inH: 10, outH: 15, type: WorkType.holiday), rules), isNull));
+    test('주간 실적에서 빠지고 목표는 −8h', () {
+      final s = weekSummary(
+        records: [rec(14, inH: 10, outH: 15, type: WorkType.holiday), rec(15, inH: 9, outH: 18)],
+        monday: d(14),
+        rules: rules,
+        now: d(15, 20),
+        firstRecordDate: d(7),
+      );
+      expect(s.targetMinutes, 2400 - 480);
+      expect(s.workedMinutes, 480);
+      expect(s.holidayCount, 1);
+    });
+    test('오늘 이전 공휴일 근무는 남은 시간 계산에서도 빠진다', () {
+      final records = [rec(14, inH: 10, outH: 15, type: WorkType.holiday)];
+      expect(weekRemainingBeforeToday(records: records, today: d(15), rules: rules, firstRecordDate: d(7)), 1920);
+    });
+    test('excludedMinutes = 주말 + 공휴일 근무', () {
+      final records = [rec(14, inH: 10, outH: 15, type: WorkType.holiday), rec(19, inH: 10, outH: 14)];
+      expect(excludedMinutes(records, d(14), rules), 300 + 240);
+    });
+    test('누락 아님', () {
+      expect(
+        unrecordedWeekdays(rules: rules, records: [rec(14, type: WorkType.holiday)], today: d(16), firstRecordDate: d(14)),
+        [d(15)],
+      );
+    });
+  });
+
+  group('출장', () {
+    test('기준 0, 실근무 0, 쉬는 날', () {
+      expect(standardMinutes(WorkType.businessTrip, rules), 0);
+      expect(actualMinutes(rec(14, type: WorkType.businessTrip), rules), 0);
+      expect(isOffType(WorkType.businessTrip), isTrue);
+    });
+    test('목표 −8h, 개수 집계', () {
+      final s = weekSummary(
+        records: [rec(14, type: WorkType.businessTrip)],
+        monday: d(14),
+        rules: rules,
+        now: d(14, 12),
+        firstRecordDate: d(7),
+      );
+      expect(s.targetMinutes, 1920);
+      expect(s.businessTripCount, 1);
+    });
+    test('근무일에서 빠진다 — 금요일 출장이면 목요일이 마지막', () {
+      final records = [rec(18, type: WorkType.businessTrip)];
+      expect(isLastWorkday(records, d(17)), isTrue);
+      expect(remainingWorkdays(records, d(14)), 4);
+    });
+    test('누락 아님', () {
+      expect(
+        unrecordedWeekdays(rules: rules, records: [rec(14, type: WorkType.businessTrip)], today: d(15), firstRecordDate: d(14)),
+        isEmpty,
+      );
+    });
+  });
+
+  group('시간공제', () {
+    test('그날 기준시간 = 기본 − 공제, 0 미만 없음', () {
+      expect(dayStandardMinutes(rec(14, ded: 120), rules), 360);
+      expect(dayStandardMinutes(rec(14, type: WorkType.halfDay, ded: 60), rules), 180);
+      expect(dayStandardMinutes(rec(14, type: WorkType.halfDay, ded: 300), rules), 0);
+      expect(dayStandardMinutes(null, rules), 480);
+    });
+    test('주간 목표에서 빠지고 합계가 집계된다 (미래 공제도 즉시)', () {
+      final s = weekSummary(
+        records: [rec(14, inH: 9, outH: 18, ded: 60), rec(18, ded: 150)],
+        monday: d(14),
+        rules: rules,
+        now: d(14, 20),
+        firstRecordDate: d(7),
+      );
+      expect(s.targetMinutes, 2400 - 210);
+      expect(s.deductionMinutes, 210);
+    });
+    test('기준 대비에 반영, 실근무·점심은 그대로', () {
+      final r = rec(14, inH: 9, outH: 15, ded: 120); // 실근무 5h, 기준 6h
+      expect(actualMinutes(r, rules), 300);
+      expect(deltaMinutes(r, rules), -60);
+    });
+    test('오늘 몫: 공제는 그날에만 반영', () {
+      expect(todayShareMinutes(records: [rec(14, ded: 120)], today: d(14), rules: rules, firstRecordDate: d(7)), 360);
+      expect(todayShareMinutes(records: [rec(16, ded: 120)], today: d(14), rules: rules, firstRecordDate: d(7)), 480);
+    });
+    test('반차 오늘 몫 = 4h − 공제', () {
+      expect(
+        todayShareMinutes(records: [rec(14, type: WorkType.halfDay, ded: 60)], today: d(14), rules: rules, firstRecordDate: d(7)),
+        180,
+      );
+    });
+    test('공제로 기준 0이 된 날은 누락 아님', () {
+      expect(unrecordedWeekdays(rules: rules, records: [rec(14, ded: 480)], today: d(15), firstRecordDate: d(14)), isEmpty);
+    });
+    test('isValidDeduction: 반차는 4h까지', () {
+      expect(isValidDeduction(WorkType.normal, 480, rules), isTrue);
+      expect(isValidDeduction(WorkType.halfDay, 240, rules), isTrue);
+      expect(isValidDeduction(WorkType.halfDay, 250, rules), isFalse);
+    });
+    test('closingDeduction = max(0, 기본 − 실근무)', () {
+      expect(closingDeduction(rec(14, inH: 9), d(14, 15), rules), 180); // 5h 근무
+      expect(closingDeduction(rec(14, inH: 9, type: WorkType.halfDay), d(14, 11), rules), 120);
+      expect(closingDeduction(rec(14, inH: 9, type: WorkType.halfDay), d(14, 14), rules), 0); // 이미 초과
+      expect(closingDeduction(rec(14, inH: 9, ded: 60), d(14, 16, 13), rules), 107); // 기존 공제는 무시
+    });
+  });
+
+  group('sanitizeRecord', () {
+    test('쉬는 날은 공제·사유를 지우고, 연차·출장은 시각도 지운다', () {
+      final dayOff = sanitizeRecord(rec(14, inH: 9, outH: 18, type: WorkType.dayOff, ded: 60, reason: 'x'));
+      expect((dayOff.clockIn, dayOff.clockOut, dayOff.deductionMinutes, dayOff.deductionReason), (null, null, 0, null));
+      final trip = sanitizeRecord(rec(14, inH: 9, outH: 18, type: WorkType.businessTrip));
+      expect((trip.clockIn, trip.clockOut), (null, null));
+      final holiday = sanitizeRecord(rec(14, inH: 10, outH: 15, type: WorkType.holiday, ded: 60));
+      expect((holiday.clockIn, holiday.deductionMinutes), (d(14, 10), 0));
+    });
+    test('주말은 공제 없음', () => expect(sanitizeRecord(rec(19, ded: 60)).deductionMinutes, 0));
+    test('공제 0이면 사유 null, 빈 사유는 null, 앞뒤 공백 제거', () {
+      expect(sanitizeRecord(rec(14, reason: '공문')).deductionReason, isNull);
+      expect(sanitizeRecord(rec(14, ded: 60, reason: '  ')).deductionReason, isNull);
+      expect(sanitizeRecord(rec(14, ded: 60, reason: ' 공문 ')).deductionReason, '공문');
+    });
+  });
+
+  test('isTodayWorking: 오늘 && 출근만 찍힘', () {
+    expect(isTodayWorking(rec(16, inH: 9), d(16), d(16, 12)), isTrue);
+    expect(isTodayWorking(null, d(16), d(16, 12)), isFalse); // 출근 전은 유형 전용 시트가 열린다
+    expect(isTodayWorking(rec(16, type: WorkType.dayOff), d(16), d(16, 12)), isFalse);
+    expect(isTodayWorking(rec(16, inH: 9, outH: 18), d(16), d(16, 12)), isFalse);
+    expect(isTodayWorking(rec(15, inH: 9), d(15), d(16, 12)), isFalse);
   });
 
   test('addMonths는 해를 넘긴다', () {

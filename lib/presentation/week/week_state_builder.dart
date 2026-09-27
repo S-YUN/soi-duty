@@ -25,7 +25,7 @@ WeekState buildWeekState({
     canGoPrev: start.isAfter(earliestMonday(firstRecordDate, today)),
     canGoNext: start.isBefore(thisMonday),
     summary: weekSummary(records: records, monday: start, rules: rules, now: now, firstRecordDate: firstRecordDate),
-    weekendMinutes: weekendMinutes(records, start, rules),
+    excludedMinutes: excludedMinutes(records, start, rules),
     days: [for (var i = 0; i < 7; i++) _day(addDays(start, i), byDate, today, rules)],
     firstRecordDate: firstRecordDate,
   );
@@ -60,6 +60,6 @@ WeekDay _day(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime today, Wo
     actualMinutes: hasBoth ? actualMinutes(r!, rules) : null,
     deltaMinutes: kind == WeekDayKind.recorded ? deltaMinutes(r!, rules) : null,
     isToday: isToday,
-    isTodayInProgress: isTodayInProgress(r, date, today),
+    isTodayWorking: isTodayWorking(r, date, today),
   );
 }

@@ -5,6 +5,8 @@ class WorkRules {
     this.lunchBreakMinutes = 60,
     this.halfDayCreditMinutes = 240,
     this.dayOffCreditMinutes = 480,
+    this.businessTripCreditMinutes = 480,
+    this.deductionStepMinutes = 10,
     this.defaultClockInMinutes = 8 * 60,
     this.defaultClockOutMinutes = 17 * 60,
   });
@@ -13,6 +15,12 @@ class WorkRules {
   final int lunchBreakMinutes;
   final int halfDayCreditMinutes;
   final int dayOffCreditMinutes;
+
+  /// 출장 1일 차감량 (8h)
+  final int businessTripCreditMinutes;
+
+  /// 시간공제 휠의 분 단위
+  final int deductionStepMinutes;
 
   /// 시트에서 빈 출근/퇴근 행을 열 때 휠이 시작하는 시각(자정 기준 분). 저장값·표시와는 무관.
   final int defaultClockInMinutes;

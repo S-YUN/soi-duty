@@ -27,8 +27,8 @@ void main() {
     expect(cell(s, DateTime(2026, 8, 31)).isCurrentMonth, isFalse);
     expect(cell(s, d(1)).isCurrentMonth, isTrue);
     expect(cell(s, d(16)).isToday, isTrue);
-    expect(cell(s, d(16)).isTodayInProgress, isTrue); // 기록 없음
-    expect(cell(s, d(15)).isTodayInProgress, isFalse);
+    expect(cell(s, d(16)).isTodayWorking, isFalse); // 기록 없음 — 출근 전 오늘은 유형 전용 시트가 열린다
+    expect(cell(s, d(15)).isTodayWorking, isFalse);
   });
 
   test('값 판정', () {

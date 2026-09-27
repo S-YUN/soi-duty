@@ -6,6 +6,7 @@ import 'package:soi_duty/data/repository/drift_work_record_repository.dart';
 import 'package:soi_duty/data/seed/debug_seed.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_calculator.dart';
+import 'package:soi_duty/domain/rules/work_rules.dart';
 
 import '../helpers/records.dart';
 
@@ -64,7 +65,7 @@ void main() {
     await applySeed(db, SeedScenario.withGaps, today: today);
     final all = await repo.watchAll().first;
     final first = await repo.watchFirstRecordDate().first;
-    expect(unrecordedWeekdays(records: all, today: today, firstRecordDate: first), isNotEmpty);
+    expect(unrecordedWeekdays(rules: const WorkRules(), records: all, today: today, firstRecordDate: first), isNotEmpty);
   });
 
   test('시드를 다시 적용하면 이전 기록이 남지 않는다', () async {

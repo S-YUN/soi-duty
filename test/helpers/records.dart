@@ -11,10 +11,14 @@ WorkRecord rec(
   int? outH,
   int? outM,
   WorkType type = WorkType.normal,
+  int ded = 0,
+  String? reason,
 }) =>
     WorkRecord(
       date: d(day),
       clockIn: inH == null ? null : d(day, inH, inM ?? 0),
       clockOut: outH == null ? null : d(day, outH, outM ?? 0),
       type: type,
+      deductionMinutes: ded,
+      deductionReason: reason,
     );

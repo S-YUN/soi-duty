@@ -62,7 +62,7 @@ TodayState buildTodayState({
     todayActual: phase == TodayPhase.done ? actualMinutes(record!, rules) : null,
     todayDelta: phase == TodayPhase.done ? deltaMinutes(record!, rules) : null,
     week: week,
-    unrecordedDays: unrecordedWeekdays(records: records, today: today, firstRecordDate: firstRecordDate),
+    unrecordedDays: unrecordedWeekdays(rules: rules, records: records, today: today, firstRecordDate: firstRecordDate),
     firstRecordDate: firstRecordDate,
   );
 }

@@ -15,8 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WeekDay {
 
- DateTime get date; WorkRecord? get record; WeekDayKind get kind; int? get actualMinutes; int? get deltaMinutes; bool get isToday;/// 오늘인데 출퇴근이 덜 찍힘 — 탭해도 시트 대신 안내만.
- bool get isTodayInProgress;
+ DateTime get date; WorkRecord? get record; WeekDayKind get kind; int? get actualMinutes; int? get deltaMinutes; bool get isToday;/// 오늘 근무 중(출근만 찍힘) — 탭해도 시트 대신 안내만.
+ bool get isTodayWorking;
 /// Create a copy of WeekDay
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,20 +28,20 @@ $WeekDayCopyWith<WeekDay> get copyWith => _$WeekDayCopyWithImpl<WeekDay>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as WeekDay;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeekDay&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.record, _this.record) || other.record == _this.record)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.actualMinutes, _this.actualMinutes) || other.actualMinutes == _this.actualMinutes)&&(identical(other.deltaMinutes, _this.deltaMinutes) || other.deltaMinutes == _this.deltaMinutes)&&(identical(other.isToday, _this.isToday) || other.isToday == _this.isToday)&&(identical(other.isTodayInProgress, _this.isTodayInProgress) || other.isTodayInProgress == _this.isTodayInProgress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeekDay&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.record, _this.record) || other.record == _this.record)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.actualMinutes, _this.actualMinutes) || other.actualMinutes == _this.actualMinutes)&&(identical(other.deltaMinutes, _this.deltaMinutes) || other.deltaMinutes == _this.deltaMinutes)&&(identical(other.isToday, _this.isToday) || other.isToday == _this.isToday)&&(identical(other.isTodayWorking, _this.isTodayWorking) || other.isTodayWorking == _this.isTodayWorking));
 }
 
 
 @override
 int get hashCode {
   final _this = this as WeekDay;
-  return Object.hash(runtimeType,_this.date,_this.record,_this.kind,_this.actualMinutes,_this.deltaMinutes,_this.isToday,_this.isTodayInProgress);
+  return Object.hash(runtimeType,_this.date,_this.record,_this.kind,_this.actualMinutes,_this.deltaMinutes,_this.isToday,_this.isTodayWorking);
 }
 
 @override
 String toString() {
   final _this = this as WeekDay;
-  return 'WeekDay(date: ${_this.date}, record: ${_this.record}, kind: ${_this.kind}, actualMinutes: ${_this.actualMinutes}, deltaMinutes: ${_this.deltaMinutes}, isToday: ${_this.isToday}, isTodayInProgress: ${_this.isTodayInProgress})';
+  return 'WeekDay(date: ${_this.date}, record: ${_this.record}, kind: ${_this.kind}, actualMinutes: ${_this.actualMinutes}, deltaMinutes: ${_this.deltaMinutes}, isToday: ${_this.isToday}, isTodayWorking: ${_this.isTodayWorking})';
 }
 
 
@@ -52,7 +52,7 @@ abstract mixin class $WeekDayCopyWith<$Res>  {
   factory $WeekDayCopyWith(WeekDay value, $Res Function(WeekDay) _then) = _$WeekDayCopyWithImpl;
 @useResult
 $Res call({
- DateTime date, WorkRecord? record, WeekDayKind kind, int? actualMinutes, int? deltaMinutes, bool isToday, bool isTodayInProgress
+ DateTime date, WorkRecord? record, WeekDayKind kind, int? actualMinutes, int? deltaMinutes, bool isToday, bool isTodayWorking
 });
 
 
@@ -69,7 +69,7 @@ class _$WeekDayCopyWithImpl<$Res>
 
 /// Create a copy of WeekDay
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? record = freezed,Object? kind = null,Object? actualMinutes = freezed,Object? deltaMinutes = freezed,Object? isToday = null,Object? isTodayInProgress = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? record = freezed,Object? kind = null,Object? actualMinutes = freezed,Object? deltaMinutes = freezed,Object? isToday = null,Object? isTodayWorking = null,}) {
   return _then(WeekDay(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,record: freezed == record ? _self.record : record // ignore: cast_nullable_to_non_nullable
@@ -77,7 +77,7 @@ as WorkRecord?,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_t
 as WeekDayKind,actualMinutes: freezed == actualMinutes ? _self.actualMinutes : actualMinutes // ignore: cast_nullable_to_non_nullable
 as int?,deltaMinutes: freezed == deltaMinutes ? _self.deltaMinutes : deltaMinutes // ignore: cast_nullable_to_non_nullable
 as int?,isToday: null == isToday ? _self.isToday : isToday // ignore: cast_nullable_to_non_nullable
-as bool,isTodayInProgress: null == isTodayInProgress ? _self.isTodayInProgress : isTodayInProgress // ignore: cast_nullable_to_non_nullable
+as bool,isTodayWorking: null == isTodayWorking ? _self.isTodayWorking : isTodayWorking // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -175,10 +175,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  WeekDayKind kind,  int? actualMinutes,  int? deltaMinutes,  bool isToday,  bool isTodayInProgress)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  WeekDayKind kind,  int? actualMinutes,  int? deltaMinutes,  bool isToday,  bool isTodayWorking)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WeekDay() when $default != null:
-return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.deltaMinutes,_that.isToday,_that.isTodayInProgress);case _:
+return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.deltaMinutes,_that.isToday,_that.isTodayWorking);case _:
   return orElse();
 
 }
@@ -196,10 +196,10 @@ return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.del
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  WeekDayKind kind,  int? actualMinutes,  int? deltaMinutes,  bool isToday,  bool isTodayInProgress)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  WorkRecord? record,  WeekDayKind kind,  int? actualMinutes,  int? deltaMinutes,  bool isToday,  bool isTodayWorking)  $default,) {final _that = this;
 switch (_that) {
 case _WeekDay():
-return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.deltaMinutes,_that.isToday,_that.isTodayInProgress);case _:
+return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.deltaMinutes,_that.isToday,_that.isTodayWorking);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -216,10 +216,10 @@ return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.del
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  WorkRecord? record,  WeekDayKind kind,  int? actualMinutes,  int? deltaMinutes,  bool isToday,  bool isTodayInProgress)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  WorkRecord? record,  WeekDayKind kind,  int? actualMinutes,  int? deltaMinutes,  bool isToday,  bool isTodayWorking)?  $default,) {final _that = this;
 switch (_that) {
 case _WeekDay() when $default != null:
-return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.deltaMinutes,_that.isToday,_that.isTodayInProgress);case _:
+return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.deltaMinutes,_that.isToday,_that.isTodayWorking);case _:
   return null;
 
 }
@@ -231,7 +231,7 @@ return $default(_that.date,_that.record,_that.kind,_that.actualMinutes,_that.del
 
 
 class _WeekDay implements WeekDay {
-  const _WeekDay({required this.date, this.record, required this.kind, this.actualMinutes, this.deltaMinutes, required this.isToday, required this.isTodayInProgress});
+  const _WeekDay({required this.date, this.record, required this.kind, this.actualMinutes, this.deltaMinutes, required this.isToday, required this.isTodayWorking});
   
 
 @override final  DateTime date;
@@ -240,8 +240,8 @@ class _WeekDay implements WeekDay {
 @override final  int? actualMinutes;
 @override final  int? deltaMinutes;
 @override final  bool isToday;
-/// 오늘인데 출퇴근이 덜 찍힘 — 탭해도 시트 대신 안내만.
-@override final  bool isTodayInProgress;
+/// 오늘 근무 중(출근만 찍힘) — 탭해도 시트 대신 안내만.
+@override final  bool isTodayWorking;
 
 /// Create a copy of WeekDay
 /// with the given fields replaced by the non-null parameter values.
@@ -253,18 +253,18 @@ _$WeekDayCopyWith<_WeekDay> get copyWith => __$WeekDayCopyWithImpl<_WeekDay>(thi
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeekDay&&(identical(other.date, date) || other.date == date)&&(identical(other.record, record) || other.record == record)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.actualMinutes, actualMinutes) || other.actualMinutes == actualMinutes)&&(identical(other.deltaMinutes, deltaMinutes) || other.deltaMinutes == deltaMinutes)&&(identical(other.isToday, isToday) || other.isToday == isToday)&&(identical(other.isTodayInProgress, isTodayInProgress) || other.isTodayInProgress == isTodayInProgress));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeekDay&&(identical(other.date, date) || other.date == date)&&(identical(other.record, record) || other.record == record)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.actualMinutes, actualMinutes) || other.actualMinutes == actualMinutes)&&(identical(other.deltaMinutes, deltaMinutes) || other.deltaMinutes == deltaMinutes)&&(identical(other.isToday, isToday) || other.isToday == isToday)&&(identical(other.isTodayWorking, isTodayWorking) || other.isTodayWorking == isTodayWorking));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,date,record,kind,actualMinutes,deltaMinutes,isToday,isTodayInProgress);
+    return Object.hash(runtimeType,date,record,kind,actualMinutes,deltaMinutes,isToday,isTodayWorking);
 }
 
 @override
 String toString() {
-    return 'WeekDay(date: $date, record: $record, kind: $kind, actualMinutes: $actualMinutes, deltaMinutes: $deltaMinutes, isToday: $isToday, isTodayInProgress: $isTodayInProgress)';
+    return 'WeekDay(date: $date, record: $record, kind: $kind, actualMinutes: $actualMinutes, deltaMinutes: $deltaMinutes, isToday: $isToday, isTodayWorking: $isTodayWorking)';
 }
 
 
@@ -275,7 +275,7 @@ abstract mixin class _$WeekDayCopyWith<$Res> implements $WeekDayCopyWith<$Res> {
   factory _$WeekDayCopyWith(_WeekDay value, $Res Function(_WeekDay) _then) = __$WeekDayCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime date, WorkRecord? record, WeekDayKind kind, int? actualMinutes, int? deltaMinutes, bool isToday, bool isTodayInProgress
+ DateTime date, WorkRecord? record, WeekDayKind kind, int? actualMinutes, int? deltaMinutes, bool isToday, bool isTodayWorking
 });
 
 
@@ -292,7 +292,7 @@ class __$WeekDayCopyWithImpl<$Res>
 
 /// Create a copy of WeekDay
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? record = freezed,Object? kind = null,Object? actualMinutes = freezed,Object? deltaMinutes = freezed,Object? isToday = null,Object? isTodayInProgress = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? record = freezed,Object? kind = null,Object? actualMinutes = freezed,Object? deltaMinutes = freezed,Object? isToday = null,Object? isTodayWorking = null,}) {
   return _then(_WeekDay(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,record: freezed == record ? _self.record : record // ignore: cast_nullable_to_non_nullable
@@ -300,7 +300,7 @@ as WorkRecord?,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_t
 as WeekDayKind,actualMinutes: freezed == actualMinutes ? _self.actualMinutes : actualMinutes // ignore: cast_nullable_to_non_nullable
 as int?,deltaMinutes: freezed == deltaMinutes ? _self.deltaMinutes : deltaMinutes // ignore: cast_nullable_to_non_nullable
 as int?,isToday: null == isToday ? _self.isToday : isToday // ignore: cast_nullable_to_non_nullable
-as bool,isTodayInProgress: null == isTodayInProgress ? _self.isTodayInProgress : isTodayInProgress // ignore: cast_nullable_to_non_nullable
+as bool,isTodayWorking: null == isTodayWorking ? _self.isTodayWorking : isTodayWorking // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -323,7 +323,7 @@ $WorkRecordCopyWith<$Res>? get record {
 /// @nodoc
 mixin _$WeekState {
 
- DateTime get monday; bool get isCurrentWeek; bool get canGoPrev; bool get canGoNext; WeekSummary get summary; int get weekendMinutes; List<WeekDay> get days; DateTime? get firstRecordDate;
+ DateTime get monday; bool get isCurrentWeek; bool get canGoPrev; bool get canGoNext; WeekSummary get summary; int get excludedMinutes; List<WeekDay> get days; DateTime? get firstRecordDate;
 /// Create a copy of WeekState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -335,20 +335,20 @@ $WeekStateCopyWith<WeekState> get copyWith => _$WeekStateCopyWithImpl<WeekState>
 @override
 bool operator ==(Object other) {
   final _this = this as WeekState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeekState&&(identical(other.monday, _this.monday) || other.monday == _this.monday)&&(identical(other.isCurrentWeek, _this.isCurrentWeek) || other.isCurrentWeek == _this.isCurrentWeek)&&(identical(other.canGoPrev, _this.canGoPrev) || other.canGoPrev == _this.canGoPrev)&&(identical(other.canGoNext, _this.canGoNext) || other.canGoNext == _this.canGoNext)&&(identical(other.summary, _this.summary) || other.summary == _this.summary)&&(identical(other.weekendMinutes, _this.weekendMinutes) || other.weekendMinutes == _this.weekendMinutes)&&const DeepCollectionEquality().equals(other.days, _this.days)&&(identical(other.firstRecordDate, _this.firstRecordDate) || other.firstRecordDate == _this.firstRecordDate));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeekState&&(identical(other.monday, _this.monday) || other.monday == _this.monday)&&(identical(other.isCurrentWeek, _this.isCurrentWeek) || other.isCurrentWeek == _this.isCurrentWeek)&&(identical(other.canGoPrev, _this.canGoPrev) || other.canGoPrev == _this.canGoPrev)&&(identical(other.canGoNext, _this.canGoNext) || other.canGoNext == _this.canGoNext)&&(identical(other.summary, _this.summary) || other.summary == _this.summary)&&(identical(other.excludedMinutes, _this.excludedMinutes) || other.excludedMinutes == _this.excludedMinutes)&&const DeepCollectionEquality().equals(other.days, _this.days)&&(identical(other.firstRecordDate, _this.firstRecordDate) || other.firstRecordDate == _this.firstRecordDate));
 }
 
 
 @override
 int get hashCode {
   final _this = this as WeekState;
-  return Object.hash(runtimeType,_this.monday,_this.isCurrentWeek,_this.canGoPrev,_this.canGoNext,_this.summary,_this.weekendMinutes,const DeepCollectionEquality().hash(_this.days),_this.firstRecordDate);
+  return Object.hash(runtimeType,_this.monday,_this.isCurrentWeek,_this.canGoPrev,_this.canGoNext,_this.summary,_this.excludedMinutes,const DeepCollectionEquality().hash(_this.days),_this.firstRecordDate);
 }
 
 @override
 String toString() {
   final _this = this as WeekState;
-  return 'WeekState(monday: ${_this.monday}, isCurrentWeek: ${_this.isCurrentWeek}, canGoPrev: ${_this.canGoPrev}, canGoNext: ${_this.canGoNext}, summary: ${_this.summary}, weekendMinutes: ${_this.weekendMinutes}, days: ${_this.days}, firstRecordDate: ${_this.firstRecordDate})';
+  return 'WeekState(monday: ${_this.monday}, isCurrentWeek: ${_this.isCurrentWeek}, canGoPrev: ${_this.canGoPrev}, canGoNext: ${_this.canGoNext}, summary: ${_this.summary}, excludedMinutes: ${_this.excludedMinutes}, days: ${_this.days}, firstRecordDate: ${_this.firstRecordDate})';
 }
 
 
@@ -359,7 +359,7 @@ abstract mixin class $WeekStateCopyWith<$Res>  {
   factory $WeekStateCopyWith(WeekState value, $Res Function(WeekState) _then) = _$WeekStateCopyWithImpl;
 @useResult
 $Res call({
- DateTime monday, bool isCurrentWeek, bool canGoPrev, bool canGoNext, WeekSummary summary, int weekendMinutes, List<WeekDay> days, DateTime? firstRecordDate
+ DateTime monday, bool isCurrentWeek, bool canGoPrev, bool canGoNext, WeekSummary summary, int excludedMinutes, List<WeekDay> days, DateTime? firstRecordDate
 });
 
 
@@ -376,14 +376,14 @@ class _$WeekStateCopyWithImpl<$Res>
 
 /// Create a copy of WeekState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? monday = null,Object? isCurrentWeek = null,Object? canGoPrev = null,Object? canGoNext = null,Object? summary = null,Object? weekendMinutes = null,Object? days = null,Object? firstRecordDate = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? monday = null,Object? isCurrentWeek = null,Object? canGoPrev = null,Object? canGoNext = null,Object? summary = null,Object? excludedMinutes = null,Object? days = null,Object? firstRecordDate = freezed,}) {
   return _then(WeekState(
 monday: null == monday ? _self.monday : monday // ignore: cast_nullable_to_non_nullable
 as DateTime,isCurrentWeek: null == isCurrentWeek ? _self.isCurrentWeek : isCurrentWeek // ignore: cast_nullable_to_non_nullable
 as bool,canGoPrev: null == canGoPrev ? _self.canGoPrev : canGoPrev // ignore: cast_nullable_to_non_nullable
 as bool,canGoNext: null == canGoNext ? _self.canGoNext : canGoNext // ignore: cast_nullable_to_non_nullable
 as bool,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
-as WeekSummary,weekendMinutes: null == weekendMinutes ? _self.weekendMinutes : weekendMinutes // ignore: cast_nullable_to_non_nullable
+as WeekSummary,excludedMinutes: null == excludedMinutes ? _self.excludedMinutes : excludedMinutes // ignore: cast_nullable_to_non_nullable
 as int,days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
 as List<WeekDay>,firstRecordDate: freezed == firstRecordDate ? _self.firstRecordDate : firstRecordDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,
@@ -480,10 +480,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime monday,  bool isCurrentWeek,  bool canGoPrev,  bool canGoNext,  WeekSummary summary,  int weekendMinutes,  List<WeekDay> days,  DateTime? firstRecordDate)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime monday,  bool isCurrentWeek,  bool canGoPrev,  bool canGoNext,  WeekSummary summary,  int excludedMinutes,  List<WeekDay> days,  DateTime? firstRecordDate)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WeekState() when $default != null:
-return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext,_that.summary,_that.weekendMinutes,_that.days,_that.firstRecordDate);case _:
+return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext,_that.summary,_that.excludedMinutes,_that.days,_that.firstRecordDate);case _:
   return orElse();
 
 }
@@ -501,10 +501,10 @@ return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime monday,  bool isCurrentWeek,  bool canGoPrev,  bool canGoNext,  WeekSummary summary,  int weekendMinutes,  List<WeekDay> days,  DateTime? firstRecordDate)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime monday,  bool isCurrentWeek,  bool canGoPrev,  bool canGoNext,  WeekSummary summary,  int excludedMinutes,  List<WeekDay> days,  DateTime? firstRecordDate)  $default,) {final _that = this;
 switch (_that) {
 case _WeekState():
-return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext,_that.summary,_that.weekendMinutes,_that.days,_that.firstRecordDate);case _:
+return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext,_that.summary,_that.excludedMinutes,_that.days,_that.firstRecordDate);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -521,10 +521,10 @@ return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime monday,  bool isCurrentWeek,  bool canGoPrev,  bool canGoNext,  WeekSummary summary,  int weekendMinutes,  List<WeekDay> days,  DateTime? firstRecordDate)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime monday,  bool isCurrentWeek,  bool canGoPrev,  bool canGoNext,  WeekSummary summary,  int excludedMinutes,  List<WeekDay> days,  DateTime? firstRecordDate)?  $default,) {final _that = this;
 switch (_that) {
 case _WeekState() when $default != null:
-return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext,_that.summary,_that.weekendMinutes,_that.days,_that.firstRecordDate);case _:
+return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext,_that.summary,_that.excludedMinutes,_that.days,_that.firstRecordDate);case _:
   return null;
 
 }
@@ -536,7 +536,7 @@ return $default(_that.monday,_that.isCurrentWeek,_that.canGoPrev,_that.canGoNext
 
 
 class _WeekState implements WeekState {
-  const _WeekState({required this.monday, required this.isCurrentWeek, required this.canGoPrev, required this.canGoNext, required this.summary, required this.weekendMinutes, required  List<WeekDay> days, this.firstRecordDate}): _days = days;
+  const _WeekState({required this.monday, required this.isCurrentWeek, required this.canGoPrev, required this.canGoNext, required this.summary, required this.excludedMinutes, required  List<WeekDay> days, this.firstRecordDate}): _days = days;
   
 
 @override final  DateTime monday;
@@ -544,7 +544,7 @@ class _WeekState implements WeekState {
 @override final  bool canGoPrev;
 @override final  bool canGoNext;
 @override final  WeekSummary summary;
-@override final  int weekendMinutes;
+@override final  int excludedMinutes;
  final  List<WeekDay> _days;
 @override List<WeekDay> get days {
   if (_days is EqualUnmodifiableListView) return _days;
@@ -564,18 +564,18 @@ _$WeekStateCopyWith<_WeekState> get copyWith => __$WeekStateCopyWithImpl<_WeekSt
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeekState&&(identical(other.monday, monday) || other.monday == monday)&&(identical(other.isCurrentWeek, isCurrentWeek) || other.isCurrentWeek == isCurrentWeek)&&(identical(other.canGoPrev, canGoPrev) || other.canGoPrev == canGoPrev)&&(identical(other.canGoNext, canGoNext) || other.canGoNext == canGoNext)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.weekendMinutes, weekendMinutes) || other.weekendMinutes == weekendMinutes)&&const DeepCollectionEquality().equals(other.days, _days)&&(identical(other.firstRecordDate, firstRecordDate) || other.firstRecordDate == firstRecordDate));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeekState&&(identical(other.monday, monday) || other.monday == monday)&&(identical(other.isCurrentWeek, isCurrentWeek) || other.isCurrentWeek == isCurrentWeek)&&(identical(other.canGoPrev, canGoPrev) || other.canGoPrev == canGoPrev)&&(identical(other.canGoNext, canGoNext) || other.canGoNext == canGoNext)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.excludedMinutes, excludedMinutes) || other.excludedMinutes == excludedMinutes)&&const DeepCollectionEquality().equals(other.days, _days)&&(identical(other.firstRecordDate, firstRecordDate) || other.firstRecordDate == firstRecordDate));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,monday,isCurrentWeek,canGoPrev,canGoNext,summary,weekendMinutes,const DeepCollectionEquality().hash(_days),firstRecordDate);
+    return Object.hash(runtimeType,monday,isCurrentWeek,canGoPrev,canGoNext,summary,excludedMinutes,const DeepCollectionEquality().hash(_days),firstRecordDate);
 }
 
 @override
 String toString() {
-    return 'WeekState(monday: $monday, isCurrentWeek: $isCurrentWeek, canGoPrev: $canGoPrev, canGoNext: $canGoNext, summary: $summary, weekendMinutes: $weekendMinutes, days: $days, firstRecordDate: $firstRecordDate)';
+    return 'WeekState(monday: $monday, isCurrentWeek: $isCurrentWeek, canGoPrev: $canGoPrev, canGoNext: $canGoNext, summary: $summary, excludedMinutes: $excludedMinutes, days: $days, firstRecordDate: $firstRecordDate)';
 }
 
 
@@ -586,7 +586,7 @@ abstract mixin class _$WeekStateCopyWith<$Res> implements $WeekStateCopyWith<$Re
   factory _$WeekStateCopyWith(_WeekState value, $Res Function(_WeekState) _then) = __$WeekStateCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime monday, bool isCurrentWeek, bool canGoPrev, bool canGoNext, WeekSummary summary, int weekendMinutes, List<WeekDay> days, DateTime? firstRecordDate
+ DateTime monday, bool isCurrentWeek, bool canGoPrev, bool canGoNext, WeekSummary summary, int excludedMinutes, List<WeekDay> days, DateTime? firstRecordDate
 });
 
 
@@ -603,14 +603,14 @@ class __$WeekStateCopyWithImpl<$Res>
 
 /// Create a copy of WeekState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? monday = null,Object? isCurrentWeek = null,Object? canGoPrev = null,Object? canGoNext = null,Object? summary = null,Object? weekendMinutes = null,Object? days = null,Object? firstRecordDate = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? monday = null,Object? isCurrentWeek = null,Object? canGoPrev = null,Object? canGoNext = null,Object? summary = null,Object? excludedMinutes = null,Object? days = null,Object? firstRecordDate = freezed,}) {
   return _then(_WeekState(
 monday: null == monday ? _self.monday : monday // ignore: cast_nullable_to_non_nullable
 as DateTime,isCurrentWeek: null == isCurrentWeek ? _self.isCurrentWeek : isCurrentWeek // ignore: cast_nullable_to_non_nullable
 as bool,canGoPrev: null == canGoPrev ? _self.canGoPrev : canGoPrev // ignore: cast_nullable_to_non_nullable
 as bool,canGoNext: null == canGoNext ? _self.canGoNext : canGoNext // ignore: cast_nullable_to_non_nullable
 as bool,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
-as WeekSummary,weekendMinutes: null == weekendMinutes ? _self.weekendMinutes : weekendMinutes // ignore: cast_nullable_to_non_nullable
+as WeekSummary,excludedMinutes: null == excludedMinutes ? _self.excludedMinutes : excludedMinutes // ignore: cast_nullable_to_non_nullable
 as int,days: null == days ? _self._days : days // ignore: cast_nullable_to_non_nullable
 as List<WeekDay>,firstRecordDate: freezed == firstRecordDate ? _self.firstRecordDate : firstRecordDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,

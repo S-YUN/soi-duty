@@ -40,8 +40,8 @@ void main() {
     expect(day(s, 14).actualMinutes, 511);
     expect(day(s, 14).deltaMinutes, 31);
     expect(day(s, 15).kind, WeekDayKind.off);
-    expect(day(s, 16).isTodayInProgress, isTrue); // 오늘, 출근만
-    expect(day(s, 15).isTodayInProgress, isFalse);
+    expect(day(s, 16).isTodayWorking, isTrue); // 오늘, 출근만
+    expect(day(s, 15).isTodayWorking, isFalse);
     expect(day(s, 16).kind, WeekDayKind.working);
     expect(day(s, 17).kind, WeekDayKind.future);
     expect(day(s, 18).kind, WeekDayKind.future); // 미래 반차 — 배지는 record.type으로
@@ -74,7 +74,7 @@ void main() {
 
   test('주말 합과 주간 요약', () {
     final s = build([rec(14, inH: 9, outH: 18), rec(19, inH: 10, outH: 12)]);
-    expect(s.weekendMinutes, 120);
+    expect(s.excludedMinutes, 120);
     expect(s.summary.workedMinutes, 480);
   });
 }

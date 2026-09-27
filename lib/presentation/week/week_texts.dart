@@ -104,6 +104,7 @@ abstract final class WeekTexts {
         WorkType.halfDay => '반차',
         WorkType.dayOff => '연차',
         WorkType.holiday => '공휴일',
+        WorkType.businessTrip => '출장',
         WorkType.normal => none,
       };
 }
