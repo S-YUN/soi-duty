@@ -43,6 +43,9 @@ WeekDay _day(DateTime date, Map<DateTime, WorkRecord> byDate, DateTime today, Wo
     kind = WeekDayKind.holidayRecorded;
   } else if (r != null && r.type == WorkType.holiday && isToday && r.clockIn != null) {
     kind = WeekDayKind.working;
+  } else if (r != null && r.type == WorkType.holiday && !isToday && (r.clockIn != null || r.clockOut != null)) {
+    // 공휴일에 출근만 찍고 날이 지남 — 퇴근을 빠뜨린 걸 보이게. 기록 안 된 날 목록엔 넣지 않는다.
+    kind = WeekDayKind.partial;
   } else if (r != null && (isOffType(r.type) || (!hasBoth && dayStandardMinutes(r, rules) == 0))) {
     // 쉬는 날, 그리고 시간공제로 기준이 0이 된 날(시각 없음)은 누락이 아니다 — 배지만.
     kind = WeekDayKind.off;

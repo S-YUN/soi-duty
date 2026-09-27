@@ -105,4 +105,9 @@ void main() {
     expect(day(s, 14).kind, WeekDayKind.off);
     expect(day(s, 15).kind, WeekDayKind.off);
   });
+
+  test('퇴근을 안 찍은 지난 공휴일은 부분 기록으로 보인다', () {
+    final s = build([rec(14, inH: 9, type: WorkType.holiday)]);
+    expect(day(s, 14).kind, WeekDayKind.partial);
+  });
 }

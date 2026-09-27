@@ -96,4 +96,9 @@ void main() {
     final s = build([rec(14, ded: 480)]);
     expect(cell(s, d(14)).value, const MonthCellValue.none());
   });
+
+  test('퇴근을 안 찍은 지난 공휴일은 — 표시, 기록 안 된 날 목록엔 없다', () {
+    final s = build([rec(14, inH: 9, type: WorkType.holiday)]);
+    expect(cell(s, d(14)).value, const MonthCellValue.unrecorded());
+  });
 }

@@ -121,4 +121,11 @@ void main() {
 
     test('잠금 토스트는 한 문구', () => expect(WeekTexts.todayInProgressToast, '오늘 기록은 퇴근한 뒤에 수정할 수 있어요'));
   });
+
+  test('퇴근 안 찍은 지난 공휴일: 출근만 메모 + 공휴일 배지', () {
+    final s = build([rec(14, inH: 9, type: WorkType.holiday)]);
+    final day = s.days.firstWhere((x) => x.date.day == 14);
+    expect(WeekTexts.note(day), '09:00 출근 · 퇴근 없음');
+    expect(WeekTexts.badges(day).map((b) => b.label).toList(), ['공휴일']);
+  });
 }

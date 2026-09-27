@@ -532,4 +532,11 @@ void main() {
     expect(addMonths(DateTime(2026, 12), 1), DateTime(2027, 1));
     expect(addMonths(DateTime(2026, 1), -1), DateTime(2025, 12));
   });
+
+  test('퇴근을 안 찍은 지난 공휴일은 기록 누락 목록에 넣지 않는다', () {
+    expect(
+      unrecordedWeekdays(rules: rules, records: [rec(14, inH: 9, type: WorkType.holiday)], today: d(15), firstRecordDate: d(14)),
+      isEmpty,
+    );
+  });
 }
