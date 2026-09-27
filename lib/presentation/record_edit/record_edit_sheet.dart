@@ -189,7 +189,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                 outdent: AppSizes.timeRowOutdent,
                 Column(
                   children: [
-                    for (final row in EditingRow.values)
+                    for (final row in const [EditingRow.clockIn, EditingRow.clockOut])
                       TimeRow(
                         label: row == EditingRow.clockIn
                             ? RecordEditTexts.clockIn

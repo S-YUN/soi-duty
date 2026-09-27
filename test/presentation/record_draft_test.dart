@@ -145,6 +145,11 @@ void main() {
     test('시각이 있는 공휴일은 펼친 채로 열린다', () {
       expect(mk(date: d(14), record: rec(14, inH: 10, outH: 15, type: WorkType.holiday)).showsTimeRows, isTrue);
     });
+    test('시각 있던 날을 공휴일로 바꾸면 접힌 상태 — 시각이 지워진다', () {
+      final x = mk(date: d(14), record: rec(14, inH: 9, outH: 18)).withType(WorkType.holiday);
+      expect(x.showsTimeRows, isFalse);
+      expect(x.toRecord().clockIn, isNull);
+    });
     test('미래 공휴일엔 버튼 없음', () {
       expect(mk(date: d(18), record: rec(18, type: WorkType.holiday)).showsHolidayWorkButton, isFalse);
     });

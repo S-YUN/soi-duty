@@ -113,7 +113,11 @@ class RecordDraft {
     return r.type == WorkType.normal && r.clockIn == null && r.clockOut == null && r.deductionMinutes == 0;
   }
 
-  RecordDraft withType(WorkType? next) => _copy(type: next ?? WorkType.normal);
+  /// 유형 변경. 다른 유형에서 공휴일로 오면 근무 입력은 접힌 상태로 시작한다 — 칩은 즉시 저장이라 시각이 지워진다.
+  RecordDraft withType(WorkType? next) {
+    final type = next ?? WorkType.normal;
+    return _copy(type: type, showsHolidayWork: type == this.type ? null : false);
+  }
   RecordDraft withDeduction(int minutes) => _copy(deductionMinutes: minutes);
   RecordDraft withReason(String text) => _copy(deductionReason: text);
   RecordDraft expandHolidayWork() => _copy(showsHolidayWork: true);
