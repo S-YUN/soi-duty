@@ -87,4 +87,19 @@ void main() {
     final first = await repo.watchFirstRecordDate().first;
     expect(first, addDays(mondayOf(today), -56));
   });
+
+  test('history: 출장·시간공제(사유 있음/없음)·공휴일 근무가 섞여 있다', () async {
+    await applySeed(db, SeedScenario.history, today: today);
+    final records = await repo.watchAll().first;
+    expect(records.any((r) => r.type == WorkType.businessTrip), isTrue);
+    expect(records.any((r) => r.deductionMinutes > 0 && r.deductionReason != null), isTrue);
+    expect(records.any((r) => r.deductionMinutes > 0 && r.deductionReason == null), isTrue);
+    expect(records.any((r) => r.type == WorkType.holiday && r.clockOut != null), isTrue);
+  });
+
+  test('holidayWork: 오늘 공휴일 + 출근', () async {
+    await applySeed(db, SeedScenario.holidayWork, today: today);
+    final todayRec = (await repo.watchAll().first).singleWhere((r) => r.date == today);
+    expect((todayRec.type, todayRec.clockIn != null, todayRec.clockOut), (WorkType.holiday, true, null));
+  });
 }

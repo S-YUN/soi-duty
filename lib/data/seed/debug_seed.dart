@@ -13,6 +13,7 @@ enum SeedScenario {
   done('퇴근 완료'),
   dayOff('연차'),
   holiday('공휴일'),
+  holidayWork('공휴일 근무 중'),
   firstWeek('첫 주 예외'),
   withGaps('기록 누락 있는 주'),
   history('두 달치 기록');
@@ -68,6 +69,11 @@ List<WorkRecord> _records(SeedScenario scenario, DateTime today) {
       return [...filledPast(), WorkRecord(date: today, type: WorkType.dayOff)];
     case SeedScenario.holiday:
       return [...filledPast(), WorkRecord(date: today, type: WorkType.holiday)];
+    case SeedScenario.holidayWork:
+      return [
+        ...filledPast(),
+        WorkRecord(date: today, type: WorkType.holiday, clockIn: DateTime(today.year, today.month, today.day, 9, 30)),
+      ];
     case SeedScenario.firstWeek:
       // 첫 기록일 = 이번 주 수요일. 오늘이 수요일 이전이면 오늘.
       final wednesday = DateTime(monday.year, monday.month, monday.day + 2);
@@ -117,6 +123,22 @@ List<WorkRecord> _records(SeedScenario scenario, DateTime today) {
           records.add(full(d, inH: 9, inM: (n % 4) * 7, outH: 18, outM: (n % 5) * 9));
         }
       }
+      // 지난 주에 출장·시간공제(사유 있음/없음), 2주 전 월요일엔 공휴일 근무 — 날짜 변동과 무관하게 항상 보이게 덮어쓴다.
+      final fixed = {
+        addDays(lastMonday, 1): WorkRecord(date: addDays(lastMonday, 1), type: WorkType.businessTrip),
+        addDays(lastMonday, 2): full(addDays(lastMonday, 2), outH: 16)
+            .copyWith(deductionMinutes: 120, deductionReason: '조기퇴근 공문'),
+        addDays(lastMonday, 3): full(addDays(lastMonday, 3), outH: 17).copyWith(deductionMinutes: 60),
+        addDays(lastMonday, -7): WorkRecord(
+          date: addDays(lastMonday, -7),
+          type: WorkType.holiday,
+          clockIn: DateTime(lastMonday.year, lastMonday.month, lastMonday.day - 7, 10),
+          clockOut: DateTime(lastMonday.year, lastMonday.month, lastMonday.day - 7, 15),
+        ),
+      };
+      records
+        ..removeWhere((r) => fixed.containsKey(r.date))
+        ..addAll(fixed.values);
       // 오늘 근무 중 + 다음 주 수요일에 미리 찍은 연차
       records.add(WorkRecord(date: today, clockIn: DateTime(today.year, today.month, today.day, 9, 12)));
       records.add(WorkRecord(date: addDays(monday, 9), type: WorkType.dayOff));
