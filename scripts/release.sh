@@ -4,6 +4,7 @@
 #   scripts/release.sh                 빌드 번호 +1, 둘 다
 #   scripts/release.sh --name 1.0.2    버전 이름도 바꾼다
 #   scripts/release.sh --android       한쪽만 (--ios)
+#   scripts/release.sh --no-bump       pubspec 번호 그대로 (한쪽 스토어에만 처음 올릴 때 — 번호는 스토어마다 따로 센다)
 #   scripts/release.sh --check         빌드·업로드 없이 키 권한만 확인
 #
 # 키는 레포 밖 키 보관함(~/development/keys/, README 참고)의 fastlane.env 에서 읽는다.
@@ -23,12 +24,14 @@ do_android=1
 do_ios=1
 new_name=""
 check_only=0
+bump=1
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --android) do_ios=0 ;;
     --ios) do_android=0 ;;
     --name) new_name="$2"; shift ;;
     --check) check_only=1 ;;
+    --no-bump) bump=0 ;;
     *) echo "알 수 없는 옵션: $1" >&2; exit 1 ;;
   esac
   shift
@@ -85,13 +88,19 @@ flutter test
 
 # ----- 버전 -----
 current="$(grep -E '^version:' pubspec.yaml | sed -E 's/version: *//')"
-name="${current%+*}"
-build="${current#*+}"
-[[ -n "$new_name" ]] && name="$new_name"
-version="$name+$((build + 1))"
-step "버전 $current → $version"
-sed -i '' -E "s/^version: .*/version: $version/" pubspec.yaml
-git commit -qm "버전 $version" pubspec.yaml
+if (( bump )); then
+  name="${current%+*}"
+  build="${current#*+}"
+  [[ -n "$new_name" ]] && name="$new_name"
+  version="$name+$((build + 1))"
+  step "버전 $current → $version"
+  sed -i '' -E "s/^version: .*/version: $version/" pubspec.yaml
+  git commit -qm "버전 $version" pubspec.yaml
+else
+  [[ -z "$new_name" ]] || die "--name 과 --no-bump 는 같이 쓸 수 없다"
+  version="$current"
+  step "버전 그대로 $version"
+fi
 
 # ----- Android -----
 if (( do_android )); then

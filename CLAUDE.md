@@ -418,6 +418,7 @@ flavor 설정은 `pubspec.yaml`의 `flavorizr:` 블록이 정본이고 `dart run
 
 `scripts/release.sh` — 테스트 → `pubspec.yaml` 빌드 번호 +1 커밋 → prod 빌드 → Play 비공개 테스트 · TestFlight 업로드.
 `--name 1.0.2`로 버전 이름도 바꾸고, `--android`/`--ios`로 한쪽만 올린다. push는 따로 한다.
+빌드 번호는 스토어마다 따로 세지만 두 스토어를 같은 번호로 맞춰 둔다 — 한쪽에만 올릴 때는 `--no-bump`로 번호를 그대로 쓴다.
 `--check`는 빌드 없이 두 스토어 API 권한만 확인한다. Play 트랙은 `alpha`(비공개 테스트).
 키는 레포 밖 키 보관함 `~/development/keys/`(README 있음)의 `fastlane.env`에서 읽는다 — 조각케이크와 같은
 App Store Connect 팀 키·Play 서비스 계정을 쓴다. fastlane은 rbenv Ruby 3.4.6에만 있어 스크립트가 `RBENV_VERSION`을 잡는다.
