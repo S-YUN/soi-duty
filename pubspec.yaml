@@ -2,7 +2,7 @@ name: soi_duty
 description: "주 40시간 유연근무 기준 근무시간 기록 앱. 잔여 시간을 보여준다."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.13.0
