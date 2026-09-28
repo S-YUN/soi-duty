@@ -4,28 +4,31 @@
 #   scripts/release.sh                 빌드 번호 +1, 둘 다
 #   scripts/release.sh --name 1.0.2    버전 이름도 바꾼다
 #   scripts/release.sh --android       한쪽만 (--ios)
+#   scripts/release.sh --check         빌드·업로드 없이 키 권한만 확인
 #
-# 키는 레포 밖 ~/.soiduty/release.env 에서 읽는다:
-#   PLAY_JSON_KEY=~/.soiduty/play-service-account.json
-#   PLAY_TRACK=alpha
-#   ASC_KEY_ID=XXXXXXXXXX
-#   ASC_ISSUER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-#   ASC_KEY_PATH=~/.soiduty/AuthKey_XXXXXXXXXX.p8
+# 키는 레포 밖 키 보관함(~/development/keys/, README 참고)의 fastlane.env 에서 읽는다.
+# 조각케이크와 같은 팀 키·서비스 계정을 쓴다:
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH, PLAY_JSON_KEY_PATH
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-ENV_FILE="${SOIDUTY_RELEASE_ENV:-$HOME/.soiduty/release.env}"
+ENV_FILE="${SOIDUTY_RELEASE_ENV:-$HOME/development/keys/fastlane.env}"
 PACKAGE=com.nuyoes.soiduty
+PLAY_TRACK=alpha
+# fastlane은 rbenv의 이 Ruby에만 깔려 있다 (system Ruby에는 없음).
+export RBENV_VERSION="${FASTLANE_RUBY:-3.4.6}"
 
 do_android=1
 do_ios=1
 new_name=""
+check_only=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --android) do_ios=0 ;;
     --ios) do_android=0 ;;
     --name) new_name="$2"; shift ;;
+    --check) check_only=1 ;;
     *) echo "알 수 없는 옵션: $1" >&2; exit 1 ;;
   esac
   shift
@@ -38,18 +41,40 @@ die() { printf '\033[1;31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 [[ -f "$ENV_FILE" ]] || die "$ENV_FILE 이 없다"
 # shellcheck source=/dev/null
 source "$ENV_FILE"
-expand() { eval echo "$1"; }  # ~ 확장
 
 if (( do_android )); then
-  PLAY_JSON_KEY="$(expand "${PLAY_JSON_KEY:?PLAY_JSON_KEY 없음}")"
-  PLAY_TRACK="${PLAY_TRACK:-alpha}"
+  PLAY_JSON_KEY="${PLAY_JSON_KEY_PATH:?PLAY_JSON_KEY_PATH 없음}"
   [[ -f "$PLAY_JSON_KEY" ]] || die "Play 서비스 계정 키가 없다: $PLAY_JSON_KEY"
   [[ -f android/key.properties ]] || die "android/key.properties 가 없다 (업로드 키 서명)"
 fi
 if (( do_ios )); then
   : "${ASC_KEY_ID:?ASC_KEY_ID 없음}" "${ASC_ISSUER_ID:?ASC_ISSUER_ID 없음}"
-  ASC_KEY_PATH="$(expand "${ASC_KEY_PATH:?ASC_KEY_PATH 없음}")"
-  [[ -f "$ASC_KEY_PATH" ]] || die "App Store Connect API 키가 없다: $ASC_KEY_PATH"
+  [[ -f "${ASC_KEY_PATH:?ASC_KEY_PATH 없음}" ]] || die "App Store Connect API 키가 없다: $ASC_KEY_PATH"
+  # fastlane은 키 내용을 담은 JSON을 받는다. 임시 파일로 만들고 끝나면 지운다.
+  api_json="$(mktemp)"
+  trap 'rm -f "$api_json"' EXIT
+  ruby -rjson -e 'puts({key_id: ARGV[0], issuer_id: ARGV[1], key: File.read(ARGV[2])}.to_json)' \
+    "$ASC_KEY_ID" "$ASC_ISSUER_ID" "$ASC_KEY_PATH" > "$api_json"
+fi
+
+# ----- 권한 확인 (읽기만) -----
+if (( check_only )); then
+  failed=()
+  if (( do_android )); then
+    step "Play: $PACKAGE $PLAY_TRACK 트랙"
+    fastlane run google_play_track_version_codes \
+      package_name:"$PACKAGE" track:"$PLAY_TRACK" json_key:"$PLAY_JSON_KEY" \
+      || failed+=("Play — Play Console 사용자 및 권한에서 서비스 계정에 이 앱 권한을 줬는지")
+  fi
+  if (( do_ios )); then
+    step "App Store Connect: $PACKAGE"
+    fastlane run latest_testflight_build_number \
+      app_identifier:"$PACKAGE" api_key_path:"$api_json" \
+      || failed+=("App Store Connect — 앱이 등록돼 있는지")
+  fi
+  (( ${#failed[@]} == 0 )) || { printf '\n'; for f in "${failed[@]}"; do printf '\033[1;31m✗ %s\033[0m\n' "$f"; done; exit 1; }
+  step "확인 완료"
+  exit 0
 fi
 
 [[ -z "$(git status --porcelain)" ]] || die "커밋 안 된 변경이 있다"
@@ -94,11 +119,6 @@ if (( do_ios )); then
   ipa="$(ls build/ios/ipa/*.ipa | head -1)"
 
   step "TestFlight 업로드"
-  # fastlane은 키 내용을 담은 JSON을 받는다. 임시 파일로 만들고 끝나면 지운다.
-  api_json="$(mktemp)"
-  trap 'rm -f "$api_json"' EXIT
-  ruby -rjson -e 'puts({key_id: ARGV[0], issuer_id: ARGV[1], key: File.read(ARGV[2])}.to_json)' \
-    "$ASC_KEY_ID" "$ASC_ISSUER_ID" "$ASC_KEY_PATH" > "$api_json"
   fastlane run upload_to_testflight \
     api_key_path:"$api_json" \
     ipa:"$ipa" \

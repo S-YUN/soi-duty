@@ -418,6 +418,8 @@ flavor 설정은 `pubspec.yaml`의 `flavorizr:` 블록이 정본이고 `dart run
 
 `scripts/release.sh` — 테스트 → `pubspec.yaml` 빌드 번호 +1 커밋 → prod 빌드 → Play 비공개 테스트 · TestFlight 업로드.
 `--name 1.0.2`로 버전 이름도 바꾸고, `--android`/`--ios`로 한쪽만 올린다. push는 따로 한다.
-키(Play 서비스 계정 JSON, App Store Connect API .p8)는 레포 밖 `~/.soiduty/release.env`에서 경로를 읽는다 — 형식은 스크립트 머리말.
+`--check`는 빌드 없이 두 스토어 API 권한만 확인한다. Play 트랙은 `alpha`(비공개 테스트).
+키는 레포 밖 키 보관함 `~/development/keys/`(README 있음)의 `fastlane.env`에서 읽는다 — 조각케이크와 같은
+App Store Connect 팀 키·Play 서비스 계정을 쓴다. fastlane은 rbenv Ruby 3.4.6에만 있어 스크립트가 `RBENV_VERSION`을 잡는다.
 iOS 서명은 Xcode 자동 서명(이 맥의 Xcode 계정)이고 `ios/ExportOptions.plist`가 내보내기 설정.
 `ITSAppUsesNonExemptEncryption = false`는 업로드마다 수출 규정 질문에 멈추지 않게 하려는 것.
