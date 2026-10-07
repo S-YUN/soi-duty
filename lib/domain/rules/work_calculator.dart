@@ -9,6 +9,12 @@ import 'work_rules.dart';
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
+/// 초 이하를 버린다. 화면은 분까지만 보이므로 저장·계산도 분 단위로 맞춘다.
+DateTime minuteOnly(DateTime d) => DateTime(d.year, d.month, d.day, d.hour, d.minute);
+
+/// 분 단위로 자른 두 시각의 차. 09:10:45 → 11:10:20 이 1h 59m가 아니라 2h가 되게.
+int minutesBetween(DateTime from, DateTime to) => minuteOnly(to).difference(minuteOnly(from)).inMinutes;
+
 bool isWeekend(DateTime d) => d.weekday >= DateTime.saturday;
 
 DateTime mondayOf(DateTime d) {
@@ -66,7 +72,7 @@ int? actualMinutes(WorkRecord r, WorkRules rules) {
   final clockIn = r.clockIn;
   final clockOut = r.clockOut;
   if (clockIn == null || clockOut == null) return r.type == WorkType.holiday ? 0 : null;
-  final raw = clockOut.difference(clockIn).inMinutes;
+  final raw = minutesBetween(clockIn, clockOut);
   final lunch = deductsLunch(r) ? rules.lunchBreakMinutes : 0;
   return math.max(0, raw - lunch);
 }
@@ -76,7 +82,7 @@ int? ongoingMinutes(WorkRecord r, DateTime now, WorkRules rules) {
   if (dateOnly(now) != dateOnly(r.date)) return null;
   final clockIn = r.clockIn;
   if (clockIn == null || r.clockOut != null) return null;
-  final raw = now.difference(clockIn).inMinutes;
+  final raw = minutesBetween(clockIn, now);
   final lunch = deductsLunch(r) ? rules.lunchBreakMinutes : 0;
   return math.max(0, raw - lunch);
 }

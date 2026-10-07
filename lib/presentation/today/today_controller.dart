@@ -64,7 +64,7 @@ class TodayController extends _$TodayController {
   Future<void> cancelClockOut() => _saveToday((r, _) => r.copyWith(clockOut: null));
 
   Future<void> _saveToday(WorkRecord Function(WorkRecord record, DateTime now) update) async {
-    final now = ref.read(clockProvider)();
+    final now = minuteOnly(ref.read(clockProvider)());
     final current = await future;
     final base = current.record ?? WorkRecord(date: dateOnly(now));
     await ref.read(workRecordRepositoryProvider).save(update(base, now));

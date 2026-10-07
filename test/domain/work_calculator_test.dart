@@ -65,6 +65,14 @@ void main() {
     test('공제 후 음수면 0', () {
       expect(actualMinutes(rec(14, inH: 9, outH: 9, outM: 30), rules), 0);
     });
+    test('초는 버리고 화면에 보이는 분끼리 뺀다 (09:10:45 → 11:10:20 = 2h)', () {
+      final r = WorkRecord(
+        date: d(19),
+        clockIn: DateTime(2026, 9, 19, 9, 10, 45),
+        clockOut: DateTime(2026, 9, 19, 11, 10, 20),
+      );
+      expect(actualMinutes(r, rules), 120);
+    });
   });
 
   group('ongoingMinutes', () {
@@ -85,6 +93,10 @@ void main() {
     });
     test('출근 안 찍었으면 null', () {
       expect(ongoingMinutes(rec(14), d(14, 12), rules), isNull);
+    });
+    test('초는 버리고 분끼리 뺀다', () {
+      final r = WorkRecord(date: d(19), clockIn: DateTime(2026, 9, 19, 9, 10, 45));
+      expect(ongoingMinutes(r, DateTime(2026, 9, 19, 11, 10, 20), rules), 120);
     });
   });
 

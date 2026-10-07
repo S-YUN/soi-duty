@@ -53,7 +53,7 @@ TodayState buildTodayState({
     clockIn: record?.clockIn,
     clockOut: record?.clockOut,
     // 시트로 출근 시각을 미래로 잡을 수 있으므로 음수는 0으로.
-    elapsedMinutes: phase == TodayPhase.working ? math.max(0, now.difference(record!.clockIn!).inMinutes) : null,
+    elapsedMinutes: phase == TodayPhase.working ? math.max(0, minutesBetween(record!.clockIn!, now)) : null,
     expectedClockOut: expected,
     todayShareMinutes: share,
     weekRemainingBeforeToday: remaining,
