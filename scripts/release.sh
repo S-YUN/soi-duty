@@ -6,6 +6,7 @@
 #   scripts/release.sh --android       한쪽만 (--ios)
 #   scripts/release.sh --no-bump       pubspec 번호 그대로 (한쪽 스토어에만 처음 올릴 때 — 번호는 스토어마다 따로 센다)
 #   scripts/release.sh --check         빌드·업로드 없이 키 권한만 확인
+#   scripts/release.sh --notes "..."   TestFlight 외부 테스터에게 보일 '테스트할 내용' (기본: 버그 수정 및 개선)
 #
 # 키는 레포 밖 키 보관함(~/development/keys/, README 참고)의 fastlane.env 에서 읽는다.
 # 조각케이크와 같은 팀 키·서비스 계정을 쓴다:
@@ -17,6 +18,8 @@ cd "$(dirname "$0")/.."
 ENV_FILE="${SOIDUTY_RELEASE_ENV:-$HOME/development/keys/fastlane.env}"
 PACKAGE=com.nuyoes.soiduty
 PLAY_TRACK=alpha
+# App Store Connect → TestFlight → 외부 테스팅 그룹 이름과 같아야 한다 (소이듀티 TestFlight 운영 매뉴얼).
+TESTFLIGHT_GROUP="소이회사"
 # fastlane은 rbenv의 이 Ruby에만 깔려 있다 (system Ruby에는 없음).
 export RBENV_VERSION="${FASTLANE_RUBY:-3.4.6}"
 
@@ -25,6 +28,7 @@ do_ios=1
 new_name=""
 check_only=0
 bump=1
+notes="버그 수정 및 개선"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --android) do_ios=0 ;;
@@ -32,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --name) new_name="$2"; shift ;;
     --check) check_only=1 ;;
     --no-bump) bump=0 ;;
+    --notes) notes="$2"; shift ;;
     *) echo "알 수 없는 옵션: $1" >&2; exit 1 ;;
   esac
   shift
@@ -127,11 +132,15 @@ if (( do_ios )); then
   flutter build ipa --flavor prod --release --export-options-plist=ios/ExportOptions.plist
   ipa="$(ls build/ios/ipa/*.ipa | head -1)"
 
-  step "TestFlight 업로드"
+  # 외부 그룹 배포는 애플 쪽 빌드 처리가 끝나야 할 수 있어서 처리 완료까지 기다린다 (보통 10~30분).
+  # 새 버전 이름(1.0.2 등)의 첫 빌드는 베타 심사에 들어가고, 승인되면 그룹에 자동으로 풀린다.
+  step "TestFlight 업로드 → 외부 그룹 '$TESTFLIGHT_GROUP'"
   fastlane run upload_to_testflight \
     api_key_path:"$api_json" \
     ipa:"$ipa" \
-    skip_waiting_for_build_processing:true
+    distribute_external:true \
+    groups:"$TESTFLIGHT_GROUP" \
+    changelog:"$notes"
 fi
 
 step "완료: $version"

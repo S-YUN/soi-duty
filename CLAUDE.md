@@ -420,6 +420,8 @@ flavor 설정은 `pubspec.yaml`의 `flavorizr:` 블록이 정본이고 `dart run
 `--name 1.0.2`로 버전 이름도 바꾸고, `--android`/`--ios`로 한쪽만 올린다. push는 따로 한다.
 빌드 번호는 스토어마다 따로 세지만 두 스토어를 같은 번호로 맞춰 둔다 — 한쪽에만 올릴 때는 `--no-bump`로 번호를 그대로 쓴다.
 `--check`는 빌드 없이 두 스토어 API 권한만 확인한다. Play 트랙은 `alpha`(비공개 테스트).
+iOS는 TestFlight 외부 그룹 `소이회사`(공개 링크)에도 배포한다 — 처리 완료까지 기다리므로 iOS 단계가 10~30분 걸리고,
+`--notes "..."`가 테스터에게 보이는 '테스트할 내용'이다. 새 버전 이름의 첫 빌드는 베타 심사를 거친다 (2026-10-19).
 키는 레포 밖 키 보관함 `~/development/keys/`(README 있음)의 `fastlane.env`에서 읽는다 — 조각케이크와 같은
 App Store Connect 팀 키·Play 서비스 계정을 쓴다. fastlane은 rbenv Ruby 3.4.6에만 있어 스크립트가 `RBENV_VERSION`을 잡는다.
 iOS 서명은 Xcode 자동 서명(이 맥의 Xcode 계정)이고 `ios/ExportOptions.plist`가 내보내기 설정.
