@@ -88,6 +88,17 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('시각 있는 날에 출장을 누르면 확인창 제목은 "출장으로 바꿀까요?"', (tester) async {
+    await insert(14, inH: 9, outH: 18);
+    await pumpSheet(tester, d(14));
+    await tester.tap(find.text('출장'));
+    await tester.pumpAndSettle();
+    expect(find.text('출장으로 바꿀까요?'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    await unmount(tester);
+  });
+
   testWidgets('시각 있는 날에 공휴일을 누르면 확인 후 저장, 취소하면 그대로', (tester) async {
     await insert(14, inH: 9, outH: 18);
     await pumpSheet(tester, d(14));

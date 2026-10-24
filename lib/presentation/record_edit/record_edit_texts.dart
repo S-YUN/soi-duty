@@ -1,4 +1,5 @@
 import '../../core/presentation/format/date_format.dart';
+import '../../core/presentation/format/korean_particle.dart';
 import '../../core/presentation/format/time_format.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
@@ -61,8 +62,8 @@ abstract final class RecordEditTexts {
 
   static String time(DateTime? t) => t == null ? empty : formatClock(t);
 
-  /// "연차로 바꿀까요?" / "공휴일로 바꿀까요?"
-  static String replaceTimesTitle(WorkType t) => '${chipLabel(t)}로 바꿀까요?';
+  /// "연차로 바꿀까요?" / "공휴일로 바꿀까요?" / "출장으로 바꿀까요?"
+  static String replaceTimesTitle(WorkType t) => '${withRo(chipLabel(t))} 바꿀까요?';
 
   static String wheelTitle(EditingRow row) => row == EditingRow.clockIn ? clockInTitle : clockOutTitle;
 

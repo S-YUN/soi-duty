@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/format/date_format.dart';
+import 'package:soi_duty/core/presentation/format/korean_particle.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
 
 void main() {
@@ -52,4 +53,11 @@ void main() {
   test('formatMonthTitle', () => expect(formatMonthTitle(DateTime(2026, 9)), '2026년 9월'));
   test('formatClockRange', () =>
       expect(formatClockRange(DateTime(2026, 9, 7, 9, 5), DateTime(2026, 9, 7, 18, 36)), '09:05 – 18:36'));
+  test('withRo — 받침 없음·ㄹ 받침은 "로", 그 외 받침은 "으로"', () {
+    expect(withRo('연차'), '연차로');
+    expect(withRo('공휴일'), '공휴일로');
+    expect(withRo('출장'), '출장으로');
+    expect(withRo('반차'), '반차로');
+    expect(withRo(''), '로');
+  });
 }
