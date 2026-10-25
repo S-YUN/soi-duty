@@ -211,3 +211,90 @@ final class FirstRecordDateProvider
 }
 
 String _$firstRecordDateHash() => r'8c2c296cce52ff09c4fe793bcfa8d187e54ecd94';
+
+@ProviderFor(appSettingsRepository)
+final appSettingsRepositoryProvider = AppSettingsRepositoryProvider._();
+
+final class AppSettingsRepositoryProvider
+    extends
+        $FunctionalProvider<
+          AppSettingsRepository,
+          AppSettingsRepository,
+          AppSettingsRepository
+        >
+    with $Provider<AppSettingsRepository> {
+  AppSettingsRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appSettingsRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appSettingsRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<AppSettingsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AppSettingsRepository create(Ref ref) {
+    return appSettingsRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppSettingsRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppSettingsRepository>(value),
+    );
+  }
+}
+
+String _$appSettingsRepositoryHash() =>
+    r'e9b6bfe02a6c0c5663bf85f2f5a76518f88c68fb';
+
+@ProviderFor(appSettings)
+final appSettingsProvider = AppSettingsProvider._();
+
+final class AppSettingsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<AppSettings>,
+          AppSettings,
+          Stream<AppSettings>
+        >
+    with $FutureModifier<AppSettings>, $StreamProvider<AppSettings> {
+  AppSettingsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appSettingsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appSettingsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<AppSettings> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<AppSettings> create(Ref ref) {
+    return appSettings(ref);
+  }
+}
+
+String _$appSettingsHash() => r'b5ec109e7a7996167b7484d517e9d52acb26bc5a';
