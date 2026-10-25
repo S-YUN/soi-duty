@@ -177,6 +177,61 @@ abstract final class AppSizes {
   static double get sheetButtonGap => 9.w;
   static double get deleteLinkTop => 16.w;
 
+  // 설정 진입 톱니 (탭 줄 오른쪽) · 설정 화면
+  static double get gearRight => 10.w;
+  static double get gearSize => 44.w;
+  static double get gearIcon => 22.w;
+  static double get gearStroke => 1.8.w;
+  static double get settingsHeader => 44.w;
+  static double get settingsBackLeft => 8.w;
+  static Size get backArrow => Size(12.w, 20.w);
+  static double get backArrowStroke => 2.w;
+  static EdgeInsets get settingsBodyPadding => EdgeInsets.fromLTRB(16.w, 18.w, 16.w, 54.w);
+  static double get settingsSectionGap => 22.w;
+  static EdgeInsets get settingsSectionLabelPadding => EdgeInsets.fromLTRB(4.w, 0, 4.w, 8.w);
+  static EdgeInsets get settingsCardPadding => EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.w);
+  static double get settingsRowMinHeight => 44.w;
+  static EdgeInsets get settingsRowPadding => EdgeInsets.symmetric(vertical: 14.w);
+  static EdgeInsets get settingsSegmentRowPadding => EdgeInsets.symmetric(vertical: 12.w);
+  static double get settingsRowGap => 12.w;
+  static double get settingsSubTop => 4.w;
+  static Size get chevron => Size(8.w, 14.w);
+  static double get chevronStroke => 1.8.w;
+  static double get externalIcon => 16.w;
+  static double get externalIconStroke => 2.w;
+  static double get settingsNoteTop => 8.w;
+  static EdgeInsets get settingsNotePadding => EdgeInsets.symmetric(horizontal: 4.w);
+  static double get segmentPadding => 3.w;
+  static double get segmentGap => 2.w;
+  static EdgeInsets get segmentItemPadding => EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.w);
+
+  // 숫자 입력 시트 (총 연차 · 시급)
+  static double get numberSheetBottom => 14.w;
+  static double get numberFieldTop => 14.w;
+  static EdgeInsets get numberFieldPadding => EdgeInsets.fromLTRB(2.w, 8.w, 2.w, 10.w);
+  static double get numberFieldUnderline => 2.w;
+  static double get numberFieldGap => 6.w;
+  static double get numberNoteTop => 10.w;
+  static double get numberSaveTop => 18.w;
+  static double get clearLinkTop => 2.w;
+  static double get clearLinkMinHeight => 44.w;
+  static EdgeInsets get clearLinkPadding => EdgeInsets.symmetric(horizontal: 4.w);
+  static double get lockIcon => 14.w;
+  static double get lockIconGap => 6.w;
+
+  // 월간 탭 카드 (수당 · 연차)
+  static double get extraRowsTop => 12.w;
+  static double get extraRowGap => 8.w;
+  static EdgeInsets get extraDividerMargin => EdgeInsets.fromLTRB(0, 14.w, 0, 10.w);
+  static double get amountRowTop => 4.w;
+  static double get nudgeMinHeight => 44.w;
+  static double get nudgeGap => 10.w;
+  static double get leaveCellsTop => 12.w;
+  static EdgeInsets get leaveCellPadding => EdgeInsets.fromLTRB(4.w, 6.w, 4.w, 2.w);
+  static double get leaveValueTop => 6.w;
+  static double get plannedLineTop => 3.w;
+  static EdgeInsets get leaveDividerMargin => EdgeInsets.fromLTRB(0, 14.w, 0, 6.w);
+
   // 확인 다이얼로그
   static EdgeInsets get dialogPadding => EdgeInsets.all(20.w);
   static double get dialogMessageTop => 8.w;

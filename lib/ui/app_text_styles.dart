@@ -133,6 +133,31 @@ abstract final class AppTextStyles {
 
   static TextStyle get toast => _style(13.5, FontWeight.w500, color: AppColors.onBrand);
 
+
+  // 설정 화면 (브리프 4)
+  static TextStyle get settingsTitle => _style(22, FontWeight.w600, letterSpacingEm: -0.03);
+  static TextStyle get settingsSectionLabel => _style(13, FontWeight.w500, color: AppColors.subtle);
+  static TextStyle get settingsRowLabel => _style(15, FontWeight.w500);
+  static TextStyle get settingsRowSub => _style(13, FontWeight.w400, height: 1.45, color: AppColors.subtle);
+  static TextStyle get settingsValueUnset => _style(15, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get settingsValueSet => _style(15, FontWeight.w600, color: AppColors.brand);
+  static TextStyle get settingsNote => _style(13, FontWeight.w400, height: 1.5, color: AppColors.subtle);
+  static TextStyle get segmentOn => _style(13, FontWeight.w600, color: AppColors.onBrand);
+  static TextStyle get segmentOff => _style(13, FontWeight.w500, color: AppColors.subtle);
+
+  // 숫자 입력 시트
+  static TextStyle get numberField => _style(28, FontWeight.w600, letterSpacingEm: -0.02, color: AppColors.brand);
+  static TextStyle get numberFieldEmpty => _style(28, FontWeight.w600, letterSpacingEm: -0.02, color: AppColors.dotInactive);
+  static TextStyle get numberUnit => _style(20, FontWeight.w500, color: AppColors.subtle);
+  static TextStyle get clearLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
+
+  // 월간 탭 카드 (수당 · 연차)
+  static TextStyle get extraRowLabel => _style(13.5, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get extraRowValue => _style(15, FontWeight.w500);
+  static TextStyle get extraAmount => _style(22, FontWeight.w600, letterSpacingEm: -0.02, color: AppColors.brand);
+  static TextStyle get nudge => _style(14, FontWeight.w500, height: 1.45, color: AppColors.brand);
+  static TextStyle get plannedLine => _style(12, FontWeight.w400, color: AppColors.subtle);
+
   // 확인 다이얼로그
   static TextStyle get dialogTitle => _style(16, FontWeight.w600);
   static TextStyle get dialogMessage => _style(14, FontWeight.w400, height: 1.5, color: AppColors.subtle);
