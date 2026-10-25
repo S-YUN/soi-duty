@@ -28,16 +28,23 @@ class FakeBackupFiles implements BackupFiles {
   String? pickResult;
   String? sharedName;
   String? sharedContent;
+  /// 플랫폼 예외 흉내 — 임시 폴더 쓰기 실패, 선택기 오류 등.
+  bool throwOnShare = false;
+  bool throwOnPick = false;
 
   @override
   Future<bool> shareJson({required String fileName, required String content}) async {
+    if (throwOnShare) throw Exception('share failed');
     sharedName = fileName;
     sharedContent = content;
     return shareResult;
   }
 
   @override
-  Future<String?> pickJson() async => pickResult;
+  Future<String?> pickJson() async {
+    if (throwOnPick) throw Exception('pick failed');
+    return pickResult;
+  }
 }
 
 void main() {
@@ -158,6 +165,23 @@ void main() {
     expect(first.value, '2026-09-14');
     expect(find.text('15일'), findsOneWidget);
     expect(find.text('12,500원'), findsOneWidget);
+    await finish(tester);
+  });
+
+  testWidgets('내보내기 — 플랫폼 예외면 실패 토스트, 날짜는 그대로', (tester) async {
+    files.throwOnShare = true;
+    await pumpSettings(tester);
+    await tapRow(tester, '내보내기');
+    expect(find.text('내보내기에 실패했어요. 다시 시도해 주세요'), findsOneWidget);
+    expect(find.text('아직 내보낸 적 없어요'), findsOneWidget);
+    await finish(tester);
+  });
+
+  testWidgets('가져오기 — 파일 선택 중 예외면 읽기 실패 토스트', (tester) async {
+    files.throwOnPick = true;
+    await pumpSettings(tester);
+    await tapRow(tester, '가져오기');
+    expect(find.text('파일을 읽을 수 없어요. 내보낸 파일이 맞는지 확인해 주세요'), findsOneWidget);
     await finish(tester);
   });
 }

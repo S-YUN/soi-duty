@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -7,7 +7,6 @@ import '../../presentation/settings/settings_screen.dart';
 import '../../presentation/shell/tab_shell.dart';
 import '../../presentation/today/today_screen.dart';
 import '../../presentation/week/week_screen.dart';
-import '../../ui/app_sizes.dart';
 import 'route_paths.dart';
 
 part 'router.g.dart';
@@ -29,20 +28,11 @@ GoRouter router(Ref ref) {
         ],
       ),
       // 설정 — 탭 셸 위로 오른쪽에서 밀려오는 전체 화면. 뒤로가기(시스템 포함)로 닫힌다.
-      GoRoute(
-        path: RoutePaths.settings,
-        pageBuilder: (context, state) => CustomTransitionPage<void>(
-          key: state.pageKey,
-          child: const SettingsScreen(),
-          transitionDuration: AppDurations.sheetSlide,
-          reverseTransitionDuration: AppDurations.sheetSlide,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) => SlideTransition(
-            position: Tween(begin: const Offset(1, 0), end: Offset.zero)
-                .animate(CurvedAnimation(parent: animation, curve: AppCurves.sheet)),
-            child: child,
-          ),
-        ),
-      ),
+      GoRoute(path: RoutePaths.settings, pageBuilder: (context, state) => buildSettingsPage(state.pageKey)),
     ],
   );
 }
+
+/// 설정 화면 페이지. CupertinoPage — 오른쪽에서 밀려오고 iOS 가장자리 스와이프로도 닫힌다
+/// (CustomTransitionPage로 260ms·AppCurves.sheet를 맞추면 스와이프 백이 사라져 리뷰에서 바꿨다, 2026-10-25).
+Page<void> buildSettingsPage(LocalKey key) => CupertinoPage<void>(key: key, child: const SettingsScreen());

@@ -40,6 +40,10 @@ abstract final class SettingsTexts {
   static const importConfirm = '가져오기';
   static const importDone = '기록을 가져왔어요';
   static const importFailed = '파일을 읽을 수 없어요. 내보낸 파일이 맞는지 확인해 주세요';
+  static const exportFailed = '내보내기에 실패했어요. 다시 시도해 주세요';
+  /// 확인까지 한 가져오기가 저장 단계에서 실패 — 트랜잭션이라 기록은 그대로다.
+  static const restoreFailed = '기록을 가져오지 못했어요. 지금 기록은 그대로예요';
+  static const linkFailed = '링크를 열 수 없어요';
   static String lastExportLine(DateTime? d) => d == null ? '아직 내보낸 적 없어요' : '마지막 내보내기 ${d.month}월 ${d.day}일';
 
   static const sectionApp = '앱 정보';

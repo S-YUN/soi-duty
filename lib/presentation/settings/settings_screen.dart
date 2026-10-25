@@ -90,21 +90,34 @@ class SettingsScreen extends ConsumerWidget {
         ),
         onExport: () => _export(context, ref),
         onImport: () => _import(context, ref),
-        onPrivacy: () => launchUrl(Uri.parse(SettingsTexts.privacyUrl), mode: LaunchMode.externalApplication),
+        onPrivacy: () => _openPrivacy(context),
       ),
     );
   }
 }
 
+// 플랫폼 예외(임시 폴더 쓰기 실패 · 공유/선택기 오류 · DB 오류)는 토스트로 알린다 — 아무 반응 없이 끝나면 성공으로 착각한다.
 Future<void> _export(BuildContext context, WidgetRef ref) async {
   final now = ref.read(clockProvider)();
-  final shared = await ref.read(settingsControllerProvider.notifier).exportBackup(now);
+  final bool shared;
+  try {
+    shared = await ref.read(settingsControllerProvider.notifier).exportBackup(now);
+  } catch (_) {
+    if (context.mounted) showAppToast(context, SettingsTexts.exportFailed);
+    return;
+  }
   if (shared && context.mounted) showAppToast(context, SettingsTexts.exportDone);
 }
 
 Future<void> _import(BuildContext context, WidgetRef ref) async {
   final controller = ref.read(settingsControllerProvider.notifier);
-  final pick = await controller.pickBackup();
+  final BackupPick pick;
+  try {
+    pick = await controller.pickBackup();
+  } catch (_) {
+    if (context.mounted) showAppToast(context, SettingsTexts.importFailed);
+    return;
+  }
   if (!context.mounted) return;
   switch (pick) {
     case BackupPickCancelled():
@@ -119,9 +132,24 @@ Future<void> _import(BuildContext context, WidgetRef ref) async {
         confirmLabel: SettingsTexts.importConfirm,
       );
       if (!ok) return;
-      await controller.restoreBackup(snapshot);
+      try {
+        await controller.restoreBackup(snapshot);
+      } catch (_) {
+        if (context.mounted) showAppToast(context, SettingsTexts.restoreFailed);
+        return;
+      }
       if (context.mounted) showAppToast(context, SettingsTexts.importDone);
   }
+}
+
+Future<void> _openPrivacy(BuildContext context) async {
+  var opened = false;
+  try {
+    opened = await launchUrl(Uri.parse(SettingsTexts.privacyUrl), mode: LaunchMode.externalApplication);
+  } catch (_) {
+    opened = false;
+  }
+  if (!opened && context.mounted) showAppToast(context, SettingsTexts.linkFailed);
 }
 
 /// 설정 화면의 순수 UI. 헤더(뒤로 · 제목) → 섹션 다섯 개.
