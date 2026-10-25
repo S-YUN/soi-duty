@@ -3,10 +3,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/database/app_database.dart';
 import '../../data/repository/drift_app_settings_repository.dart';
+import '../../data/repository/drift_backup_repository.dart';
 import '../../data/repository/drift_work_record_repository.dart';
 import '../../domain/model/app_settings.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/repository/app_settings_repository.dart';
+import '../../domain/repository/backup_repository.dart';
 import '../../domain/repository/work_record_repository.dart';
 import '../../domain/rules/work_rules.dart';
 
@@ -38,3 +40,7 @@ AppSettingsRepository appSettingsRepository(Ref ref) => DriftAppSettingsReposito
 
 @riverpod
 Stream<AppSettings> appSettings(Ref ref) => ref.watch(appSettingsRepositoryProvider).watch();
+
+@Riverpod(keepAlive: true)
+BackupRepository backupRepository(Ref ref) =>
+    DriftBackupRepository(ref.watch(appDatabaseProvider), rules: ref.watch(workRulesProvider));

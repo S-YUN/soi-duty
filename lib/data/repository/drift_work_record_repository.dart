@@ -26,7 +26,7 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
 
   @override
   Stream<List<WorkRecord>> watchAll() =>
-      _db.select(_db.workRecords).watch().map((rows) => rows.map(_toDomain).toList());
+      _db.select(_db.workRecords).watch().map((rows) => rows.map(toDomain).toList());
 
   @override
   Stream<DateTime?> watchFirstRecordDate() => (_db.select(_db.settings)
@@ -38,7 +38,7 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
   Future<void> save(WorkRecord input) => _db.transaction(() async {
         // 쉬는 날의 공제·연차의 시각 같은 모순은 여기 한 곳에서 걷어낸다.
         final record = sanitizeRecord(input, rules);
-        await _db.into(_db.workRecords).insertOnConflictUpdate(_toCompanion(record));
+        await _db.into(_db.workRecords).insertOnConflictUpdate(toCompanion(record));
         final first = await (_db.select(_db.settings)..where((s) => s.key.equals(firstRecordDateKey)))
             .getSingleOrNull();
         final current = first == null ? null : parseDateKey(first.value);
@@ -53,7 +53,7 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
   Future<void> delete(DateTime date) =>
       (_db.delete(_db.workRecords)..where((t) => t.date.equals(dateKey(date)))).go();
 
-  static WorkRecord _toDomain(WorkRecordRow row) => WorkRecord(
+  static WorkRecord toDomain(WorkRecordRow row) => WorkRecord(
         date: parseDateKey(row.date),
         clockIn: row.clockIn,
         clockOut: row.clockOut,
@@ -61,7 +61,7 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
         deductionMinutes: row.deductionMinutes,
       );
 
-  static WorkRecordsCompanion _toCompanion(WorkRecord r) => WorkRecordsCompanion.insert(
+  static WorkRecordsCompanion toCompanion(WorkRecord r) => WorkRecordsCompanion.insert(
         date: dateKey(r.date),
         clockIn: Value(r.clockIn),
         clockOut: Value(r.clockOut),
