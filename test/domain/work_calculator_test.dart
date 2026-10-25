@@ -563,4 +563,44 @@ void main() {
       isEmpty,
     );
   });
+
+  group('주말·공휴일 수당', () {
+    test('extraWorkMinutesOfMonth — 주말·평일 공휴일만, 점심 공제 없음, 퇴근 없는 날 제외', () {
+      final rs = [
+        rec(19, inH: 9, outH: 14),
+        rec(20, inH: 10, outH: 12),
+        rec(15, inH: 9, outH: 13, type: WorkType.holiday),
+        rec(16, inH: 9, outH: 18),
+        rec(26, inH: 9),
+      ];
+      expect(extraWorkMinutesOfMonth(rs, DateTime(2026, 9), rules), (weekendMinutes: 420, holidayMinutes: 240));
+      expect(extraWorkMinutesOfMonth(rs, DateTime(2026, 10), rules), (weekendMinutes: 0, holidayMinutes: 0));
+    });
+    test('extraPayWon — 660분 × 12,500 × 1.5 = 206,250, 소수점 버림', () {
+      expect(extraPayWon(660, 12500, rules), 206250);
+      expect(extraPayWon(7, 10000, rules), 1750);
+      expect(extraPayWon(1, 10000, rules), 250);
+      expect(extraPayWon(1, 9999, rules), 249);
+    });
+    test('배율은 WorkRules', () => expect(extraPayWon(60, 10000, const WorkRules(extraWorkPayMultiplier: 2)), 20000));
+  });
+
+  group('연차 사용', () {
+    final rs = [
+      rec(14, type: WorkType.dayOff),
+      rec(17, inH: 13, outH: 18, type: WorkType.halfDay),
+      rec(24, type: WorkType.dayOff),
+      WorkRecord(date: DateTime(2027, 1, 4), type: WorkType.dayOff),
+    ];
+    test('usedLeaveHalfDays — 연차 2 · 반차 1, 다른 해 제외, 미래 포함', () {
+      expect(usedLeaveHalfDays(rs, 2026), 5);
+      expect(usedLeaveHalfDays(rs, 2027), 2);
+      expect(usedLeaveHalfDays(rs, 2025), 0);
+    });
+    test('plannedLeaveHalfDays — 오늘보다 뒤인 날만, 오늘은 제외', () {
+      expect(plannedLeaveHalfDays(rs, 2026, d(16, 12)), 3);
+      expect(plannedLeaveHalfDays(rs, 2026, d(17, 9)), 2);
+      expect(plannedLeaveHalfDays(rs, 2026, d(14, 9)), 3);
+    });
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/format/date_format.dart';
 import 'package:soi_duty/core/presentation/format/korean_particle.dart';
+import 'package:soi_duty/core/presentation/format/number_format.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
 
 void main() {
@@ -59,5 +60,17 @@ void main() {
     expect(withRo('출장'), '출장으로');
     expect(withRo('반차'), '반차로');
     expect(withRo(''), '로');
+  });
+
+  test('formatThousands / formatWon / formatLeaveDays', () {
+    expect(formatThousands(0), '0');
+    expect(formatThousands(999), '999');
+    expect(formatThousands(12500), '12,500');
+    expect(formatThousands(1234567), '1,234,567');
+    expect(formatWon(206250), '206,250원');
+    expect(formatLeaveDays(30), '15일');
+    expect(formatLeaveDays(15), '7.5일');
+    expect(formatLeaveDays(1), '0.5일');
+    expect(formatLeaveDays(0), '0일');
   });
 }

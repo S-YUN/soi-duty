@@ -350,3 +350,47 @@ List<DateTime> unrecordedWeekdays({
   }
   return result;
 }
+
+// ---- 월간 카드: 주말·공휴일 수당, 연차 ----
+
+/// 그 달의 주말 근무·평일 공휴일 근무(분). 출퇴근 둘 다 있는 날만 — 근무 중인 오늘은 넣지 않는다.
+/// 둘 다 점심 공제가 없다([deductsLunch]). 주 40시간과 무관한 월별 합산.
+({int weekendMinutes, int holidayMinutes}) extraWorkMinutesOfMonth(
+  List<WorkRecord> records,
+  DateTime month,
+  WorkRules rules,
+) {
+  var weekend = 0, holiday = 0;
+  for (final r in records) {
+    if (r.date.year != month.year || r.date.month != month.month) continue;
+    if (r.clockIn == null || r.clockOut == null) continue;
+    if (isWeekend(r.date)) {
+      weekend += actualMinutes(r, rules) ?? 0;
+    } else if (r.type == WorkType.holiday) {
+      holiday += actualMinutes(r, rules) ?? 0;
+    }
+  }
+  return (weekendMinutes: weekend, holidayMinutes: holiday);
+}
+
+/// 예상 수당(원) = 분 ÷ 60 × 시급 × 배율, 소수점 버림.
+int extraPayWon(int minutes, int hourlyWage, WorkRules rules) =>
+    (minutes * hourlyWage * rules.extraWorkPayMultiplier / 60).floor();
+
+/// 그 해 사용한 연차(반일 단위). 연차 2 · 반차 1. 미리 찍은 미래 날짜도 포함 — 이미 계획한 날은 더 쓸 수 없는 날이다.
+int usedLeaveHalfDays(List<WorkRecord> records, int year) =>
+    records.where((r) => r.date.year == year).fold(0, (sum, r) => sum + _leaveHalfDays(r.type));
+
+/// 그 해 사용분 중 날짜가 오늘보다 뒤인 것(반일 단위). 오늘은 예정이 아니다.
+int plannedLeaveHalfDays(List<WorkRecord> records, int year, DateTime today) {
+  final t = dateOnly(today);
+  return records
+      .where((r) => r.date.year == year && r.date.isAfter(t))
+      .fold(0, (sum, r) => sum + _leaveHalfDays(r.type));
+}
+
+int _leaveHalfDays(WorkType t) => switch (t) {
+      WorkType.dayOff => 2,
+      WorkType.halfDay => 1,
+      WorkType.normal || WorkType.holiday || WorkType.businessTrip => 0,
+    };

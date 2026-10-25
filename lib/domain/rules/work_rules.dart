@@ -9,6 +9,7 @@ class WorkRules {
     this.deductionStepMinutes = 10,
     this.defaultClockInMinutes = 8 * 60,
     this.defaultClockOutMinutes = 17 * 60,
+    this.extraWorkPayMultiplier = 1.5,
   });
 
   final int weeklyTargetMinutes;
@@ -25,6 +26,9 @@ class WorkRules {
   /// 시트에서 빈 출근/퇴근 행을 열 때 휠이 시작하는 시각(자정 기준 분). 저장값·표시와는 무관.
   final int defaultClockInMinutes;
   final int defaultClockOutMinutes;
+
+  /// 주말·공휴일 근무 수당 배율. 사용자 설정이 아니다 — 테스트 회사 규정(1.5배 고정).
+  final double extraWorkPayMultiplier;
 
   /// 평일 하루 기준시간 (8h). 연차 1일 차감량과 같다.
   int get dailyStandardMinutes => dayOffCreditMinutes;
