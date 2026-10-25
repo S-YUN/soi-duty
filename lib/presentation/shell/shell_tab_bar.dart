@@ -28,7 +28,7 @@ class ShellTabBar extends StatelessWidget {
         Center(child: PillTabs(labels: labels, selectedIndex: selectedIndex, onSelected: onSelected)),
         Positioned(
           right: AppSizes.gearRight,
-          child: GearButton(onTap: onSettings, tooltip: SettingsTexts.title),
+          child: GearButton(onTap: onSettings, label: SettingsTexts.title),
         ),
       ],
     );

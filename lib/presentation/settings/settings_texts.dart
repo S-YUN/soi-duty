@@ -17,14 +17,14 @@ abstract final class SettingsTexts {
   static const annualSub = '알려주시면 월간 탭에서 남은 연차를 볼 수 있어요';
   static const annualUnit = '일';
   static const annualNote = '1월~12월 기준이에요.';
-  static const annualMaxDigits = 2;
+  static final annualMaxDigits = AppSettings.maxAnnualLeaveDays.toString().length;
 
   static const sectionPay = '수당';
   static const wageLabel = '시급';
   static const wageSub = '알려주시면 주말·공휴일 근무 예상 금액을 볼 수 있어요';
   static const wageUnit = '원';
   static const wagePrivacyNote = '이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.';
-  static const wageMaxDigits = 7;
+  static final wageMaxDigits = AppSettings.maxHourlyWage.toString().length;
   static String wageNote(WorkRules rules) => '주말·공휴일 근무 × ${_multiplier(rules.extraWorkPayMultiplier)}배로 계산해요';
 
   static const sectionData = '데이터';
@@ -44,7 +44,8 @@ abstract final class SettingsTexts {
   /// 확인까지 한 가져오기가 저장 단계에서 실패 — 트랜잭션이라 기록은 그대로다.
   static const restoreFailed = '기록을 가져오지 못했어요. 지금 기록은 그대로예요';
   static const linkFailed = '링크를 열 수 없어요';
-  static String lastExportLine(DateTime? d) => d == null ? '아직 내보낸 적 없어요' : '마지막 내보내기 ${d.month}월 ${d.day}일';
+  static String lastExportLine(DateTime? d) =>
+      d == null ? '아직 내보낸 적 없어요' : '마지막 내보내기 ${d.year}년 ${d.month}월 ${d.day}일';
 
   static const sectionApp = '앱 정보';
   static const versionLabel = '버전';

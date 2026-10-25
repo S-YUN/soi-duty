@@ -55,4 +55,19 @@ void main() {
     expect(s.annualLeaveDaysByYear, isEmpty);
     expect(s.hourlyWage, isNull);
   });
+
+  test('범위 밖 값은 거른다 — 시급 0·8자리는 null, 총 연차 0·100은 그 해 제거, 퇴근<출근은 시각 제거', () {
+    String withPatch(Map<String, dynamic> Function(Map<String, dynamic>) patch) =>
+        jsonEncode(patch(jsonDecode(encodeBackup(snapshot)) as Map<String, dynamic>));
+    expect(decodeBackup(withPatch((j) => j..['settings'] = {...j['settings'] as Map, 'hourlyWage': 0})).hourlyWage, isNull);
+    expect(decodeBackup(withPatch((j) => j..['settings'] = {...j['settings'] as Map, 'hourlyWage': 10000000})).hourlyWage, isNull);
+    expect(decodeBackup(withPatch((j) => j..['settings'] = {...j['settings'] as Map, 'hourlyWage': 9999999})).hourlyWage, 9999999);
+    final leave = decodeBackup(withPatch((j) => j..['settings'] = {...j['settings'] as Map, 'annualLeaveDaysByYear': {'2026': 0, '2027': 100, '2028': 99}}));
+    expect(leave.annualLeaveDaysByYear, {2028: 99});
+    final bad = decodeBackup(withPatch((j) => j..['records'] = [
+          {'date': '2026-09-14T00:00:00.000', 'clockIn': '2026-09-14T18:00:00.000', 'clockOut': '2026-09-14T09:00:00.000', 'type': 'normal', 'deductionMinutes': 0},
+        ]));
+    expect(bad.records.single.clockIn, isNull);
+    expect(bad.records.single.clockOut, isNull);
+  });
 }

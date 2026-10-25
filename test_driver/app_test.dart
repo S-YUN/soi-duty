@@ -117,7 +117,7 @@ void main() {
     await driver.waitFor(find.text('퇴근하기'));
 
     // 설정: 톱니 → 화면 → 시급 시트(OS 키패드 위) → 저장 → 뒤로
-    await driver.tap(find.byTooltip('설정'));
+    await driver.tap(find.bySemanticsLabel('설정'));
     await driver.waitFor(find.text('올해 총 연차'));
     await shot('settings');
     await driver.tap(find.text('시급'));
@@ -125,7 +125,7 @@ void main() {
     await shot('settings-wage-sheet');
     await driver.tap(find.text('저장'));
     await driver.waitForAbsent(find.text('이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.'));
-    await driver.tap(find.byTooltip('뒤로'));
+    await driver.tap(find.bySemanticsLabel('뒤로'));
     await driver.waitFor(find.text('퇴근하기'));
   });
 }

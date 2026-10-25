@@ -20,6 +20,12 @@ abstract class AppSettings with _$AppSettings {
     DateTime? lastExportDate,
   }) = _AppSettings;
 
+  /// 입력 한도. 설정 시트의 자릿수와 백업 가져오기의 범위 검사가 같은 값을 본다.
+  static const maxAnnualLeaveDays = 99;
+  static const maxHourlyWage = 9999999;
+  static bool isValidAnnualLeaveDays(int days) => days >= 1 && days <= maxAnnualLeaveDays;
+  static bool isValidHourlyWage(int won) => won >= 1 && won <= maxHourlyWage;
+
   int? annualLeaveDaysOf(int year) => annualLeaveDaysByYear[year];
 
   /// days가 null이면 그 해 값을 지운다.

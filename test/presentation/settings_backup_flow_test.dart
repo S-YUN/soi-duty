@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +15,7 @@ import 'package:soi_duty/domain/backup/backup_codec.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/backup_snapshot.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
-import 'package:soi_duty/presentation/settings/backup_files.dart';
+import 'package:soi_duty/domain/repository/backup_files.dart';
 import 'package:soi_duty/presentation/settings/settings_screen.dart';
 import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
@@ -97,12 +99,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('내보내기 — 공유 성공이면 토스트와 "마지막 내보내기 9월 16일", 파일 내용은 백업 JSON', (tester) async {
+  testWidgets('내보내기 — 공유 성공이면 토스트와 "마지막 내보내기 2026년 9월 16일", 파일 내용은 백업 JSON', (tester) async {
     await db.into(db.workRecords).insert(WorkRecordsCompanion.insert(date: '2026-09-14', type: WorkType.dayOff));
     await pumpSettings(tester);
     await tapRow(tester, '내보내기');
     expect(find.text('내보낼 파일을 만들었어요'), findsOneWidget);
-    expect(find.text('마지막 내보내기 9월 16일'), findsOneWidget);
+    expect(find.text('마지막 내보내기 2026년 9월 16일'), findsOneWidget);
     expect(files.sharedName, 'soi_duty_backup_2026-09-16.json');
     final snapshot = decodeBackup(files.sharedContent!);
     expect(snapshot.records, [rec(14, type: WorkType.dayOff)]);
@@ -182,6 +184,33 @@ void main() {
     await pumpSettings(tester);
     await tapRow(tester, '가져오기');
     expect(find.text('파일을 읽을 수 없어요. 내보낸 파일이 맞는지 확인해 주세요'), findsOneWidget);
+    await finish(tester);
+  });
+
+  testWidgets('설정값이 아직 안 왔으면 기본값을 번쩍이지 않고 배경만 그린다', (tester) async {
+    final pending = StreamController<AppSettings>();
+    addTearDown(pending.close);
+    tester.view.physicalSize = const Size(402 * 3, 874 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        clockProvider.overrideWithValue(() => now),
+        nowProvider.overrideWith((ref) => Stream.value(now)),
+        appVersionProvider.overrideWith((ref) async => '1.0.1'),
+        appSettingsProvider.overrideWith((ref) => pending.stream),
+        backupFilesProvider.overrideWithValue(files),
+      ],
+      child: MaterialApp(theme: AppTheme.light, home: const SettingsScreen()),
+    ));
+    await tester.pump();
+    expect(find.text('사용 안 함'), findsNothing);
+    expect(find.byType(SettingsView), findsNothing);
+    pending.add(const AppSettings(hourlyWage: 9860));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('9,860원'), findsOneWidget);
     await finish(tester);
   });
 }

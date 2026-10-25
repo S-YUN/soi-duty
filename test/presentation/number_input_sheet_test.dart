@@ -102,6 +102,8 @@ void main() {
     await tester.enterText(find.byType(TextField), '12345678');
     await tester.pump();
     expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, '1,234,567');
+    // 커서는 항상 끝 — 중간 편집·붙여넣기도 끝으로 간다(의도된 동작).
+    expect(tester.widget<TextField>(find.byType(TextField)).controller!.selection, const TextSelection.collapsed(offset: 9));
     await tester.tap(saveButton());
     await tester.pumpAndSettle();
     expect(saved, 1234567);

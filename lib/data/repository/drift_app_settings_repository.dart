@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 
 import '../../domain/model/app_settings.dart';
 import '../../domain/repository/app_settings_repository.dart';
@@ -28,7 +27,12 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
         await _put(weekStartKey, s.weekStart.name);
         await _put(hourlyWageKey, s.hourlyWage?.toString());
         await _put(lastExportDateKey, s.lastExportDate == null ? null : dateKey(s.lastExportDate!));
-        await (_db.delete(_db.settings)..where((t) => t.key.like('$annualLeaveDaysKeyPrefix%'))).go();
+        // LIKE의 '_'는 한 글자 와일드카드라 비슷한 키가 휩쓸린다 — Dart에서 접두사로 고른다.
+        final yearKeys = (await _db.select(_db.settings).get())
+            .map((r) => r.key)
+            .where((k) => k.startsWith(annualLeaveDaysKeyPrefix))
+            .toList();
+        if (yearKeys.isNotEmpty) await (_db.delete(_db.settings)..where((t) => t.key.isIn(yearKeys))).go();
         for (final e in s.annualLeaveDaysByYear.entries) {
           await _put('$annualLeaveDaysKeyPrefix${e.key}', e.value.toString());
         }

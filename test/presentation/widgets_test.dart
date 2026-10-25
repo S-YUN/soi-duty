@@ -67,6 +67,19 @@ void main() {
     expect(opened, 1);
   });
 
+  testWidgets('ShellTabBar — 폭 320에서도 톱니가 알약과 겹치지 않는다', (tester) async {
+    SizeConfig.init(320);
+    tester.view.physicalSize = const Size(320 * 3, 874 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: ShellTabBar(labels: const ['오늘', '주간', '월간'], selectedIndex: 0, onSelected: (_) {}, onSettings: () {}),
+      ),
+    ));
+    expect(tester.getTopRight(find.byType(PillTabs)).dx, lessThan(tester.getTopLeft(find.byType(GearButton)).dx));
+  });
+
   testWidgets('TypeBadge 라벨', (tester) async {
     await tester.pumpWidget(wrap(const TypeBadge(type: WorkType.holiday)));
     expect(find.text('공휴일'), findsOneWidget);

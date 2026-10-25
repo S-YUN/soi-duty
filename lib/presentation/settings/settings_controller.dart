@@ -5,16 +5,16 @@ import '../../domain/backup/backup_codec.dart';
 import '../../domain/model/app_settings.dart';
 import '../../domain/model/backup_snapshot.dart';
 import '../../domain/rules/work_calculator.dart';
-import 'backup_files.dart';
 import 'settings_texts.dart';
 
 part 'settings_controller.g.dart';
 
-/// 설정값 변경. 현재 값을 읽어 한 필드만 바꿔 저장한다 — 스트림이 화면들을 갱신한다.
-@riverpod
+/// 설정값 변경과 백업 동작. 상태가 없는 액션 모음이라 keepAlive — 화면이 붙잡아 둘 필요가 없다.
+/// 현재 값을 읽어 한 필드만 바꿔 저장한다 — 스트림이 화면들을 갱신한다.
+@Riverpod(keepAlive: true)
 class SettingsController extends _$SettingsController {
   @override
-  Future<AppSettings> build() => ref.watch(appSettingsProvider.future);
+  void build() {}
 
   Future<void> setWeekStart(WeekStart weekStart) => _update((s) => s.copyWith(weekStart: weekStart));
 

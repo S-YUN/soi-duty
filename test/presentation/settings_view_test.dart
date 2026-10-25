@@ -58,7 +58,7 @@ void main() {
     expect(find.text('개인정보 처리방침'), findsOneWidget);
   });
 
-  testWidgets('채운 상태 — "15일" · "12,500원" · "마지막 내보내기 10월 24일", 보조 설명 없음', (tester) async {
+  testWidgets('채운 상태 — "15일" · "12,500원" · "마지막 내보내기 2026년 10월 24일", 보조 설명 없음', (tester) async {
     await pump(
       tester,
       AppSettings(
@@ -70,7 +70,7 @@ void main() {
     );
     expect(find.text('15일'), findsOneWidget);
     expect(find.text('12,500원'), findsOneWidget);
-    expect(find.text('마지막 내보내기 10월 24일'), findsOneWidget);
+    expect(find.text('마지막 내보내기 2026년 10월 24일'), findsOneWidget);
     expect(find.text('사용 안 함'), findsNothing);
     expect(find.text('알려주시면 월간 탭에서 남은 연차를 볼 수 있어요'), findsNothing);
   });
@@ -86,7 +86,7 @@ void main() {
     await tester.ensureVisible(find.text('개인정보 처리방침'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('개인정보 처리방침'));
-    await tester.tap(find.byTooltip('뒤로'));
+    await tester.tap(find.bySemanticsLabel('뒤로'));
     expect(taps, ['annual', 'wage', 'export', 'import', 'privacy', 'back']);
   });
 

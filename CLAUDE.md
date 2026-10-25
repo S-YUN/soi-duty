@@ -307,7 +307,8 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
 한 트랜잭션에서 기록 전부 교체 · 첫 기록일(파일 값 ?? 최소 날짜 ?? 삭제) · 설정 세 값 덮어쓰기(`last_export_date`는 기기 값이라 유지)를 한다.
 내보내기는 임시 파일 `soi_duty_backup_yyyy-MM-dd.json` → OS 공유 시트(`share_plus`), 닫지 않았으면 마지막 내보내기 날짜를 오늘로.
 가져오기는 OS 파일 선택(`file_picker`) → 디코드 실패 토스트 / 확인 다이얼로그("지금 기록 n건이 …") → 복원 → 토스트. 파일 I/O는
-`presentation/settings/backup_files.dart`의 `BackupFiles` 뒤에 있어 테스트는 Fake로 바꾼다. 같은 OS끼리의 폰 교체는 OS 백업(iCloud·Google)으로도
+`domain/repository/backup_files.dart`의 `BackupFiles` 포트 뒤에 있고(구현 `data/backup/platform_backup_files.dart`, 이전 백업 임시 파일은 다음 내보내기 때 삭제) 테스트는 Fake로 바꾼다.
+가져오기는 범위 밖 값(시급 1~9,999,999 · 총 연차 1~99 밖, 퇴근<출근)을 UI 규칙대로 거른다. 같은 OS끼리의 폰 교체는 OS 백업(iCloud·Google)으로도
 따라올 수 있지만 검증하지 않았다 — 내보내기가 확실한 길이다.
 
 **Fake 구현체는 만들지 않는다.** Fake는 보통 UI를 미완성 데이터 소스에서 떼어놓기
@@ -409,7 +410,8 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
   **가장 작은 글자는 캘린더 값 11.5** — 칸 폭(44px) 한계라 더 키우면 잘린다.
 - **설정 (브리프 4, 2026-10-25)**: 진입은 알약 탭 줄 오른쪽 **톱니**(44 히트, 세 탭 공통, `ShellTabBar`). 설정은 `/settings` 전체 화면이
   오른쪽에서 밀려오고(`CupertinoPage` — iOS 가장자리 스와이프로도 닫힌다) 뒤로가기로 닫힌다. 섹션: 캘린더(시작 요일 세그먼트 월|일) · 연차(올해 총 연차) · 수당(시급) · 데이터(내보내기 · 가져오기 ·
-  마지막 내보내기 줄) · 앱 정보(버전 · 개인정보 처리방침 → `https://s-yun.github.io/soi-duty/privacy.html`).
+  마지막 내보내기 줄 "마지막 내보내기 2026년 10월 24일") · 앱 정보(버전 · 개인정보 처리방침 → `https://s-yun.github.io/soi-duty/privacy.html`).
+  톱니·외부 링크 아이콘은 머티리얼(`settings_outlined` · `open_in_new_rounded`)로 확정, 꺾쇠·뒤로가기는 `shared/stroke_icons.dart`. 톱니·뒤로가기는 Tooltip 대신 `Semantics(label)`.
   연차·수당은 **옵트인** — 값을 넣으면 켜지고 시트의 "사용 안 함으로 되돌리기"로 끈다. 토글 없음. 값 없는 행은 보조 설명이 "넣으면 무엇이 생기는지" 말한다.
 - **숫자 입력 시트**(`shared/number_input_sheet.dart`, 총 연차·시급 공용): OS 숫자 키패드(앱이 그리지 않음), 값 28/600 브랜드색 + 밑줄 2px,
   빈 값은 "0" 플레이스홀더, 단위 "일"/"원". 총 연차 1~99 정수(2자리), 시급 1~9,999,999(7자리, 콤마 실시간). 빈 값·0은 저장 비활성.
@@ -435,6 +437,7 @@ lib/
 ├─ ui/                       색상·타이포·사이즈 토큰
 ├─ domain/model/             WorkRecord, WorkType, AppSettings(WeekStart), BackupSnapshot (freezed)
 ├─ domain/backup/            백업 JSON 코덱 (순수 Dart)
+├─ data/backup/              PlatformBackupFiles (share_plus · file_picker · 임시 폴더)
 ├─ domain/rules/             WorkRules + 계산 함수 (순수 Dart, 테스트 1순위)
 ├─ domain/repository/        Repository 인터페이스
 ├─ data/database/            Drift 테이블·AppDatabase
@@ -444,7 +447,7 @@ lib/
 ├─ presentation/shared/      기간 네비게이터, 토스트(app_toast), 확인 다이얼로그 등 공용 위젯
 ├─ presentation/splash/      NativeSplashHold — 오늘 상태 준비까지 네이티브 스플래시 유지
 ├─ presentation/record_edit/ 시간 수정 시트 (오늘·주간·월간·누락 리스트가 공유). 미래 날짜는 type_rows, 과거는 type_chips
-├─ presentation/settings/    설정 화면(SettingsScreen/View · 컨트롤러 · 텍스트 · backup_files) + widgets/(섹션·행·세그먼트)
+├─ presentation/settings/    설정 화면(SettingsScreen/View · 컨트롤러(keepAlive, 상태 없음) · 텍스트) + widgets/(섹션·행·세그먼트)
 ├─ presentation/debug/       시드·시계 이동 시트 (kDebugMode에서만 진입)
 └─ presentation/<feature>/   @riverpod Notifier/Provider + Screen + <feature>_texts + <feature>_state(_builder)
                              (today / week / month). 오늘 화면의 '출근 변경' 시트는 today/widgets/clock_in_edit_sheet

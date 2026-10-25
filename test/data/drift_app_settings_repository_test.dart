@@ -68,4 +68,13 @@ void main() {
     expect(s.withAnnualLeaveDays(2027, 16).annualLeaveDaysByYear, {2026: 15, 2027: 16});
     expect(s.withAnnualLeaveDays(2026, null).annualLeaveDaysByYear, isEmpty);
   });
+
+  test("'annual_leave_days' 접두 키만 지운다 — LIKE의 '_' 와일드카드에 비슷한 키가 휩쓸리지 않는다", () async {
+    await db.into(db.settings).insert(SettingsCompanion.insert(key: 'annual_leave_daysX2026', value: 'keep'));
+    await repo.save(const AppSettings(annualLeaveDaysByYear: {2026: 15}));
+    await repo.save(const AppSettings());
+    final keys = (await db.select(db.settings).get()).map((r) => r.key);
+    expect(keys, contains('annual_leave_daysX2026'));
+    expect(keys, isNot(contains('annual_leave_days_2026')));
+  });
 }

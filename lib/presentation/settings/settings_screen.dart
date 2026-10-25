@@ -47,12 +47,13 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(appSettingsProvider).value ?? const AppSettings();
+    final async = ref.watch(appSettingsProvider);
+    // 첫 값이 오기 전에 기본값("사용 안 함")을 번쩍이지 않는다 — 배경만.
+    if (!async.hasValue) return const ColoredBox(color: AppColors.screenBackground, child: SizedBox.expand());
+    final settings = async.value!;
     final version = ref.watch(appVersionProvider).value ?? '';
     final year = ref.watch(clockProvider)().year;
     final rules = ref.watch(workRulesProvider);
-    // autoDispose 컨트롤러를 화면이 떠 있는 동안 붙잡아 둔다 — 내보내기·시트 저장 같은 비동기 작업 중에 사라지면 안 된다.
-    ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
     return SettingsView(
       settings: settings,
@@ -291,8 +292,9 @@ class _BackButtonState extends State<_BackButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: SettingsTexts.back,
+    return Semantics(
+      label: SettingsTexts.back,
+      button: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: (_) => setState(() => _pressed = true),

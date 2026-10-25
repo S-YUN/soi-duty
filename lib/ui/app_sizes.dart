@@ -181,7 +181,6 @@ abstract final class AppSizes {
   static double get gearRight => 10.w;
   static double get gearSize => 44.w;
   static double get gearIcon => 22.w;
-  static double get gearStroke => 1.8.w;
   static double get settingsHeader => 44.w;
   static double get settingsBackLeft => 8.w;
   static Size get backArrow => Size(12.w, 20.w);
@@ -198,7 +197,6 @@ abstract final class AppSizes {
   static Size get chevron => Size(8.w, 14.w);
   static double get chevronStroke => 1.8.w;
   static double get externalIcon => 16.w;
-  static double get externalIconStroke => 2.w;
   static double get settingsNoteTop => 8.w;
   static EdgeInsets get settingsNotePadding => EdgeInsets.symmetric(horizontal: 4.w);
   static double get segmentPadding => 3.w;

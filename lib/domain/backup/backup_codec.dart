@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../model/app_settings.dart';
 import '../model/backup_snapshot.dart';
 import '../model/work_record.dart';
+import '../rules/work_calculator.dart';
 
 /// 백업 파일 형식 버전. 읽을 수 있는 최대 버전이기도 하다 — 더 큰 값은 새 앱이 쓴 파일이라 거부한다.
 const backupFormatVersion = 1;
@@ -51,16 +52,19 @@ BackupSnapshot decodeBackup(String text) {
   final settingsMap = settings is Map<String, dynamic> ? settings : const <String, dynamic>{};
   try {
     final byYear = settingsMap['annualLeaveDaysByYear'];
+    final wage = (settingsMap['hourlyWage'] as num?)?.toInt();
+    // 손으로 고친 파일의 범위 밖 값은 UI가 허용하는 범위로 거른다 — 시급 0이 "설정됨"으로 보이지 않게.
     return BackupSnapshot(
       exportedAt: DateTime.parse(root['exportedAt'] as String),
       firstRecordDate: root['firstRecordDate'] == null ? null : DateTime.parse(root['firstRecordDate'] as String),
       weekStart: WeekStart.values.asNameMap()[settingsMap['weekStart']] ?? WeekStart.monday,
       annualLeaveDaysByYear: {
         if (byYear is Map<String, dynamic>)
-          for (final e in byYear.entries) int.parse(e.key): (e.value as num).toInt(),
+          for (final e in byYear.entries)
+            if (AppSettings.isValidAnnualLeaveDays((e.value as num).toInt())) int.parse(e.key): (e.value as num).toInt(),
       },
-      hourlyWage: (settingsMap['hourlyWage'] as num?)?.toInt(),
-      records: [for (final r in records) WorkRecord.fromJson(r as Map<String, dynamic>)],
+      hourlyWage: wage != null && AppSettings.isValidHourlyWage(wage) ? wage : null,
+      records: [for (final r in records) _dropInvalidRange(WorkRecord.fromJson(r as Map<String, dynamic>))],
     );
   } on BackupFormatException {
     rethrow;
@@ -68,6 +72,10 @@ BackupSnapshot decodeBackup(String text) {
     throw BackupFormatException('내용을 읽을 수 없음: $e');
   }
 }
+
+/// 자정 넘김 미지원 — 퇴근 < 출근이면 시각 둘 다 버린다(기록 안 된 날로).
+WorkRecord _dropInvalidRange(WorkRecord r) =>
+    isValidClockRange(r.clockIn, r.clockOut) ? r : r.copyWith(clockIn: null, clockOut: null);
 
 String _dateKey(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

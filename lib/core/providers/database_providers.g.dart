@@ -344,3 +344,44 @@ final class BackupRepositoryProvider
 }
 
 String _$backupRepositoryHash() => r'da2067c0588407d6b1a80b6683d04713c4630be0';
+
+@ProviderFor(backupFiles)
+final backupFilesProvider = BackupFilesProvider._();
+
+final class BackupFilesProvider
+    extends $FunctionalProvider<BackupFiles, BackupFiles, BackupFiles>
+    with $Provider<BackupFiles> {
+  BackupFilesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'backupFilesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$backupFilesHash();
+
+  @$internal
+  @override
+  $ProviderElement<BackupFiles> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  BackupFiles create(Ref ref) {
+    return backupFiles(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BackupFiles value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BackupFiles>(value),
+    );
+  }
+}
+
+String _$backupFilesHash() => r'd809b112ec6e8edd1560729d0809b4b767e6d563';
