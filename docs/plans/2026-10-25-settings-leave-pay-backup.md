@@ -25,7 +25,7 @@
 
 1. **다른 폰에서 내보낸 파일에 오늘의 '출근만 찍힌' 기록이 있을 때** — 복원 뒤 오늘 화면이 근무 중 상태로 이어진다. (Task 8 복원 테스트)
 2. **시급 7자리 한도에서 8번째 숫자 입력** — 무시되고 "1,234,567"이 유지된다. (Task 5)
-3. **12월 → 다음 해 1월로 넘길 때 연차 카드** — 사용은 새 해 기준으로 0부터, 총 연차는 같은 값. (Task 4)
+3. **12월 → 다음 해 1월로 넘길 때 연차 카드** — 사용·예정은 새 해 기준으로 0부터, 총 연차는 새 해 값(없으면 "—" + 유도 줄). 지난해 카드는 지난해 값 그대로. (Task 4)
 4. **일요일 시작에서 설치 전 날짜 판정** — 첫 주 월요일 앞의 일요일 셀은 흐리고 탭이 막힌다(`editableFrom`은 월요일 기준 그대로). (Task 2)
 5. **공유 시트를 닫거나 파일 선택을 취소했을 때** — 마지막 내보내기 날짜가 바뀌지 않고 토스트도 뜨지 않는다. (Task 9)
 
@@ -66,9 +66,9 @@
 **Interfaces:**
 - Produces:
   - `enum WeekStart { monday, sunday }`
-  - `AppSettings({WeekStart weekStart = WeekStart.monday, int? annualLeaveDays, int? hourlyWage, DateTime? lastExportDate})` (freezed, `copyWith`)
+  - `AppSettings({WeekStart weekStart = WeekStart.monday, Map<int, int> annualLeaveDaysByYear = const {}, int? hourlyWage, DateTime? lastExportDate})` (freezed, `copyWith`) + 확장 `int? annualLeaveDaysOf(int year)`, `AppSettings withAnnualLeaveDays(int year, int? days)` (null이면 그 해 키 제거)
   - `abstract interface class AppSettingsRepository { Stream<AppSettings> watch(); Future<void> save(AppSettings settings); }`
-  - `DriftAppSettingsRepository(AppDatabase db)` — 키 상수 `weekStartKey='week_start'`, `annualLeaveDaysKey='annual_leave_days'`, `hourlyWageKey='hourly_wage'`, `lastExportDateKey='last_export_date'`
+  - `DriftAppSettingsRepository(AppDatabase db)` — 키 상수 `weekStartKey='week_start'`, `annualLeaveDaysKeyPrefix='annual_leave_days_'`(+해), `hourlyWageKey='hourly_wage'`, `lastExportDateKey='last_export_date'`
   - 프로바이더: `appSettingsRepositoryProvider` (keepAlive), `appSettingsProvider` (`Stream<AppSettings>`)
 
 - [ ] **Step 1: 실패하는 테스트** — `NativeDatabase.memory()`로 `AppDatabase` 구동 (`test/data/drift_work_record_repository_test.dart` 패턴).
@@ -76,9 +76,10 @@
 ```dart
 test('비어 있으면 기본값', () async => expect(await repo.watch().first, const AppSettings()));
 test('저장한 값이 그대로 읽히고 null은 행을 지운다', () async {
-  await repo.save(const AppSettings(weekStart: WeekStart.sunday, annualLeaveDays: 15, hourlyWage: 12500));
+  await repo.save(const AppSettings(weekStart: WeekStart.sunday, annualLeaveDaysByYear: {2026: 15, 2027: 16}, hourlyWage: 12500));
   await repo.save((await repo.watch().first).copyWith(lastExportDate: DateTime(2026, 10, 24)));
-  expect(await repo.watch().first, AppSettings(weekStart: WeekStart.sunday, annualLeaveDays: 15, hourlyWage: 12500, lastExportDate: DateTime(2026, 10, 24)));
+  expect(await repo.watch().first, AppSettings(weekStart: WeekStart.sunday, annualLeaveDaysByYear: {2026: 15, 2027: 16}, hourlyWage: 12500, lastExportDate: DateTime(2026, 10, 24)));
+  expect((await db.select(db.settings).get()).map((r) => r.key), containsAll(['annual_leave_days_2026', 'annual_leave_days_2027']));
   await repo.save(const AppSettings(weekStart: WeekStart.sunday));
   expect((await db.select(db.settings).get()).map((r) => r.key), ['week_start']);
 });
@@ -87,7 +88,7 @@ test('watch는 save마다 새 값을 흘린다', ...);     // expectLater(repo.w
 ```
 
 - [ ] **Step 2: 실행해 실패 확인** — `flutter test test/data/drift_app_settings_repository_test.dart` → 컴파일 실패.
-- [ ] **Step 3: 구현** — 모델·포트·Drift 구현. `watch()`는 `select(settings).watch()`를 매핑(모르는 키는 무시, 숫자 파싱 실패는 null). `save()`는 트랜잭션에서 네 키를 upsert/delete. 프로바이더 추가 후 코드젠.
+- [ ] **Step 3: 구현** — 모델·포트·Drift 구현. `watch()`는 `select(settings).watch()`를 매핑(모르는 키는 무시, 숫자 파싱 실패는 무시/null, `annual_leave_days_` 접두 키는 해로 파싱). `save()`는 트랜잭션에서 고정 키 셋을 upsert/delete하고 `annual_leave_days_%` 행은 전부 지운 뒤 맵대로 다시 넣는다. 프로바이더 추가 후 코드젠.
 - [ ] **Step 4: 통과 확인** — 위 명령 PASS. `flutter analyze` 깨끗.
 - [ ] **Step 5: 커밋** — `설정 모델·저장소: AppSettings (시작 요일 · 총 연차 · 시급 · 마지막 내보내기)`
 
@@ -139,7 +140,8 @@ test('calendarDays — 기본(월요일)은 9/28부터 11/1까지', ...);
   - `WorkRules.extraWorkPayMultiplier` (`double`, 기본 1.5)
   - `({int weekendMinutes, int holidayMinutes}) extraWorkMinutesOfMonth(List<WorkRecord> records, DateTime month, WorkRules rules)` — 그 달, 출퇴근 둘 다 있는 날만, 주말 → weekend, 평일 `holiday` 유형 → holiday, `actualMinutes` 사용
   - `int extraPayWon(int minutes, int hourlyWage, WorkRules rules)` = `(minutes * hourlyWage * multiplier / 60).floor()`
-  - `int usedLeaveHalfDays(List<WorkRecord> records, int year)` — `dayOff` 2, `halfDay` 1
+  - `int usedLeaveHalfDays(List<WorkRecord> records, int year)` — `dayOff` 2, `halfDay` 1 (그 해 전체, 미래 포함)
+  - `int plannedLeaveHalfDays(List<WorkRecord> records, int year, DateTime today)` — 그중 `date.isAfter(dateOnly(today))`인 것만
   - `String formatThousands(int n)` → `"12,500"`, `String formatWon(int won)` → `"12,500원"`, `String formatLeaveDays(int halfDays)` → `15 → "7.5일"`, `30 → "15일"`
 
 - [ ] **Step 1: 실패하는 테스트**
@@ -152,6 +154,7 @@ test('extraWorkMinutesOfMonth — 주말·평일 공휴일만, 점심 공제 없
 });
 test('extraPayWon — 660분 × 12,500 × 1.5 = 206,250, 소수점 버림(7분 × 10,000 = 1,750)', ...);
 test('usedLeaveHalfDays — 연차 2 · 반차 1, 다른 해 제외, 미래 포함', ...);
+test('plannedLeaveHalfDays — 오늘보다 뒤인 날만, 오늘은 제외', ...); // today 9/16: rec(16 dayOff) 제외, rec(17 halfDay)+rec(24 dayOff) → 3
 test('formatLeaveDays / formatWon / formatThousands', ...); // 15→"7.5일", 30→"15일", 1→"0.5일", 1234567→"1,234,567"
 ```
 
@@ -170,7 +173,7 @@ test('formatLeaveDays / formatWon / formatThousands', ...); // 15→"7.5일", 30
 - Consumes: Task 3 함수, `AppSettings`
 - Produces (freezed):
   - `MonthExtraWork({required int weekendMinutes, required int holidayMinutes, int? payWon})` — `payWon`은 시급 있을 때만
-  - `MonthLeave({required int year, int? totalDays, required int usedHalfDays, int? remainingHalfDays})` — `remaining = total*2 − used` (음수 = 초과), total 없으면 null
+  - `MonthLeave({required int year, int? totalDays, required int usedHalfDays, required int plannedHalfDays, int? remainingHalfDays})` — `totalDays = settings.annualLeaveDaysOf(year)`, `remaining = total*2 − used` (예정 포함, 음수 = 초과), total 없으면 null
   - `MonthState({..., MonthExtraWork? extraWork, MonthLeave? leave})` — `extraWork`는 합계 0이면 null, `leave`는 total 없고 used 0이면 null
 
 - [ ] **Step 1: 실패하는 테스트**
@@ -179,7 +182,8 @@ test('formatLeaveDays / formatWon / formatThousands', ...); // 15→"7.5일", 30
 test('수당 카드 — 주말·공휴일 근무 없는 달은 null, 있으면 분과 (시급 있을 때) 금액', ...);
 test('연차 카드 — 총 연차 없고 사용 0이면 null, 사용만 있으면 total null·remaining null', ...);
 test('연차 카드 — 총 6일에 사용 7.5일이면 remainingHalfDays == -3', ...);
-test('연차 카드 — month가 2027-01이면 year 2027, 2026년 사용분은 빠진다 (Review Focus 3)', ...);
+test('연차 카드 — month가 2027-01이면 year 2027, 총 연차는 2027 키(없으면 null), 2026년 사용분은 빠진다 (Review Focus 3)', ...);
+test('연차 카드 — plannedHalfDays는 오늘 이후 연차·반차만 (오늘 9/16, 9/17 반차·9/24 연차 → 3)', ...);
 ```
 
 - [ ] **Step 2: 실패 확인** → **Step 3: 구현**(빌더 끝에서 두 값 계산) → **Step 4: PASS** → 코드젠 포함
@@ -236,8 +240,8 @@ testWidgets('viewInsets 300에서도 저장 버튼이 탭 가능', ...); // Medi
   - `RoutePaths.settings = '/settings'`; `GoRoute(path: '/settings', pageBuilder: CustomTransitionPage(SlideTransition from Offset(1,0), AppDurations.sheetSlide, AppCurves.sheet))`
   - `GearButton({required VoidCallback onTap})` — `TabShell`의 탭 줄을 `Stack`으로 감싸 `Positioned(right: AppSizes.gearRight)`. `PillTabs`는 그대로 `Center`.
   - `appVersionProvider` (`Future<String>`, `PackageInfo.fromPlatform().version`)
-  - `SettingsView({required AppSettings settings, required String version, required SettingsCallbacks callbacks})` 순수 위젯. `SettingsCallbacks(onBack, onWeekStart(WeekStart), onTapAnnual, onTapWage, onExport, onImport, onPrivacy)`
-  - `SettingsController` (`@riverpod class`): `setWeekStart(WeekStart)`, `setAnnualLeaveDays(int?)`, `setHourlyWage(int?)` — 현재 값 `copyWith` 후 `save`
+  - `SettingsView({required AppSettings settings, required int year, required String version, required SettingsCallbacks callbacks})` 순수 위젯 — 연차 행은 `settings.annualLeaveDaysOf(year)`를 보여준다(`year`는 `clockProvider` 기준 올해). `SettingsCallbacks(onBack, onWeekStart(WeekStart), onTapAnnual, onTapWage, onExport, onImport, onPrivacy)`
+  - `SettingsController` (`@riverpod class`): `setWeekStart(WeekStart)`, `setAnnualLeaveDays(int year, int? days)`, `setHourlyWage(int?)` — 현재 값 `copyWith`/`withAnnualLeaveDays` 후 `save`
   - `SettingsTexts`: 스펙 §6-1 문구 전부 + `lastExportLine(DateTime?)` → "아직 내보낸 적 없어요" / "마지막 내보내기 10월 24일"(`formatDateShort` 아님 — "n월 n일"만), `annualValue(int?)` → "사용 안 함"/"15일", `wageValue(int?)` → "사용 안 함"/"12,500원", `privacyUrl`
   - 처리방침: `launchUrl(Uri.parse(SettingsTexts.privacyUrl), mode: LaunchMode.externalApplication)`. 매니페스트 `<queries>`에 `<intent><action android:name="android.intent.action.VIEW"/><data android:scheme="https"/></intent>`.
 
@@ -251,7 +255,7 @@ testWidgets('폭 320·600에서 overflow 없음', ...);  // tester.takeException
 testWidgets('TabShell — 톱니가 있고 PillTabs 중심 x == 화면 중심', ...); // widgets_test.dart
 ```
 
-- [ ] **Step 2: 실패 확인** → **Step 3: 구현** (화면에서 연차·시급 행 탭 → `showNumberInputSheet(... onSave: controller.setAnnualLeaveDays, onClear: () => controller.setAnnualLeaveDays(null))`; 내보내기/가져오기는 Task 9까지 빈 콜백) → **Step 4: PASS + `flutter analyze`**
+- [ ] **Step 2: 실패 확인** → **Step 3: 구현** (화면에서 연차·시급 행 탭 → `showNumberInputSheet(... onSave: (v) => controller.setAnnualLeaveDays(year, v), onClear: () => controller.setAnnualLeaveDays(year, null))`; 내보내기/가져오기는 Task 9까지 빈 콜백) → **Step 4: PASS + `flutter analyze`**
 - [ ] **Step 5: 시뮬레이터 확인** — `flutter run --flavor dev`로 톱니 → 설정 → 시트 → 키패드 위 시트 위치 눈으로 확인.
 - [ ] **Step 6: 커밋** — `설정 화면: 톱니 진입, 시작 요일 · 총 연차 · 시급 · 앱 정보`
 
@@ -269,8 +273,9 @@ testWidgets('TabShell — 톱니가 있고 PillTabs 중심 x == 화면 중심', 
 - Produces:
   - `ExtraWorkCard({required MonthExtraWork extraWork, required String title, required VoidCallback onTapNudge})`, `LeaveCard({required MonthLeave leave, required VoidCallback onTapNudge})`
   - `MonthView({..., required VoidCallback onOpenWage, required VoidCallback onOpenAnnual})` — 카드는 범례 아래 `cardGap` 간격, 수당 → 연차 순
-  - `MonthTexts`: `extraWorkTitle(month)` "10월 주말·공휴일 근무", `weekendLabel` "주말", `holidayLabel` "공휴일", `amountLabel` "예상 금액", `wageNudge`, `leaveTitle(year)` "2026년 연차", `leaveLabels` ["총 연차","사용","잔여"], `overLabel` "초과", `leaveNudge`, 값은 `formatHm`·`formatWon`·`formatLeaveDays`, 없음 "—"
-  - `MonthScreen`: `onOpenWage` → 시급 시트(`initial: settings.hourlyWage`), `onOpenAnnual` → 연차 시트
+  - `MonthTexts`: `extraWorkTitle(month)` "10월 주말·공휴일 근무", `weekendLabel` "주말", `holidayLabel` "공휴일", `amountLabel` "예상 금액", `wageNudge`, `leaveTitle(year)` "2026년 연차", `leaveLabels` ["총 연차","사용","잔여"], `overLabel` "초과", `plannedLine(halfDays)` "예정 1.5일 포함", `leaveNudge`, 값은 `formatHm`·`formatWon`·`formatLeaveDays`, 없음 "—"
+  - `LeaveCard`는 `SummaryRow`를 그대로 쓰지 못한다(사용 칸 아래 줄) — 같은 토큰으로 3칸을 직접 그린다. 예정 줄 스타일 `AppTextStyles.plannedLine`(12 `subtle`), 위 간격 `AppSizes.plannedLineTop`(3).
+  - `MonthScreen`: `onOpenWage` → 시급 시트(`initial: settings.hourlyWage`), `onOpenAnnual` → 연차 시트, 저장은 `setAnnualLeaveDays(state.month.year, v)` — **카드의 해**
 
 - [ ] **Step 1: 실패하는 테스트**
 
@@ -279,6 +284,7 @@ testWidgets('extraWork null이면 수당 카드 없음, leave null이면 연차 
 testWidgets('수당 카드 — 주말 7h, 공휴일 0이면 공휴일 행 없음, payWon 206250 → "206,250원"', ...);
 testWidgets('수당 카드 — payWon null이면 유도 줄, 탭 → onOpenWage', ...);
 testWidgets('연차 카드 — total 15 used 15(반일) → "15일" "7.5일" "7.5일"; remaining -3 → 라벨 "초과" 값 "1.5일"', ...);
+testWidgets('연차 카드 — plannedHalfDays 3 → "예정 1.5일 포함", 0이면 그 줄 없음. 세 칸 값의 y가 같다', ...);
 testWidgets('연차 카드 — total null → "—" 둘 + 유도 줄, 탭 → onOpenAnnual', ...);
 testWidgets('폭 320~600 8종에서 카드 overflow 없음', ...);
 ```
@@ -297,7 +303,7 @@ testWidgets('폭 320~600 8종에서 카드 overflow 없음', ...);
 
 **Interfaces:**
 - Produces:
-  - `BackupSnapshot({required DateTime exportedAt, DateTime? firstRecordDate, required WeekStart weekStart, int? annualLeaveDays, int? hourlyWage, required List<WorkRecord> records})` (freezed, JSON은 코덱이 직접)
+  - `BackupSnapshot({required DateTime exportedAt, DateTime? firstRecordDate, required WeekStart weekStart, required Map<int, int> annualLeaveDaysByYear, int? hourlyWage, required List<WorkRecord> records})` (freezed, JSON은 코덱이 직접 — 맵 키는 문자열 해)
   - `String encodeBackup(BackupSnapshot s)` — 스펙 §5 모양, `records`는 `WorkRecord.toJson`
   - `BackupSnapshot decodeBackup(String text)` — 실패 시 `BackupFormatException(String reason)` (`implements Exception`)
   - `abstract interface class BackupRepository { Future<BackupSnapshot> snapshot(DateTime now); Future<void> restore(BackupSnapshot s); Future<int> recordCount(); }`
@@ -355,7 +361,7 @@ testWidgets('가져오기 — 정상 파일이면 "지금 기록 3건이 파일 
 **Files:**
 - Modify: `CLAUDE.md`, `lib/data/seed/debug_seed.dart`(+ `presentation/debug/seed_picker_sheet.dart`), `test_driver/app.dart`
 
-- [ ] **Step 1: 디버그 시드** — '두 달치 기록' 시드가 `AppSettings(annualLeaveDays: 15, hourlyWage: 12500)`도 넣는다(카드가 보이는 상태를 바로 확인). `test/data/debug_seed_test.dart`에 설정값 단언 추가.
+- [ ] **Step 1: 디버그 시드** — '두 달치 기록' 시드가 `AppSettings(annualLeaveDaysByYear: {올해: 15}, hourlyWage: 12500)`도 넣는다(카드가 보이는 상태를 바로 확인). `test/data/debug_seed_test.dart`에 설정값 단언 추가.
 - [ ] **Step 2: 스모크 드라이브** — `test_driver/app.dart`에 설정 화면 스크린샷 1장(`settings.png`)과 월간 카드가 보이는 월간 스크린샷. `flutter drive --flavor dev --target test_driver/app.dart -d <시뮬레이터>` 통과.
 - [ ] **Step 3: CLAUDE.md** — 스펙 §9 항목 반영. "백업·내보내기는 아직 없다" 문구 삭제.
 - [ ] **Step 4: 전체 검증** — `flutter analyze` 깨끗, `flutter test` 전부 PASS.

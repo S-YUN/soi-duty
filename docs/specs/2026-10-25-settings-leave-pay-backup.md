@@ -17,17 +17,19 @@ enum WeekStart { monday, sunday }
 @freezed
 class AppSettings {
   @Default(WeekStart.monday) WeekStart weekStart;
-  int? annualLeaveDays;    // 올해 총 연차 (정수 일). null = 사용 안 함
+  @Default({}) Map<int, int> annualLeaveDaysByYear; // 해 → 총 연차(정수 일). 없는 해 = 사용 안 함
   int? hourlyWage;         // 시급 (원). null = 사용 안 함
   DateTime? lastExportDate; // 날짜만. null = 아직 내보낸 적 없음
 }
 ```
 
 - 기존 Drift `Settings`(key/value) 테이블에 키로 저장한다. 스키마 변경 없음(v2 유지).
-  키: `week_start`(`monday`|`sunday`) · `annual_leave_days` · `hourly_wage` · `last_export_date`(`yyyy-MM-dd`). null은 행 삭제.
+  키: `week_start`(`monday`|`sunday`) · `annual_leave_days_<year>`(해마다 한 행, 예 `annual_leave_days_2026`) · `hourly_wage` · `last_export_date`(`yyyy-MM-dd`). null은 행 삭제.
+- **총 연차는 해마다 따로 저장한다** (2026-10-25). 설정 화면의 "올해 총 연차"는 지금 해의 값만 보여주고 고친다. 해가 바뀌면 그 해 값이 없으므로
+  월간 카드가 빈 상태("—" + 유도 줄)로 다시 입력을 유도하고, 지난해 카드는 지난해 값으로 남는다. 설정값 하나였다면 새해에 고친 값이 지난해 카드까지 바꿔 잔여가 틀어진다.
 - Repository 포트 `AppSettingsRepository { Stream<AppSettings> watch(); Future<void> save(AppSettings) }`. Drift 구현체.
   첫 기록일(`first_record_date`)은 지금처럼 `WorkRecordRepository`가 관리한다 — 같은 테이블이지만 소유자가 다르다.
-- 입력 규칙: 총 연차는 **1~99 정수**(빈 값·0은 저장 비활성). 시급은 **1~9,999,999 정수**(최대 7자리, 빈 값·0은 저장 비활성 —
+- 입력 규칙: 총 연차는 **해마다 1~99 정수**(빈 값·0은 저장 비활성). 시급은 **1~9,999,999 정수**(최대 7자리, 빈 값·0은 저장 비활성 —
   디자인은 빈 값만 막았지만 0원은 의미가 없어 같이 막는다).
 - 수당 배율 `WorkRules.extraWorkPayMultiplier = 1.5`. 사용자 설정 아님. 급여 기간은 달력 월.
 - 연차 기준 기간은 1월~12월 고정.
@@ -43,11 +45,13 @@ class AppSettings {
 
 ```
 사용(반일 단위) = Σ 연차 기록 × 2 + Σ 반차 기록 × 1   — 그 해 전체, 미리 찍은 미래 날짜 포함
-잔여(반일 단위) = 총 연차 × 2 − 사용                  — 음수면 "초과"
+예정(반일 단위) = 그중 날짜가 오늘보다 뒤인 것          — 오늘은 예정이 아니다
+잔여(반일 단위) = 그 해 총 연차 × 2 − 사용             — 예정 포함해서 뺀다. 음수면 "초과"
 ```
 
 - 해 = **보고 있는 달이 속한 해.** 12월→1월로 넘기면 다음 해 카드.
 - 표기 `formatLeaveDays(halfDays)`: 반일 단위 15 → "7.5일", 30 → "15일".
+- 예정이 0보다 크면 "사용" 칸 값 아래 **"예정 n일 포함"** (12, `subtle`, 위 간격 3). 잔여는 예정을 포함해 계산한다 — 이미 계획한 날은 더 쓸 수 없는 날이다.
 - 월간 카드(§6-2)는 `총 연차가 있거나 그 해 사용 > 0`일 때만 보인다.
 
 ## 4. 주말·공휴일 수당
@@ -69,7 +73,7 @@ class AppSettings {
 ```json
 { "app": "soi_duty", "format": 1, "exportedAt": "2026-10-25T09:12:00",
   "firstRecordDate": "2026-09-14",
-  "settings": { "weekStart": "monday", "annualLeaveDays": 15, "hourlyWage": 12500 },
+  "settings": { "weekStart": "monday", "annualLeaveDaysByYear": { "2026": 15 }, "hourlyWage": 12500 },
   "records": [ { "date": "2026-09-14T00:00:00.000", "clockIn": "2026-09-14T09:00:00.000", "clockOut": null, "type": "normal", "deductionMinutes": 0 } ] }
 ```
 
@@ -124,7 +128,7 @@ class AppSettings {
   구분선 1px `rowDivider` 여백 14 0 10. 시급 있음: "예상 금액" 13.5 `subtle` + 금액 22/600/-0.02em `brand` ("152,250원"), 위 4.
   시급 없음: 유도 줄(최소 높이 44) "시급을 알려주시면 예상 금액을 보여드려요" 14/500 `brand` + 꺾쇠 8×14 `brand` → 시급 시트.
 - **연차 카드** "2026년 연차": 위 12, 3칸(`SummaryRow` 모양 — 라벨 13 `subtle`, 값 18/600, 칸 사이 1px `divider`, 칸 패딩 6 4 2):
-  총 연차 | 사용 | 잔여. 총 연차 없음 → 총·잔여 "—" `weekendNone`, 그리고 구분선(여백 14 0 6) + 유도 줄 "올해 연차 개수를 알려주시면 남은 연차를 보여드려요" → 연차 시트.
+  총 연차 | 사용 | 잔여. 사용 칸은 예정이 있으면 값 아래 "예정 1.5일 포함"(12 `subtle`, 위 3). 총 연차 없음 → 총·잔여 "—" `weekendNone`, 그리고 구분선(여백 14 0 6) + 유도 줄 "올해 연차 개수를 알려주시면 남은 연차를 보여드려요" → 연차 시트(**카드의 해**에 저장).
   잔여 `brand`. 초과면 셋째 칸 라벨 "초과", 값 `minus`.
 - 시트에서 저장하면 카드가 그 자리에서 바뀐다(스트림).
 
