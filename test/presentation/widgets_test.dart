@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
+import 'package:soi_duty/presentation/shell/gear_button.dart';
+import 'package:soi_duty/presentation/shell/shell_tab_bar.dart';
 import 'package:soi_duty/presentation/today/widgets/pill_tabs.dart';
 import 'package:soi_duty/presentation/today/widgets/primary_button.dart';
 import 'package:soi_duty/presentation/today/widgets/soi_checkbox.dart';
@@ -45,6 +47,24 @@ void main() {
     await tester.pumpWidget(wrap(PillTabs(labels: const ['오늘', '주간'], selectedIndex: 0, onSelected: (i) => selected = i)));
     await tester.tap(find.text('주간'));
     expect(selected, 1);
+  });
+
+  testWidgets('ShellTabBar — 톱니가 있고 PillTabs 중심 x는 화면 중심', (tester) async {
+    tester.view.physicalSize = const Size(402 * 3, 874 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    var opened = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: ShellTabBar(labels: const ['오늘', '주간', '월간'], selectedIndex: 0, onSelected: (_) {}, onSettings: () => opened++),
+      ),
+    ));
+    expect(tester.getCenter(find.byType(PillTabs)).dx, closeTo(201, 0.5));
+    final gear = find.byType(GearButton);
+    expect(tester.getSize(gear), Size(AppSizes.gearSize, AppSizes.gearSize));
+    expect(tester.getTopRight(gear).dx, closeTo(402 - AppSizes.gearRight, 0.5));
+    await tester.tap(gear);
+    expect(opened, 1);
   });
 
   testWidgets('TypeBadge 라벨', (tester) async {

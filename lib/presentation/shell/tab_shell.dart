@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
 import '../today/today_texts.dart';
-import '../today/widgets/pill_tabs.dart';
+import '../../core/routing/route_paths.dart';
+import 'shell_tab_bar.dart';
 
 /// 알약 탭 + 브랜치 PageView. Scaffold·SafeArea는 여기 한 번만.
 /// 스와이프하면 브랜치가 바뀌고, 탭을 누르면 페이지가 밀려간다. 둘 다 [navigationShell]의 인덱스로 동기화한다.
@@ -50,12 +51,11 @@ class _TabShellState extends State<TabShell> {
           children: [
             Padding(
               padding: EdgeInsets.only(top: AppSizes.topInset),
-              child: Center(
-                child: PillTabs(
-                  labels: TodayTexts.tabs,
-                  selectedIndex: shell.currentIndex,
-                  onSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
-                ),
+              child: ShellTabBar(
+                labels: TodayTexts.tabs,
+                selectedIndex: shell.currentIndex,
+                onSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+                onSettings: () => context.push(RoutePaths.settings),
               ),
             ),
             Expanded(

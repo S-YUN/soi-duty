@@ -27,6 +27,8 @@ dependencies:
   # 라우팅
   go_router: ^18.0.1
   flutter_native_splash: ^2.4.8
+  package_info_plus: ^10.2.2
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
