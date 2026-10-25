@@ -93,12 +93,13 @@ class _CellState extends State<_Cell> {
     };
   }
 
-  /// 숫자 색. 원 위에서는 유형 글자색/잉크, 아니면 평일 subtle · 주말 적갈색. 미래도 같은 색 — 원 유무로 충분히 구분된다.
-  /// (다른 달·설치 전은 셀 전체 투명도로 흐려진다.)
+  /// 숫자 색. 유형 원 위에서는 유형 글자색. 그 외 주말은 원이 있어도 적갈색(요일 색이 먼저 — 주말 근무를 찍었다고
+  /// 날짜가 검게 변하면 안 된다, 실기기 피드백 2026-10-25; 디자인 마크업은 잉크였지만 사용자 결정으로 바꿈).
+  /// 평일은 원 위에서 잉크, 아니면 subtle. 미래도 같은 색 — 원 유무로 충분히 구분된다. (다른 달·설치 전은 셀 전체 투명도)
   Color _numColor(MonthCell cell, {required bool onCircle}) {
     if (onCircle && cell.type != null) return AppColors.typeColors(cell.type!).$2;
-    if (onCircle) return AppColors.ink;
-    return cell.isWeekend ? AppColors.calendarWeekendNum : AppColors.subtle;
+    if (cell.isWeekend) return AppColors.calendarWeekendNum;
+    return onCircle ? AppColors.ink : AppColors.subtle;
   }
 
   @override

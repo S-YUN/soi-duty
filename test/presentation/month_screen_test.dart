@@ -78,6 +78,28 @@ void main() {
     expect(tapped, d(14));
   });
 
+  testWidgets('주말 근무를 찍어도 날짜 숫자는 적갈색 그대로, 평일은 원 위에서 잉크', (tester) async {
+    tester.view.physicalSize = const Size(402 * 3, 874 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    final state = buildMonthState(
+      records: [rec(19, inH: 10, outH: 14), rec(14, inH: 9, outH: 18)],
+      firstRecordDate: DateTime(2026, 8, 20),
+      now: d(16, 12),
+      rules: rules,
+      month: DateTime(2026, 9),
+      settings: const AppSettings(),
+    );
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: CalendarCard(state: state, onCellTap: (_) {})),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<Text>(find.text('19')).style?.color, AppColors.calendarWeekendNum); // 토요일, 근무 원 있음
+    expect(tester.widget<Text>(find.text('20')).style?.color, AppColors.calendarWeekendNum); // 일요일, 원 없음
+    expect(tester.widget<Text>(find.text('14')).style?.color, AppColors.ink); // 평일 근무
+  });
+
   // 폰마다 폭이 다르다 — SizeConfig가 칸과 글자를 같은 배율로 키우므로 비율은 유지되지만,
   // 상한(480) 위에서는 칸만 넓어진다. 대표 폭에서 잘림·축소가 없는지 고정한다.
   for (final width in [320.0, 360.0, 375.0, 393.0, 402.0, 430.0, 480.0, 600.0]) {
