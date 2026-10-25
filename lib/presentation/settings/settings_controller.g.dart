@@ -37,7 +37,7 @@ final class SettingsControllerProvider
 }
 
 String _$settingsControllerHash() =>
-    r'c3d48452f78979c0654e1aedb0dee1793cccbb71';
+    r'7e380f1bcdca698176e975337dc3d42275188a6a';
 
 /// 설정값 변경. 현재 값을 읽어 한 필드만 바꿔 저장한다 — 스트림이 화면들을 갱신한다.
 

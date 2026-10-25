@@ -33,6 +33,7 @@ class MonthScreen extends ConsumerWidget {
     final first = ref.watch(firstRecordDateProvider).value;
     final today = ref.watch(clockProvider)();
     final settings = ref.watch(appSettingsProvider).value ?? const AppSettings();
+    ref.watch(settingsControllerProvider); // autoDispose — 시트 저장이 끝날 때까지 붙잡아 둔다
     final controller = ref.read(settingsControllerProvider.notifier);
     return async.when(
       loading: () => const ColoredBox(color: AppColors.screenBackground, child: SizedBox.expand()),

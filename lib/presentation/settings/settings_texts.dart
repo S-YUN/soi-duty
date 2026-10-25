@@ -32,6 +32,14 @@ abstract final class SettingsTexts {
   static const exportSub = '기록과 설정을 파일 하나로 저장해요';
   static const importLabel = '가져오기';
   static const importSub = '파일의 기록으로 지금 기록을 바꿔요';
+  static String backupFileName(DateTime d) =>
+      'soi_duty_backup_${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}.json';
+  static const exportDone = '내보낼 파일을 만들었어요';
+  static const importTitle = '기록을 가져올까요?';
+  static String importMessage(int count) => '지금 기록 $count건이 파일 내용으로 바뀌어요. 되돌릴 수 없어요.';
+  static const importConfirm = '가져오기';
+  static const importDone = '기록을 가져왔어요';
+  static const importFailed = '파일을 읽을 수 없어요. 내보낸 파일이 맞는지 확인해 주세요';
   static String lastExportLine(DateTime? d) => d == null ? '아직 내보낸 적 없어요' : '마지막 내보내기 ${d.month}월 ${d.day}일';
 
   static const sectionApp = '앱 정보';

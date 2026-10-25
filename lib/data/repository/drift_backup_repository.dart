@@ -9,25 +9,26 @@ import 'drift_work_record_repository.dart';
 
 /// 기록·첫 기록일·설정을 한 번에 담고(snapshot) 한 트랜잭션으로 바꾼다(restore).
 class DriftBackupRepository implements BackupRepository {
-  DriftBackupRepository(this._db, {this.rules = const WorkRules()})
-      : _records = DriftWorkRecordRepository(_db, rules: rules),
-        _settings = DriftAppSettingsRepository(_db);
+  DriftBackupRepository(this._db, {this.rules = const WorkRules()}) : _settings = DriftAppSettingsRepository(_db);
 
   final AppDatabase _db;
   final WorkRules rules;
-  final DriftWorkRecordRepository _records;
   final DriftAppSettingsRepository _settings;
 
+  // 스트림의 `.first`는 쓰지 않는다 — 위젯 테스트의 가짜 시간에서 Drift 스트림이 첫 값을 내지 않고 close까지 붙잡는다.
   @override
   Future<BackupSnapshot> snapshot(DateTime now) async {
-    final settings = await _settings.watch().first;
+    final settings = await _settings.read();
+    final rows = await _db.select(_db.workRecords).get();
+    final first = await (_db.select(_db.settings)..where((t) => t.key.equals(DriftWorkRecordRepository.firstRecordDateKey)))
+        .getSingleOrNull();
     return BackupSnapshot(
       exportedAt: now,
-      firstRecordDate: await _records.watchFirstRecordDate().first,
+      firstRecordDate: first == null ? null : parseDateKey(first.value),
       weekStart: settings.weekStart,
       annualLeaveDaysByYear: settings.annualLeaveDaysByYear,
       hourlyWage: settings.hourlyWage,
-      records: await _records.watchAll().first,
+      records: rows.map(DriftWorkRecordRepository.toDomain).toList(),
     );
   }
 
@@ -48,7 +49,7 @@ class DriftBackupRepository implements BackupRepository {
         } else {
           await _db.into(_db.settings).insertOnConflictUpdate(SettingsCompanion.insert(key: firstKey, value: dateKey(first)));
         }
-        final current = await _settings.watch().first;
+        final current = await _settings.read();
         await _settings.save(current.copyWith(
           weekStart: s.weekStart,
           annualLeaveDaysByYear: s.annualLeaveDaysByYear,

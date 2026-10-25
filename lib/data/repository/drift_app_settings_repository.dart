@@ -18,7 +18,10 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
   final AppDatabase _db;
 
   @override
-  Stream<AppSettings> watch() => _db.select(_db.settings).watch().map(_fromRows);
+  Stream<AppSettings> watch() => _db.select(_db.settings).watch().map(fromRows);
+
+  /// 일회성 읽기. 스트림의 `.first`는 위젯 테스트의 가짜 시간에서 값을 내지 않아 쓰지 않는다.
+  Future<AppSettings> read() async => fromRows(await _db.select(_db.settings).get());
 
   @override
   Future<void> save(AppSettings s) => _db.transaction(() async {
@@ -36,7 +39,7 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
     return _db.into(_db.settings).insertOnConflictUpdate(SettingsCompanion.insert(key: key, value: value));
   }
 
-  static AppSettings _fromRows(List<SettingRow> rows) {
+  static AppSettings fromRows(List<SettingRow> rows) {
     var s = const AppSettings();
     final byYear = <int, int>{};
     for (final row in rows) {

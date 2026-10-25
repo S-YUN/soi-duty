@@ -11,6 +11,8 @@ import '../../domain/rules/work_rules.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
 import '../../ui/app_text_styles.dart';
+import '../shared/app_toast.dart';
+import '../shared/confirm_dialog.dart';
 import '../shared/number_input_sheet.dart';
 import '../shared/stroke_icons.dart';
 import 'settings_controller.dart';
@@ -49,6 +51,8 @@ class SettingsScreen extends ConsumerWidget {
     final version = ref.watch(appVersionProvider).value ?? '';
     final year = ref.watch(clockProvider)().year;
     final rules = ref.watch(workRulesProvider);
+    // autoDispose 컨트롤러를 화면이 떠 있는 동안 붙잡아 둔다 — 내보내기·시트 저장 같은 비동기 작업 중에 사라지면 안 된다.
+    ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
     return SettingsView(
       settings: settings,
@@ -84,11 +88,39 @@ class SettingsScreen extends ConsumerWidget {
           onSave: controller.setHourlyWage,
           onClear: () => controller.setHourlyWage(null),
         ),
-        onExport: () {}, // 백업 — 다음 단계
-        onImport: () {},
+        onExport: () => _export(context, ref),
+        onImport: () => _import(context, ref),
         onPrivacy: () => launchUrl(Uri.parse(SettingsTexts.privacyUrl), mode: LaunchMode.externalApplication),
       ),
     );
+  }
+}
+
+Future<void> _export(BuildContext context, WidgetRef ref) async {
+  final now = ref.read(clockProvider)();
+  final shared = await ref.read(settingsControllerProvider.notifier).exportBackup(now);
+  if (shared && context.mounted) showAppToast(context, SettingsTexts.exportDone);
+}
+
+Future<void> _import(BuildContext context, WidgetRef ref) async {
+  final controller = ref.read(settingsControllerProvider.notifier);
+  final pick = await controller.pickBackup();
+  if (!context.mounted) return;
+  switch (pick) {
+    case BackupPickCancelled():
+      return;
+    case BackupPickInvalid():
+      return showAppToast(context, SettingsTexts.importFailed);
+    case BackupPickReady(:final snapshot, :final currentCount):
+      final ok = await showConfirmDialog(
+        context,
+        title: SettingsTexts.importTitle,
+        message: SettingsTexts.importMessage(currentCount),
+        confirmLabel: SettingsTexts.importConfirm,
+      );
+      if (!ok) return;
+      await controller.restoreBackup(snapshot);
+      if (context.mounted) showAppToast(context, SettingsTexts.importDone);
   }
 }
 
