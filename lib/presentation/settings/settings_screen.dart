@@ -62,7 +62,7 @@ class SettingsScreen extends ConsumerWidget {
       rules: rules,
       callbacks: SettingsCallbacks(
         onBack: () => context.pop(),
-        onWeekStart: controller.setWeekStart,
+        onWeekStart: (w) => _changeWeekStart(context, ref, settings.weekStart, w),
         onTapAnnual: () => showNumberInputSheet(
           context,
           title: SettingsTexts.annualLabel,
@@ -141,6 +141,13 @@ Future<void> _import(BuildContext context, WidgetRef ref) async {
       }
       if (context.mounted) showAppToast(context, SettingsTexts.importDone);
   }
+}
+
+/// 바뀐 게 없으면 조용히. 바뀌면 저장 뒤 무엇이 달라졌는지 토스트 — 세그먼트만으로는 반응이 약하다는 피드백.
+Future<void> _changeWeekStart(BuildContext context, WidgetRef ref, WeekStart current, WeekStart next) async {
+  if (current == next) return;
+  await ref.read(settingsControllerProvider.notifier).setWeekStart(next);
+  if (context.mounted) showAppToast(context, SettingsTexts.weekStartChanged(next));
 }
 
 Future<void> _openPrivacy(BuildContext context) async {

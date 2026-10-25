@@ -213,4 +213,20 @@ void main() {
     expect(find.text('9,860원'), findsOneWidget);
     await finish(tester);
   });
+
+  testWidgets('시작 요일을 바꾸면 토스트 — 같은 값을 다시 누르면 없음', (tester) async {
+    await pumpSettings(tester);
+    await tester.tap(find.text('일'));
+    await tester.pumpAndSettle();
+    expect(find.text('월간 캘린더가 일요일부터 시작해요'), findsOneWidget);
+    await tester.pump(AppDurations.toast);
+    await tester.pump();
+    await tester.tap(find.text('일'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('부터 시작해요'), findsNothing);
+    await tester.tap(find.text('월'));
+    await tester.pumpAndSettle();
+    expect(find.text('월간 캘린더가 월요일부터 시작해요'), findsOneWidget);
+    await finish(tester);
+  });
 }

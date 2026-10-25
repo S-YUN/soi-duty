@@ -200,7 +200,6 @@ abstract final class AppSizes {
   static double get settingsNoteTop => 8.w;
   static EdgeInsets get settingsNotePadding => EdgeInsets.symmetric(horizontal: 4.w);
   static double get segmentPadding => 3.w;
-  static double get segmentGap => 2.w;
   static EdgeInsets get segmentItemPadding => EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.w);
 
   // 숫자 입력 시트 (총 연차 · 시급)

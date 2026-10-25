@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
+import 'package:soi_duty/domain/model/app_settings.dart';
+import 'package:soi_duty/presentation/settings/widgets/segment_toggle.dart';
 import 'package:soi_duty/presentation/shell/gear_button.dart';
 import 'package:soi_duty/presentation/shell/shell_tab_bar.dart';
 import 'package:soi_duty/presentation/today/widgets/pill_tabs.dart';
@@ -78,6 +80,30 @@ void main() {
       ),
     ));
     expect(tester.getTopRight(find.byType(PillTabs)).dx, lessThan(tester.getTopLeft(find.byType(GearButton)).dx));
+  });
+
+  testWidgets('SegmentToggle — 선택 배경이 토글처럼 미끄러져 이동한다', (tester) async {
+    Widget build(WeekStart value) => wrap(SegmentToggle<WeekStart>(
+          options: const [(WeekStart.monday, '월'), (WeekStart.sunday, '일')],
+          value: value,
+          onChanged: (_) {},
+        ));
+    Finder thumb() => find.byWidgetPredicate(
+        (w) => w is DecoratedBox && (w.decoration as BoxDecoration).color == AppColors.brand);
+    await tester.pumpWidget(build(WeekStart.monday));
+    await tester.pumpAndSettle();
+    expect(thumb(), findsOneWidget);
+    final monX = tester.getCenter(find.text('월')).dx;
+    final sunX = tester.getCenter(find.text('일')).dx;
+    expect(tester.getCenter(thumb()).dx, closeTo(monX, 1));
+
+    await tester.pumpWidget(build(WeekStart.sunday));
+    await tester.pump(AppDurations.buttonColor ~/ 2);
+    final midX = tester.getCenter(thumb()).dx;
+    expect(midX, greaterThan(monX + 2));
+    expect(midX, lessThan(sunX - 2));
+    await tester.pumpAndSettle();
+    expect(tester.getCenter(thumb()).dx, closeTo(sunX, 1));
   });
 
   testWidgets('TypeBadge 라벨', (tester) async {

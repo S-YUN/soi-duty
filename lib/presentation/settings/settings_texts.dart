@@ -11,6 +11,8 @@ abstract final class SettingsTexts {
   static const weekStartLabel = '시작 요일';
   static String weekStartOption(WeekStart w) => switch (w) { WeekStart.monday => '월', WeekStart.sunday => '일' };
   static const weekStartNote = '주간 탭과 주 40시간 계산은 월~일 그대로예요';
+  static String weekStartChanged(WeekStart w) =>
+      switch (w) { WeekStart.monday => '월간 캘린더가 월요일부터 시작해요', WeekStart.sunday => '월간 캘린더가 일요일부터 시작해요' };
 
   static const sectionLeave = '연차';
   static const annualLabel = '올해 총 연차';
