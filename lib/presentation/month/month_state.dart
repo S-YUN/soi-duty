@@ -32,10 +32,39 @@ abstract class MonthCell with _$MonthCell {
   }) = _MonthCell;
 }
 
+/// 그 달 주말·공휴일 근무 카드. 합계가 0인 달은 카드 자체가 없다(null).
+@freezed
+abstract class MonthExtraWork with _$MonthExtraWork {
+  const factory MonthExtraWork({
+    required int weekendMinutes,
+    required int holidayMinutes,
+    /// 시급이 있을 때만. 없으면 유도 줄.
+    int? payWon,
+  }) = _MonthExtraWork;
+}
+
+/// 그 해 연차 카드. 총 연차도 없고 사용도 0이면 카드가 없다(null).
+@freezed
+abstract class MonthLeave with _$MonthLeave {
+  const factory MonthLeave({
+    required int year,
+    /// 그 해 총 연차(일). 없으면 "—" + 유도 줄.
+    int? totalDays,
+    /// 반일 단위. 미리 찍은 미래 날짜 포함.
+    required int usedHalfDays,
+    /// 사용 중 오늘보다 뒤인 것(반일 단위). 0보다 크면 "예정 n일 포함".
+    required int plannedHalfDays,
+    /// total×2 − used. 음수면 초과. total 없으면 null.
+    int? remainingHalfDays,
+  }) = _MonthLeave;
+}
+
 @freezed
 abstract class MonthState with _$MonthState {
   const factory MonthState({
     required DateTime month,
     required List<List<MonthCell>> weeks,
+    MonthExtraWork? extraWork,
+    MonthLeave? leave,
   }) = _MonthState;
 }

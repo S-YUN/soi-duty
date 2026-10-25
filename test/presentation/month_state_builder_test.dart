@@ -112,4 +112,55 @@ void main() {
     final s = build([rec(14, inH: 9, type: WorkType.holiday)]);
     expect(cell(s, d(14)).value, const MonthCellValue.unrecorded());
   });
+
+  group('월간 카드 데이터', () {
+    test('수당 카드 — 주말·공휴일 근무 없는 달은 null, 있으면 분과 (시급 있을 때) 금액', () {
+      expect(build([rec(14, inH: 9, outH: 18)]).extraWork, isNull);
+      final rs = [rec(19, inH: 9, outH: 14), rec(15, inH: 9, outH: 13, type: WorkType.holiday)];
+      expect(build(rs).extraWork, const MonthExtraWork(weekendMinutes: 300, holidayMinutes: 240, payWon: null));
+      expect(
+        build(rs, settings: const AppSettings(hourlyWage: 12500)).extraWork,
+        const MonthExtraWork(weekendMinutes: 300, holidayMinutes: 240, payWon: 168750),
+      );
+    });
+
+    test('연차 카드 — 총 연차 없고 사용 0이면 null, 사용만 있으면 total null·remaining null', () {
+      expect(build([]).leave, isNull);
+      expect(
+        build([rec(14, type: WorkType.dayOff)]).leave,
+        const MonthLeave(year: 2026, totalDays: null, usedHalfDays: 2, plannedHalfDays: 0, remainingHalfDays: null),
+      );
+      expect(
+        build([], settings: const AppSettings(annualLeaveDaysByYear: {2026: 15})).leave,
+        const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 0, plannedHalfDays: 0, remainingHalfDays: 30),
+      );
+    });
+
+    test('연차 카드 — 총 6일에 사용 7.5일이면 remainingHalfDays == -3', () {
+      final rs = [for (final day in [1, 2, 3, 4, 7, 8, 9]) rec(day, type: WorkType.dayOff), rec(10, inH: 9, outH: 13, type: WorkType.halfDay)];
+      final leave = build(rs, settings: const AppSettings(annualLeaveDaysByYear: {2026: 6})).leave!;
+      expect(leave.usedHalfDays, 15);
+      expect(leave.remainingHalfDays, -3);
+    });
+
+    test('연차 카드 — 2027-01이면 year 2027, 총 연차는 2027 키, 2026년 사용분은 빠진다', () {
+      final rs = [rec(14, type: WorkType.dayOff), WorkRecord(date: DateTime(2027, 1, 5), type: WorkType.halfDay)];
+      const settings = AppSettings(annualLeaveDaysByYear: {2026: 15});
+      expect(
+        build(rs, month: DateTime(2027, 1), settings: settings).leave,
+        const MonthLeave(year: 2027, totalDays: null, usedHalfDays: 1, plannedHalfDays: 1, remainingHalfDays: null),
+      );
+      expect(
+        build(rs, month: DateTime(2027, 1), settings: settings.withAnnualLeaveDays(2027, 16)).leave!.remainingHalfDays,
+        31,
+      );
+    });
+
+    test('연차 카드 — plannedHalfDays는 오늘 이후 연차·반차만 (오늘 9/16)', () {
+      final rs = [rec(14, type: WorkType.dayOff), rec(16, type: WorkType.dayOff), rec(17, type: WorkType.halfDay), rec(24, type: WorkType.dayOff)];
+      final leave = build(rs).leave!;
+      expect(leave.usedHalfDays, 7);
+      expect(leave.plannedHalfDays, 3);
+    });
+  });
 }

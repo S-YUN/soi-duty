@@ -735,9 +735,565 @@ $MonthCellValueCopyWith<$Res> get value {
 }
 
 /// @nodoc
+mixin _$MonthExtraWork {
+
+ int get weekendMinutes; int get holidayMinutes;/// 시급이 있을 때만. 없으면 유도 줄.
+ int? get payWon;
+/// Create a copy of MonthExtraWork
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MonthExtraWorkCopyWith<MonthExtraWork> get copyWith => _$MonthExtraWorkCopyWithImpl<MonthExtraWork>(this as MonthExtraWork, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as MonthExtraWork;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthExtraWork&&(identical(other.weekendMinutes, _this.weekendMinutes) || other.weekendMinutes == _this.weekendMinutes)&&(identical(other.holidayMinutes, _this.holidayMinutes) || other.holidayMinutes == _this.holidayMinutes)&&(identical(other.payWon, _this.payWon) || other.payWon == _this.payWon));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as MonthExtraWork;
+  return Object.hash(runtimeType,_this.weekendMinutes,_this.holidayMinutes,_this.payWon);
+}
+
+@override
+String toString() {
+  final _this = this as MonthExtraWork;
+  return 'MonthExtraWork(weekendMinutes: ${_this.weekendMinutes}, holidayMinutes: ${_this.holidayMinutes}, payWon: ${_this.payWon})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $MonthExtraWorkCopyWith<$Res>  {
+  factory $MonthExtraWorkCopyWith(MonthExtraWork value, $Res Function(MonthExtraWork) _then) = _$MonthExtraWorkCopyWithImpl;
+@useResult
+$Res call({
+ int weekendMinutes, int holidayMinutes, int? payWon
+});
+
+
+
+
+}
+/// @nodoc
+class _$MonthExtraWorkCopyWithImpl<$Res>
+    implements $MonthExtraWorkCopyWith<$Res> {
+  _$MonthExtraWorkCopyWithImpl(this._self, this._then);
+
+  final MonthExtraWork _self;
+  final $Res Function(MonthExtraWork) _then;
+
+/// Create a copy of MonthExtraWork
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? weekendMinutes = null,Object? holidayMinutes = null,Object? payWon = freezed,}) {
+  return _then(MonthExtraWork(
+weekendMinutes: null == weekendMinutes ? _self.weekendMinutes : weekendMinutes // ignore: cast_nullable_to_non_nullable
+as int,holidayMinutes: null == holidayMinutes ? _self.holidayMinutes : holidayMinutes // ignore: cast_nullable_to_non_nullable
+as int,payWon: freezed == payWon ? _self.payWon : payWon // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [MonthExtraWork].
+extension MonthExtraWorkPatterns on MonthExtraWork {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _MonthExtraWork value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _MonthExtraWork() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _MonthExtraWork value)  $default,){
+final _that = this;
+switch (_that) {
+case _MonthExtraWork():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _MonthExtraWork value)?  $default,){
+final _that = this;
+switch (_that) {
+case _MonthExtraWork() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int weekendMinutes,  int holidayMinutes,  int? payWon)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _MonthExtraWork() when $default != null:
+return $default(_that.weekendMinutes,_that.holidayMinutes,_that.payWon);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int weekendMinutes,  int holidayMinutes,  int? payWon)  $default,) {final _that = this;
+switch (_that) {
+case _MonthExtraWork():
+return $default(_that.weekendMinutes,_that.holidayMinutes,_that.payWon);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int weekendMinutes,  int holidayMinutes,  int? payWon)?  $default,) {final _that = this;
+switch (_that) {
+case _MonthExtraWork() when $default != null:
+return $default(_that.weekendMinutes,_that.holidayMinutes,_that.payWon);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _MonthExtraWork implements MonthExtraWork {
+  const _MonthExtraWork({required this.weekendMinutes, required this.holidayMinutes, this.payWon});
+  
+
+@override final  int weekendMinutes;
+@override final  int holidayMinutes;
+/// 시급이 있을 때만. 없으면 유도 줄.
+@override final  int? payWon;
+
+/// Create a copy of MonthExtraWork
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$MonthExtraWorkCopyWith<_MonthExtraWork> get copyWith => __$MonthExtraWorkCopyWithImpl<_MonthExtraWork>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthExtraWork&&(identical(other.weekendMinutes, weekendMinutes) || other.weekendMinutes == weekendMinutes)&&(identical(other.holidayMinutes, holidayMinutes) || other.holidayMinutes == holidayMinutes)&&(identical(other.payWon, payWon) || other.payWon == payWon));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,weekendMinutes,holidayMinutes,payWon);
+}
+
+@override
+String toString() {
+    return 'MonthExtraWork(weekendMinutes: $weekendMinutes, holidayMinutes: $holidayMinutes, payWon: $payWon)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$MonthExtraWorkCopyWith<$Res> implements $MonthExtraWorkCopyWith<$Res> {
+  factory _$MonthExtraWorkCopyWith(_MonthExtraWork value, $Res Function(_MonthExtraWork) _then) = __$MonthExtraWorkCopyWithImpl;
+@override @useResult
+$Res call({
+ int weekendMinutes, int holidayMinutes, int? payWon
+});
+
+
+
+
+}
+/// @nodoc
+class __$MonthExtraWorkCopyWithImpl<$Res>
+    implements _$MonthExtraWorkCopyWith<$Res> {
+  __$MonthExtraWorkCopyWithImpl(this._self, this._then);
+
+  final _MonthExtraWork _self;
+  final $Res Function(_MonthExtraWork) _then;
+
+/// Create a copy of MonthExtraWork
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? weekendMinutes = null,Object? holidayMinutes = null,Object? payWon = freezed,}) {
+  return _then(_MonthExtraWork(
+weekendMinutes: null == weekendMinutes ? _self.weekendMinutes : weekendMinutes // ignore: cast_nullable_to_non_nullable
+as int,holidayMinutes: null == holidayMinutes ? _self.holidayMinutes : holidayMinutes // ignore: cast_nullable_to_non_nullable
+as int,payWon: freezed == payWon ? _self.payWon : payWon // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$MonthLeave {
+
+ int get year;/// 그 해 총 연차(일). 없으면 "—" + 유도 줄.
+ int? get totalDays;/// 반일 단위. 미리 찍은 미래 날짜 포함.
+ int get usedHalfDays;/// 사용 중 오늘보다 뒤인 것(반일 단위). 0보다 크면 "예정 n일 포함".
+ int get plannedHalfDays;/// total×2 − used. 음수면 초과. total 없으면 null.
+ int? get remainingHalfDays;
+/// Create a copy of MonthLeave
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MonthLeaveCopyWith<MonthLeave> get copyWith => _$MonthLeaveCopyWithImpl<MonthLeave>(this as MonthLeave, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as MonthLeave;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthLeave&&(identical(other.year, _this.year) || other.year == _this.year)&&(identical(other.totalDays, _this.totalDays) || other.totalDays == _this.totalDays)&&(identical(other.usedHalfDays, _this.usedHalfDays) || other.usedHalfDays == _this.usedHalfDays)&&(identical(other.plannedHalfDays, _this.plannedHalfDays) || other.plannedHalfDays == _this.plannedHalfDays)&&(identical(other.remainingHalfDays, _this.remainingHalfDays) || other.remainingHalfDays == _this.remainingHalfDays));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as MonthLeave;
+  return Object.hash(runtimeType,_this.year,_this.totalDays,_this.usedHalfDays,_this.plannedHalfDays,_this.remainingHalfDays);
+}
+
+@override
+String toString() {
+  final _this = this as MonthLeave;
+  return 'MonthLeave(year: ${_this.year}, totalDays: ${_this.totalDays}, usedHalfDays: ${_this.usedHalfDays}, plannedHalfDays: ${_this.plannedHalfDays}, remainingHalfDays: ${_this.remainingHalfDays})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $MonthLeaveCopyWith<$Res>  {
+  factory $MonthLeaveCopyWith(MonthLeave value, $Res Function(MonthLeave) _then) = _$MonthLeaveCopyWithImpl;
+@useResult
+$Res call({
+ int year, int? totalDays, int usedHalfDays, int plannedHalfDays, int? remainingHalfDays
+});
+
+
+
+
+}
+/// @nodoc
+class _$MonthLeaveCopyWithImpl<$Res>
+    implements $MonthLeaveCopyWith<$Res> {
+  _$MonthLeaveCopyWithImpl(this._self, this._then);
+
+  final MonthLeave _self;
+  final $Res Function(MonthLeave) _then;
+
+/// Create a copy of MonthLeave
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? year = null,Object? totalDays = freezed,Object? usedHalfDays = null,Object? plannedHalfDays = null,Object? remainingHalfDays = freezed,}) {
+  return _then(MonthLeave(
+year: null == year ? _self.year : year // ignore: cast_nullable_to_non_nullable
+as int,totalDays: freezed == totalDays ? _self.totalDays : totalDays // ignore: cast_nullable_to_non_nullable
+as int?,usedHalfDays: null == usedHalfDays ? _self.usedHalfDays : usedHalfDays // ignore: cast_nullable_to_non_nullable
+as int,plannedHalfDays: null == plannedHalfDays ? _self.plannedHalfDays : plannedHalfDays // ignore: cast_nullable_to_non_nullable
+as int,remainingHalfDays: freezed == remainingHalfDays ? _self.remainingHalfDays : remainingHalfDays // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [MonthLeave].
+extension MonthLeavePatterns on MonthLeave {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _MonthLeave value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _MonthLeave() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _MonthLeave value)  $default,){
+final _that = this;
+switch (_that) {
+case _MonthLeave():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _MonthLeave value)?  $default,){
+final _that = this;
+switch (_that) {
+case _MonthLeave() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int year,  int? totalDays,  int usedHalfDays,  int plannedHalfDays,  int? remainingHalfDays)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _MonthLeave() when $default != null:
+return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfDays,_that.remainingHalfDays);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int year,  int? totalDays,  int usedHalfDays,  int plannedHalfDays,  int? remainingHalfDays)  $default,) {final _that = this;
+switch (_that) {
+case _MonthLeave():
+return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfDays,_that.remainingHalfDays);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int year,  int? totalDays,  int usedHalfDays,  int plannedHalfDays,  int? remainingHalfDays)?  $default,) {final _that = this;
+switch (_that) {
+case _MonthLeave() when $default != null:
+return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfDays,_that.remainingHalfDays);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _MonthLeave implements MonthLeave {
+  const _MonthLeave({required this.year, this.totalDays, required this.usedHalfDays, required this.plannedHalfDays, this.remainingHalfDays});
+  
+
+@override final  int year;
+/// 그 해 총 연차(일). 없으면 "—" + 유도 줄.
+@override final  int? totalDays;
+/// 반일 단위. 미리 찍은 미래 날짜 포함.
+@override final  int usedHalfDays;
+/// 사용 중 오늘보다 뒤인 것(반일 단위). 0보다 크면 "예정 n일 포함".
+@override final  int plannedHalfDays;
+/// total×2 − used. 음수면 초과. total 없으면 null.
+@override final  int? remainingHalfDays;
+
+/// Create a copy of MonthLeave
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$MonthLeaveCopyWith<_MonthLeave> get copyWith => __$MonthLeaveCopyWithImpl<_MonthLeave>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthLeave&&(identical(other.year, year) || other.year == year)&&(identical(other.totalDays, totalDays) || other.totalDays == totalDays)&&(identical(other.usedHalfDays, usedHalfDays) || other.usedHalfDays == usedHalfDays)&&(identical(other.plannedHalfDays, plannedHalfDays) || other.plannedHalfDays == plannedHalfDays)&&(identical(other.remainingHalfDays, remainingHalfDays) || other.remainingHalfDays == remainingHalfDays));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,year,totalDays,usedHalfDays,plannedHalfDays,remainingHalfDays);
+}
+
+@override
+String toString() {
+    return 'MonthLeave(year: $year, totalDays: $totalDays, usedHalfDays: $usedHalfDays, plannedHalfDays: $plannedHalfDays, remainingHalfDays: $remainingHalfDays)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$MonthLeaveCopyWith<$Res> implements $MonthLeaveCopyWith<$Res> {
+  factory _$MonthLeaveCopyWith(_MonthLeave value, $Res Function(_MonthLeave) _then) = __$MonthLeaveCopyWithImpl;
+@override @useResult
+$Res call({
+ int year, int? totalDays, int usedHalfDays, int plannedHalfDays, int? remainingHalfDays
+});
+
+
+
+
+}
+/// @nodoc
+class __$MonthLeaveCopyWithImpl<$Res>
+    implements _$MonthLeaveCopyWith<$Res> {
+  __$MonthLeaveCopyWithImpl(this._self, this._then);
+
+  final _MonthLeave _self;
+  final $Res Function(_MonthLeave) _then;
+
+/// Create a copy of MonthLeave
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? year = null,Object? totalDays = freezed,Object? usedHalfDays = null,Object? plannedHalfDays = null,Object? remainingHalfDays = freezed,}) {
+  return _then(_MonthLeave(
+year: null == year ? _self.year : year // ignore: cast_nullable_to_non_nullable
+as int,totalDays: freezed == totalDays ? _self.totalDays : totalDays // ignore: cast_nullable_to_non_nullable
+as int?,usedHalfDays: null == usedHalfDays ? _self.usedHalfDays : usedHalfDays // ignore: cast_nullable_to_non_nullable
+as int,plannedHalfDays: null == plannedHalfDays ? _self.plannedHalfDays : plannedHalfDays // ignore: cast_nullable_to_non_nullable
+as int,remainingHalfDays: freezed == remainingHalfDays ? _self.remainingHalfDays : remainingHalfDays // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$MonthState {
 
- DateTime get month; List<List<MonthCell>> get weeks;
+ DateTime get month; List<List<MonthCell>> get weeks; MonthExtraWork? get extraWork; MonthLeave? get leave;
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -749,20 +1305,20 @@ $MonthStateCopyWith<MonthState> get copyWith => _$MonthStateCopyWithImpl<MonthSt
 @override
 bool operator ==(Object other) {
   final _this = this as MonthState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthState&&(identical(other.month, _this.month) || other.month == _this.month)&&const DeepCollectionEquality().equals(other.weeks, _this.weeks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthState&&(identical(other.month, _this.month) || other.month == _this.month)&&const DeepCollectionEquality().equals(other.weeks, _this.weeks)&&(identical(other.extraWork, _this.extraWork) || other.extraWork == _this.extraWork)&&(identical(other.leave, _this.leave) || other.leave == _this.leave));
 }
 
 
 @override
 int get hashCode {
   final _this = this as MonthState;
-  return Object.hash(runtimeType,_this.month,const DeepCollectionEquality().hash(_this.weeks));
+  return Object.hash(runtimeType,_this.month,const DeepCollectionEquality().hash(_this.weeks),_this.extraWork,_this.leave);
 }
 
 @override
 String toString() {
   final _this = this as MonthState;
-  return 'MonthState(month: ${_this.month}, weeks: ${_this.weeks})';
+  return 'MonthState(month: ${_this.month}, weeks: ${_this.weeks}, extraWork: ${_this.extraWork}, leave: ${_this.leave})';
 }
 
 
@@ -773,11 +1329,11 @@ abstract mixin class $MonthStateCopyWith<$Res>  {
   factory $MonthStateCopyWith(MonthState value, $Res Function(MonthState) _then) = _$MonthStateCopyWithImpl;
 @useResult
 $Res call({
- DateTime month, List<List<MonthCell>> weeks
+ DateTime month, List<List<MonthCell>> weeks, MonthExtraWork? extraWork, MonthLeave? leave
 });
 
 
-
+$MonthExtraWorkCopyWith<$Res>? get extraWork;$MonthLeaveCopyWith<$Res>? get leave;
 
 }
 /// @nodoc
@@ -790,14 +1346,40 @@ class _$MonthStateCopyWithImpl<$Res>
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? month = null,Object? weeks = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? month = null,Object? weeks = null,Object? extraWork = freezed,Object? leave = freezed,}) {
   return _then(MonthState(
 month: null == month ? _self.month : month // ignore: cast_nullable_to_non_nullable
 as DateTime,weeks: null == weeks ? _self.weeks : weeks // ignore: cast_nullable_to_non_nullable
-as List<List<MonthCell>>,
+as List<List<MonthCell>>,extraWork: freezed == extraWork ? _self.extraWork : extraWork // ignore: cast_nullable_to_non_nullable
+as MonthExtraWork?,leave: freezed == leave ? _self.leave : leave // ignore: cast_nullable_to_non_nullable
+as MonthLeave?,
   ));
 }
+/// Create a copy of MonthState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$MonthExtraWorkCopyWith<$Res>? get extraWork {
+    if (_self.extraWork == null) {
+    return null;
+  }
 
+  return $MonthExtraWorkCopyWith<$Res>(_self.extraWork!, (value) {
+    return _then(_self.copyWith(extraWork: value));
+  });
+}/// Create a copy of MonthState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$MonthLeaveCopyWith<$Res>? get leave {
+    if (_self.leave == null) {
+    return null;
+  }
+
+  return $MonthLeaveCopyWith<$Res>(_self.leave!, (value) {
+    return _then(_self.copyWith(leave: value));
+  });
+}
 }
 
 
@@ -879,10 +1461,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork? extraWork,  MonthLeave? leave)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MonthState() when $default != null:
-return $default(_that.month,_that.weeks);case _:
+return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
   return orElse();
 
 }
@@ -900,10 +1482,10 @@ return $default(_that.month,_that.weeks);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork? extraWork,  MonthLeave? leave)  $default,) {final _that = this;
 switch (_that) {
 case _MonthState():
-return $default(_that.month,_that.weeks);case _:
+return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -920,10 +1502,10 @@ return $default(_that.month,_that.weeks);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime month,  List<List<MonthCell>> weeks)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork? extraWork,  MonthLeave? leave)?  $default,) {final _that = this;
 switch (_that) {
 case _MonthState() when $default != null:
-return $default(_that.month,_that.weeks);case _:
+return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
   return null;
 
 }
@@ -935,7 +1517,7 @@ return $default(_that.month,_that.weeks);case _:
 
 
 class _MonthState implements MonthState {
-  const _MonthState({required this.month, required  List<List<MonthCell>> weeks}): _weeks = weeks;
+  const _MonthState({required this.month, required  List<List<MonthCell>> weeks, this.extraWork, this.leave}): _weeks = weeks;
   
 
 @override final  DateTime month;
@@ -946,6 +1528,8 @@ class _MonthState implements MonthState {
   return EqualUnmodifiableListView(_weeks);
 }
 
+@override final  MonthExtraWork? extraWork;
+@override final  MonthLeave? leave;
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
@@ -957,18 +1541,18 @@ _$MonthStateCopyWith<_MonthState> get copyWith => __$MonthStateCopyWithImpl<_Mon
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthState&&(identical(other.month, month) || other.month == month)&&const DeepCollectionEquality().equals(other.weeks, _weeks));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthState&&(identical(other.month, month) || other.month == month)&&const DeepCollectionEquality().equals(other.weeks, _weeks)&&(identical(other.extraWork, extraWork) || other.extraWork == extraWork)&&(identical(other.leave, leave) || other.leave == leave));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,month,const DeepCollectionEquality().hash(_weeks));
+    return Object.hash(runtimeType,month,const DeepCollectionEquality().hash(_weeks),extraWork,leave);
 }
 
 @override
 String toString() {
-    return 'MonthState(month: $month, weeks: $weeks)';
+    return 'MonthState(month: $month, weeks: $weeks, extraWork: $extraWork, leave: $leave)';
 }
 
 
@@ -979,11 +1563,11 @@ abstract mixin class _$MonthStateCopyWith<$Res> implements $MonthStateCopyWith<$
   factory _$MonthStateCopyWith(_MonthState value, $Res Function(_MonthState) _then) = __$MonthStateCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime month, List<List<MonthCell>> weeks
+ DateTime month, List<List<MonthCell>> weeks, MonthExtraWork? extraWork, MonthLeave? leave
 });
 
 
-
+@override $MonthExtraWorkCopyWith<$Res>? get extraWork;@override $MonthLeaveCopyWith<$Res>? get leave;
 
 }
 /// @nodoc
@@ -996,15 +1580,41 @@ class __$MonthStateCopyWithImpl<$Res>
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? month = null,Object? weeks = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? month = null,Object? weeks = null,Object? extraWork = freezed,Object? leave = freezed,}) {
   return _then(_MonthState(
 month: null == month ? _self.month : month // ignore: cast_nullable_to_non_nullable
 as DateTime,weeks: null == weeks ? _self._weeks : weeks // ignore: cast_nullable_to_non_nullable
-as List<List<MonthCell>>,
+as List<List<MonthCell>>,extraWork: freezed == extraWork ? _self.extraWork : extraWork // ignore: cast_nullable_to_non_nullable
+as MonthExtraWork?,leave: freezed == leave ? _self.leave : leave // ignore: cast_nullable_to_non_nullable
+as MonthLeave?,
   ));
 }
 
+/// Create a copy of MonthState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$MonthExtraWorkCopyWith<$Res>? get extraWork {
+    if (_self.extraWork == null) {
+    return null;
+  }
 
+  return $MonthExtraWorkCopyWith<$Res>(_self.extraWork!, (value) {
+    return _then(_self.copyWith(extraWork: value));
+  });
+}/// Create a copy of MonthState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$MonthLeaveCopyWith<$Res>? get leave {
+    if (_self.leave == null) {
+    return null;
+  }
+
+  return $MonthLeaveCopyWith<$Res>(_self.leave!, (value) {
+    return _then(_self.copyWith(leave: value));
+  });
+}
 }
 
 // dart format on
