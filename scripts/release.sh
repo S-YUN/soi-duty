@@ -24,6 +24,8 @@ TESTFLIGHT_GROUP="소이회사"
 export RBENV_VERSION="${FASTLANE_RUBY:-3.4.6}"
 # 비대화형 셸(에이전트·CI)에는 rbenv shims가 PATH에 없다 — 여기서 직접 앞에 둔다.
 [[ -d "$HOME/.rbenv/shims" ]] && export PATH="$HOME/.rbenv/shims:$PATH"
+# fastlane은 UTF-8 로케일이 아니면 한글 changelog에서 깨진다(비대화형 셸은 LANG이 비어 있다).
+export LC_ALL="${LC_ALL:-en_US.UTF-8}" LANG="${LANG:-en_US.UTF-8}"
 
 do_android=1
 do_ios=1
