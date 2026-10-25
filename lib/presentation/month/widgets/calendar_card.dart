@@ -10,7 +10,7 @@ import '../month_texts.dart';
 /// 캘린더 셀의 키. `test_driver`가 같은 규칙으로 만들어 셀을 찾는다.
 String calendarCellKey(DateTime date) => 'cell-${date.year}-${date.month}-${date.day}';
 
-/// 카드 A — 캘린더. 월요일 시작 7열. 날짜 숫자 뒤 원 색이 곧 유형(범례와 같은 색). 오늘 표시는 따로 없다.
+/// 카드 A — 캘린더. 7열, 시작 요일은 설정(기본 월요일). 날짜 숫자 뒤 원 색이 곧 유형(범례와 같은 색). 오늘 표시는 따로 없다.
 class CalendarCard extends StatelessWidget {
   const CalendarCard({super.key, required this.state, required this.onCellTap});
 
@@ -29,11 +29,11 @@ class CalendarCard extends StatelessWidget {
             padding: AppSizes.calendarHeaderPadding,
             child: Row(
               children: [
-                for (var i = 0; i < MonthTexts.weekdays.length; i++)
+                for (final cell in state.weeks.first)
                   Expanded(
                     child: Text(
-                      MonthTexts.weekdays[i],
-                      style: i >= DateTime.saturday - 1 ? AppTextStyles.calendarHeaderWeekend : AppTextStyles.calendarHeader,
+                      MonthTexts.weekday(cell.date),
+                      style: cell.isWeekend ? AppTextStyles.calendarHeaderWeekend : AppTextStyles.calendarHeader,
                       textAlign: TextAlign.center,
                     ),
                   ),

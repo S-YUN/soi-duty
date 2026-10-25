@@ -5,7 +5,8 @@ import 'month_state.dart';
 
 /// 월간 화면의 모든 문구.
 abstract final class MonthTexts {
-  static const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+  /// 요일 헤더 — 첫 주의 실제 날짜로 그린다(시작 요일 설정에 따라 월…일 또는 일…토).
+  static String weekday(DateTime d) => weekdayShort(d);
   static const legend = [
     (WorkType.halfDay, '반차'),
     (WorkType.dayOff, '연차'),

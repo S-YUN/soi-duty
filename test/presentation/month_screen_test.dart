@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
 import 'package:soi_duty/core/presentation/size_config.dart';
+import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/month/month_screen.dart';
@@ -38,6 +39,7 @@ void main() {
       now: d(16, 12),
       rules: rules,
       month: DateTime(2026, 9),
+      settings: const AppSettings(),
     );
     DateTime? tapped;
     await tester.pumpWidget(MaterialApp(
@@ -86,6 +88,7 @@ void main() {
         now: d(16, 12),
         rules: rules,
         month: DateTime(2026, 9),
+        settings: const AppSettings(),
       );
       await tester.pumpWidget(MaterialApp(
         theme: AppTheme.light,
@@ -123,6 +126,7 @@ void main() {
       now: d(16, 12),
       rules: rules,
       month: DateTime(2026, 9),
+      settings: const AppSettings(),
     );
     await tester.pumpWidget(MaterialApp(
       theme: AppTheme.light,
@@ -137,5 +141,38 @@ void main() {
         .widget<Container>(find.ancestor(of: find.text('11'), matching: find.byType(Container)).first)
         .decoration! as BoxDecoration;
     expect(circle.color, AppColors.typeColors(WorkType.businessTrip).$1);
+  });
+
+  testWidgets('요일 헤더 — 기본은 월…일, 일요일 시작이면 일…토 (주말 색 유지)', (tester) async {
+    tester.view.physicalSize = const Size(402 * 3, 874 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    Future<void> pump(AppSettings settings) => tester.pumpWidget(MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: MonthView(
+              state: buildMonthState(
+                records: [],
+                firstRecordDate: DateTime(2026, 8, 20),
+                now: d(16, 12),
+                rules: rules,
+                month: DateTime(2026, 9),
+                settings: settings,
+              ),
+              canGoPrev: true,
+              canGoNext: true,
+              onCellTap: (_) {},
+              onPrev: () {},
+              onNext: () {},
+            ),
+          ),
+        ));
+    await pump(const AppSettings());
+    expect(tester.getCenter(find.text('월')).dx, lessThan(tester.getCenter(find.text('일')).dx));
+    await pump(const AppSettings(weekStart: WeekStart.sunday));
+    expect(tester.getCenter(find.text('일')).dx, lessThan(tester.getCenter(find.text('월')).dx));
+    expect(tester.getCenter(find.text('토')).dx, greaterThan(tester.getCenter(find.text('금')).dx));
+    expect(tester.widget<Text>(find.text('일')).style?.color, AppColors.calendarWeekendNum);
+    expect(tester.widget<Text>(find.text('월')).style?.color, AppColors.subtle);
   });
 }

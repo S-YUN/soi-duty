@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../model/app_settings.dart';
 import '../model/work_record.dart';
 import '../model/work_type.dart';
 import 'week_summary.dart';
@@ -28,12 +29,18 @@ DateTime firstOfMonth(DateTime d) => DateTime(d.year, d.month);
 
 DateTime addMonths(DateTime month, int n) => DateTime(month.year, month.month + n);
 
-/// 월요일 시작, 앞뒤를 채운 완전한 주 단위 (4~6주 × 7일).
-List<DateTime> calendarDays(DateTime month) {
+/// 그 날이 속한 주의 시작일. 월요일 시작이면 [mondayOf], 일요일 시작이면 그 날 이전(포함) 가장 가까운 일요일.
+DateTime weekStartOf(DateTime d, WeekStart weekStart) => switch (weekStart) {
+      WeekStart.monday => mondayOf(d),
+      WeekStart.sunday => addDays(dateOnly(d), -(d.weekday % 7)),
+    };
+
+/// 앞뒤를 채운 완전한 주 단위 (4~6주 × 7일). 시작 요일은 월간 캘린더 설정 — 주 40시간 계산과 무관하다.
+List<DateTime> calendarDays(DateTime month, {WeekStart weekStart = WeekStart.monday}) {
   final first = firstOfMonth(month);
   final last = DateTime(first.year, first.month + 1, 0);
-  final start = mondayOf(first);
-  final end = addDays(mondayOf(last), 6);
+  final start = weekStartOf(first, weekStart);
+  final end = addDays(weekStartOf(last, weekStart), 6);
   return [for (var d = start; !d.isAfter(end); d = addDays(d, 1)) d];
 }
 

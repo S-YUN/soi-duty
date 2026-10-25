@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
+import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/work_record.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
@@ -11,12 +12,14 @@ import '../helpers/records.dart';
 
 void main() {
   const rules = WorkRules();
-  MonthState build(List<WorkRecord> records, {DateTime? month, DateTime? first}) => buildMonthState(
+  MonthState build(List<WorkRecord> records, {DateTime? month, DateTime? first, AppSettings settings = const AppSettings()}) =>
+      buildMonthState(
         records: records,
         firstRecordDate: first ?? DateTime(2026, 8, 20),
         now: d(16, 12),
         rules: rules,
         month: month ?? DateTime(2026, 9),
+        settings: settings,
       );
   MonthCell cell(MonthState s, DateTime date) => s.weeks.expand((w) => w).firstWhere((c) => c.date == date);
 
@@ -29,6 +32,14 @@ void main() {
     expect(cell(s, d(16)).isToday, isTrue);
     expect(cell(s, d(16)).isTodayWorking, isFalse); // 기록 없음 — 출근 전 오늘은 유형 전용 시트가 열린다
     expect(cell(s, d(15)).isTodayWorking, isFalse);
+  });
+
+  test('일요일 시작 — 첫 셀이 일요일, 설치 전 판정은 월요일 기준 그대로', () {
+    final s = build([], first: DateTime(2026, 9, 14), settings: const AppSettings(weekStart: WeekStart.sunday));
+    expect(s.weeks.first.first.date, DateTime(2026, 8, 30));
+    expect(s.weeks.first.first.date.weekday, DateTime.sunday);
+    expect(cell(s, DateTime(2026, 9, 13)).isBeforeFirstWeek, isTrue); // 첫 기록 주 월요일(9/14) 앞의 일요일
+    expect(cell(s, DateTime(2026, 9, 14)).isBeforeFirstWeek, isFalse);
   });
 
   test('값 판정', () {

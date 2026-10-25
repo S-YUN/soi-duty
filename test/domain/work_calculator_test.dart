@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/work_record.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/week_summary.dart';
@@ -395,6 +396,22 @@ void main() {
     });
     test('2026-08: 6주', () => expect(calendarDays(DateTime(2026, 8)).length, 42));
     test('2027-02: 2/1 월요일, 28일 → 딱 4주', () => expect(calendarDays(DateTime(2027, 2)).length, 28));
+    test('일요일 시작 — 2026-10은 9/27(일)부터 10/31(토)까지 35일', () {
+      final days = calendarDays(DateTime(2026, 10), weekStart: WeekStart.sunday);
+      expect(days.first, DateTime(2026, 9, 27));
+      expect(days.last, DateTime(2026, 10, 31));
+      expect(days.length, 35);
+    });
+    test('월요일 시작(기본) — 2026-10은 9/28부터 11/1까지', () {
+      final days = calendarDays(DateTime(2026, 10));
+      expect(days.first, DateTime(2026, 9, 28));
+      expect(days.last, DateTime(2026, 11, 1));
+    });
+    test('weekStartOf — 일요일 시작이면 그 날 이전 가장 가까운 일요일, 일요일 자신은 그대로', () {
+      expect(weekStartOf(DateTime(2026, 10, 1), WeekStart.sunday), DateTime(2026, 9, 27));
+      expect(weekStartOf(DateTime(2026, 9, 27), WeekStart.sunday), DateTime(2026, 9, 27));
+      expect(weekStartOf(DateTime(2026, 10, 1), WeekStart.monday), DateTime(2026, 9, 28));
+    });
   });
 
   group('공휴일 근무', () {

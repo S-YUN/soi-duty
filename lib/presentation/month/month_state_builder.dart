@@ -1,3 +1,4 @@
+import '../../domain/model/app_settings.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/navigation_bounds.dart';
@@ -5,13 +6,14 @@ import '../../domain/rules/work_calculator.dart';
 import '../../domain/rules/work_rules.dart';
 import 'month_state.dart';
 
-/// (기록 전체, 첫 기록일, 현재 시각, 규칙, 선택한 달) → 월간 화면 상태. 순수 함수.
+/// (기록 전체, 첫 기록일, 현재 시각, 규칙, 선택한 달, 설정) → 월간 화면 상태. 순수 함수.
 MonthState buildMonthState({
   required List<WorkRecord> records,
   required DateTime? firstRecordDate,
   required DateTime now,
   required WorkRules rules,
   required DateTime month,
+  required AppSettings settings,
 }) {
   final today = dateOnly(now);
   final start = firstOfMonth(month);
@@ -19,7 +21,7 @@ MonthState buildMonthState({
   final byDate = recordsByDate(records);
 
   final editableFrom = earliestMonday(firstRecordDate, today);
-  final cells = [for (final d in calendarDays(start)) _cell(d, byDate, start, today, editableFrom, rules)];
+  final cells = [for (final d in calendarDays(start, weekStart: settings.weekStart)) _cell(d, byDate, start, today, editableFrom, rules)];
   return MonthState(
     month: start,
     weeks: [for (var i = 0; i < cells.length; i += 7) cells.sublist(i, i + 7)],

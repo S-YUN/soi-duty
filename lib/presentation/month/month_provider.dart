@@ -15,5 +15,13 @@ Future<MonthState> monthState(Ref ref) async {
   final now = await ref.watch(nowProvider.future);
   final rules = ref.watch(workRulesProvider);
   final month = ref.watch(selectedMonthProvider);
-  return buildMonthState(records: records, firstRecordDate: firstRecordDate, now: now, rules: rules, month: month);
+  final settings = await ref.watch(appSettingsProvider.future);
+  return buildMonthState(
+    records: records,
+    firstRecordDate: firstRecordDate,
+    now: now,
+    rules: rules,
+    month: month,
+    settings: settings,
+  );
 }
