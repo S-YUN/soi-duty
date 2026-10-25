@@ -22,6 +22,8 @@ PLAY_TRACK=alpha
 TESTFLIGHT_GROUP="소이회사"
 # fastlane은 rbenv의 이 Ruby에만 깔려 있다 (system Ruby에는 없음).
 export RBENV_VERSION="${FASTLANE_RUBY:-3.4.6}"
+# 비대화형 셸(에이전트·CI)에는 rbenv shims가 PATH에 없다 — 여기서 직접 앞에 둔다.
+[[ -d "$HOME/.rbenv/shims" ]] && export PATH="$HOME/.rbenv/shims:$PATH"
 
 do_android=1
 do_ios=1
