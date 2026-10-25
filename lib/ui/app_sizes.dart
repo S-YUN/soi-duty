@@ -226,6 +226,8 @@ abstract final class AppSizes {
   static double get leaveCellsTop => 12.w;
   static EdgeInsets get leaveCellPadding => EdgeInsets.fromLTRB(4.w, 6.w, 4.w, 2.w);
   static double get leaveValueTop => 6.w;
+  /// "미입력"(15)은 값(18)보다 작아 위 여백을 2 더 줘 밑선을 맞춘다
+  static double get leaveNotEnteredTop => 8.w;
   static double get plannedLineTop => 3.w;
   static EdgeInsets get leaveDividerMargin => EdgeInsets.fromLTRB(0, 14.w, 0, 6.w);
 

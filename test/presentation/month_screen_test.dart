@@ -9,6 +9,7 @@ import 'package:soi_duty/presentation/month/month_screen.dart';
 import 'package:soi_duty/presentation/month/month_state.dart';
 import 'package:soi_duty/presentation/month/month_state_builder.dart';
 import 'package:soi_duty/presentation/month/widgets/calendar_card.dart';
+import 'package:soi_duty/presentation/month/widgets/extra_work_card.dart';
 import 'package:soi_duty/presentation/month/widgets/leave_card.dart';
 import 'package:soi_duty/ui/app_colors.dart';
 import 'package:soi_duty/ui/app_sizes.dart';
@@ -63,7 +64,7 @@ void main() {
 
     expect(find.text('2026년 9월'), findsOneWidget);
     expect(find.text('+31m'), findsOneWidget);
-    expect(find.text('공휴일'), findsOneWidget); // 범례만 — 셀은 원 색으로 구분
+    expect(find.text('공휴일'), findsNWidgets(2)); // 범례 + 수당 카드 행 — 셀은 원 색으로 구분
     expect(find.text('+10m'), findsOneWidget); // 반차도 값은 그대로
     BoxDecoration circleOf(String day) => tester
         .widget<Container>(find.ancestor(of: find.text(day), matching: find.byType(Container)).first)
@@ -217,28 +218,44 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     }
 
-    testWidgets('extraWork null이면 수당 카드 없음, leave null이면 연차 카드 없음', (tester) async {
+    testWidgets('값 없음 + 기록 없음 — 두 카드가 항상 보이고 "기록 없음"·"—"·"미입력"·"0일"로 구분된다', (tester) async {
       await pump(tester, base());
-      expect(find.text('9월 주말·공휴일 근무'), findsNothing);
-      expect(find.text('2026년 연차'), findsNothing);
+      expect(find.text('9월 주말·공휴일 근무'), findsOneWidget);
+      expect(find.text('기록 없음'), findsNWidgets(2)); // 주말 · 공휴일 행
+      expect(tester.widget<Text>(find.text('기록 없음').first).style?.color, AppColors.subtle);
+      expect(find.text('예상 금액'), findsOneWidget);
+      final amountNone = find.descendant(of: find.byType(ExtraWorkCard), matching: find.text('—'));
+      expect(amountNone, findsOneWidget);
+      expect(tester.widget<Text>(amountNone).style?.color, AppColors.weekendNone);
+      expect(find.text('시급을 알려주시면 예상 금액을 보여드려요'), findsOneWidget);
+      expect(find.text('2026년 연차'), findsOneWidget);
+      expect(find.text('미입력'), findsOneWidget);
+      expect(tester.widget<Text>(find.text('미입력')).style?.color, AppColors.subtle);
+      expect(find.text('0일'), findsOneWidget); // 기록으로 나온 0은 숫자
+      final remainNone = find.descendant(of: find.byType(LeaveCard), matching: find.text('—'));
+      expect(remainNone, findsOneWidget);
+      expect(tester.widget<Text>(remainNone).style?.color, AppColors.weekendNone);
+      expect(find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요'), findsOneWidget);
     });
 
-    testWidgets('수당 카드 — 주말 7h, 공휴일 0이면 공휴일 행 없음, payWon 206250 → "206,250원"', (tester) async {
+    testWidgets('수당 카드 — 주말 7h, 공휴일 0이면 "기록 없음", payWon 206250 → "206,250원"', (tester) async {
       await pump(tester, base().copyWith(extraWork: const MonthExtraWork(weekendMinutes: 420, holidayMinutes: 0, payWon: 206250)));
       expect(find.text('9월 주말·공휴일 근무'), findsOneWidget);
       expect(find.text('주말'), findsOneWidget);
       expect(find.text('7h'), findsOneWidget);
-      expect(find.text('공휴일'), findsOneWidget); // 범례만
+      expect(find.text('공휴일'), findsNWidgets(2)); // 범례 + 행
+      expect(find.text('기록 없음'), findsOneWidget);
       expect(find.text('예상 금액'), findsOneWidget);
       expect(find.text('206,250원'), findsOneWidget);
       expect(find.text('시급을 알려주시면 예상 금액을 보여드려요'), findsNothing);
     });
 
-    testWidgets('수당 카드 — payWon null이면 유도 줄, 탭 → onOpenWage', (tester) async {
+    testWidgets('수당 카드 — payWon null이면 금액 "—" + 유도 줄, 탭 → onOpenWage', (tester) async {
       await pump(tester, base().copyWith(extraWork: const MonthExtraWork(weekendMinutes: 60, holidayMinutes: 240)));
       expect(find.text('1h'), findsOneWidget);
       expect(find.text('4h'), findsOneWidget);
-      expect(find.text('예상 금액'), findsNothing);
+      expect(find.text('예상 금액'), findsOneWidget);
+      expect(find.descendant(of: find.byType(ExtraWorkCard), matching: find.text('—')), findsOneWidget);
       final nudge = find.text('시급을 알려주시면 예상 금액을 보여드려요');
       await tester.ensureVisible(nudge);
       await tester.pumpAndSettle();
@@ -274,9 +291,10 @@ void main() {
       expect(find.textContaining('예정'), findsNothing);
     });
 
-    testWidgets('연차 카드 — total null → "—" 둘 + 유도 줄, 탭 → onOpenAnnual', (tester) async {
+    testWidgets('연차 카드 — total null → 총 "미입력" · 잔여 "—" + 유도 줄, 탭 → onOpenAnnual', (tester) async {
       await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, usedHalfDays: 2, plannedHalfDays: 0)));
-      expect(find.descendant(of: find.byType(LeaveCard), matching: find.text('—')), findsNWidgets(2));
+      expect(find.text('미입력'), findsOneWidget);
+      expect(find.descendant(of: find.byType(LeaveCard), matching: find.text('—')), findsOneWidget);
       expect(find.text('1일'), findsOneWidget);
       final nudge = find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요');
       await tester.ensureVisible(nudge);

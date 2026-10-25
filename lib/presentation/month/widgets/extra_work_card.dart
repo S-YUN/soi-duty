@@ -8,7 +8,7 @@ import '../month_state.dart';
 import '../month_texts.dart';
 import 'nudge_row.dart';
 
-/// 그 달 주말·공휴일 근무 카드. 시간 행(0인 쪽은 생략) → 구분선 → 예상 금액 또는 시급 유도 줄.
+/// 그 달 주말·공휴일 근무 카드(항상). 주말·공휴일 두 행(0이면 "기록 없음") → 구분선 → 예상 금액(시급 없으면 "—") → 시급 없으면 유도 줄.
 class ExtraWorkCard extends StatelessWidget {
   const ExtraWorkCard({super.key, required this.extraWork, required this.title, required this.onTapNudge});
 
@@ -19,8 +19,8 @@ class ExtraWorkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = [
-      if (extraWork.weekendMinutes > 0) (MonthTexts.weekendLabel, MonthTexts.minutes(extraWork.weekendMinutes)),
-      if (extraWork.holidayMinutes > 0) (MonthTexts.holidayLabel, MonthTexts.minutes(extraWork.holidayMinutes)),
+      (MonthTexts.weekendLabel, extraWork.weekendMinutes),
+      (MonthTexts.holidayLabel, extraWork.holidayMinutes),
     ];
     final pay = extraWork.payWon;
     return Container(
@@ -38,25 +38,29 @@ class ExtraWorkCard extends StatelessWidget {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Expanded(child: Text(rows[i].$1, style: AppTextStyles.extraRowLabel)),
-                Text(rows[i].$2, style: AppTextStyles.extraRowValue),
+                if (rows[i].$2 > 0)
+                  Text(MonthTexts.minutes(rows[i].$2), style: AppTextStyles.extraRowValue)
+                else
+                  Text(MonthTexts.noRecord, style: AppTextStyles.extraRowNone),
               ],
             ),
           ],
           Container(margin: AppSizes.extraDividerMargin, height: AppSizes.summaryDivider, color: AppColors.rowDivider),
-          if (pay != null)
-            Padding(
-              padding: EdgeInsets.only(top: AppSizes.amountRowTop),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Expanded(child: Text(MonthTexts.amountLabel, style: AppTextStyles.extraRowLabel)),
-                  Text(MonthTexts.amount(pay), style: AppTextStyles.extraAmount),
-                ],
-              ),
-            )
-          else
-            NudgeRow(text: MonthTexts.wageNudge, onTap: onTapNudge),
+          Padding(
+            padding: EdgeInsets.only(top: AppSizes.amountRowTop),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(child: Text(MonthTexts.amountLabel, style: AppTextStyles.extraRowLabel)),
+                if (pay != null)
+                  Text(MonthTexts.amount(pay), style: AppTextStyles.extraAmount)
+                else
+                  Text(MonthTexts.none, style: AppTextStyles.extraAmountNone),
+              ],
+            ),
+          ),
+          if (pay == null) NudgeRow(text: MonthTexts.wageNudge, onTap: onTapNudge),
         ],
       ),
     );

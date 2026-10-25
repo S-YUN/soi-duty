@@ -155,6 +155,11 @@ abstract final class AppTextStyles {
   static TextStyle get extraRowLabel => _style(13.5, FontWeight.w400, color: AppColors.subtle);
   static TextStyle get extraRowValue => _style(15, FontWeight.w500);
   static TextStyle get extraAmount => _style(22, FontWeight.w600, letterSpacingEm: -0.02, color: AppColors.brand);
+  /// 빈 칸 표기 (2026-10-25): "기록 없음" 14 subtle · "—" 값 크기 weekendNone · "미입력" 15/500 subtle
+  static TextStyle get extraRowNone => _style(14, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get extraAmountNone => _style(22, FontWeight.w600, color: AppColors.weekendNone);
+  static TextStyle get leaveValueNone => _style(18, FontWeight.w600, color: AppColors.weekendNone);
+  static TextStyle get leaveTotalNotEntered => _style(15, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get nudge => _style(14, FontWeight.w500, height: 1.45, color: AppColors.brand);
   static TextStyle get plannedLine => _style(12, FontWeight.w400, color: AppColors.subtle);
 

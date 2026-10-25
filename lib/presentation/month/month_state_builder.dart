@@ -30,10 +30,10 @@ MonthState buildMonthState({
   );
 }
 
-MonthExtraWork? _extraWork(List<WorkRecord> records, DateTime month, AppSettings settings, WorkRules rules) {
+/// 카드는 항상 있다(기능을 알리는 쪽, 2026-10-25). 빈 값의 표기는 위젯이 맡는다.
+MonthExtraWork _extraWork(List<WorkRecord> records, DateTime month, AppSettings settings, WorkRules rules) {
   final (:weekendMinutes, :holidayMinutes) = extraWorkMinutesOfMonth(records, month, rules);
   final total = weekendMinutes + holidayMinutes;
-  if (total == 0) return null;
   final wage = settings.hourlyWage;
   return MonthExtraWork(
     weekendMinutes: weekendMinutes,
@@ -42,10 +42,9 @@ MonthExtraWork? _extraWork(List<WorkRecord> records, DateTime month, AppSettings
   );
 }
 
-MonthLeave? _leave(List<WorkRecord> records, int year, DateTime today, AppSettings settings) {
+MonthLeave _leave(List<WorkRecord> records, int year, DateTime today, AppSettings settings) {
   final total = settings.annualLeaveDaysOf(year);
   final used = usedLeaveHalfDays(records, year);
-  if (total == null && used == 0) return null;
   return MonthLeave(
     year: year,
     totalDays: total,

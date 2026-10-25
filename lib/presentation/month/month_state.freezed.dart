@@ -1293,7 +1293,7 @@ as int?,
 /// @nodoc
 mixin _$MonthState {
 
- DateTime get month; List<List<MonthCell>> get weeks; MonthExtraWork? get extraWork; MonthLeave? get leave;
+ DateTime get month; List<List<MonthCell>> get weeks; MonthExtraWork get extraWork; MonthLeave get leave;
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1329,11 +1329,11 @@ abstract mixin class $MonthStateCopyWith<$Res>  {
   factory $MonthStateCopyWith(MonthState value, $Res Function(MonthState) _then) = _$MonthStateCopyWithImpl;
 @useResult
 $Res call({
- DateTime month, List<List<MonthCell>> weeks, MonthExtraWork? extraWork, MonthLeave? leave
+ DateTime month, List<List<MonthCell>> weeks, MonthExtraWork extraWork, MonthLeave leave
 });
 
 
-$MonthExtraWorkCopyWith<$Res>? get extraWork;$MonthLeaveCopyWith<$Res>? get leave;
+$MonthExtraWorkCopyWith<$Res> get extraWork;$MonthLeaveCopyWith<$Res> get leave;
 
 }
 /// @nodoc
@@ -1346,37 +1346,31 @@ class _$MonthStateCopyWithImpl<$Res>
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? month = null,Object? weeks = null,Object? extraWork = freezed,Object? leave = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? month = null,Object? weeks = null,Object? extraWork = null,Object? leave = null,}) {
   return _then(MonthState(
 month: null == month ? _self.month : month // ignore: cast_nullable_to_non_nullable
 as DateTime,weeks: null == weeks ? _self.weeks : weeks // ignore: cast_nullable_to_non_nullable
-as List<List<MonthCell>>,extraWork: freezed == extraWork ? _self.extraWork : extraWork // ignore: cast_nullable_to_non_nullable
-as MonthExtraWork?,leave: freezed == leave ? _self.leave : leave // ignore: cast_nullable_to_non_nullable
-as MonthLeave?,
+as List<List<MonthCell>>,extraWork: null == extraWork ? _self.extraWork : extraWork // ignore: cast_nullable_to_non_nullable
+as MonthExtraWork,leave: null == leave ? _self.leave : leave // ignore: cast_nullable_to_non_nullable
+as MonthLeave,
   ));
 }
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$MonthExtraWorkCopyWith<$Res>? get extraWork {
-    if (_self.extraWork == null) {
-    return null;
-  }
-
-  return $MonthExtraWorkCopyWith<$Res>(_self.extraWork!, (value) {
+$MonthExtraWorkCopyWith<$Res> get extraWork {
+  
+  return $MonthExtraWorkCopyWith<$Res>(_self.extraWork, (value) {
     return _then(_self.copyWith(extraWork: value));
   });
 }/// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$MonthLeaveCopyWith<$Res>? get leave {
-    if (_self.leave == null) {
-    return null;
-  }
-
-  return $MonthLeaveCopyWith<$Res>(_self.leave!, (value) {
+$MonthLeaveCopyWith<$Res> get leave {
+  
+  return $MonthLeaveCopyWith<$Res>(_self.leave, (value) {
     return _then(_self.copyWith(leave: value));
   });
 }
@@ -1461,7 +1455,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork? extraWork,  MonthLeave? leave)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork extraWork,  MonthLeave leave)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MonthState() when $default != null:
 return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
@@ -1482,7 +1476,7 @@ return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork? extraWork,  MonthLeave? leave)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork extraWork,  MonthLeave leave)  $default,) {final _that = this;
 switch (_that) {
 case _MonthState():
 return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
@@ -1502,7 +1496,7 @@ return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork? extraWork,  MonthLeave? leave)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime month,  List<List<MonthCell>> weeks,  MonthExtraWork extraWork,  MonthLeave leave)?  $default,) {final _that = this;
 switch (_that) {
 case _MonthState() when $default != null:
 return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
@@ -1517,7 +1511,7 @@ return $default(_that.month,_that.weeks,_that.extraWork,_that.leave);case _:
 
 
 class _MonthState implements MonthState {
-  const _MonthState({required this.month, required  List<List<MonthCell>> weeks, this.extraWork, this.leave}): _weeks = weeks;
+  const _MonthState({required this.month, required  List<List<MonthCell>> weeks, required this.extraWork, required this.leave}): _weeks = weeks;
   
 
 @override final  DateTime month;
@@ -1528,8 +1522,8 @@ class _MonthState implements MonthState {
   return EqualUnmodifiableListView(_weeks);
 }
 
-@override final  MonthExtraWork? extraWork;
-@override final  MonthLeave? leave;
+@override final  MonthExtraWork extraWork;
+@override final  MonthLeave leave;
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
@@ -1563,11 +1557,11 @@ abstract mixin class _$MonthStateCopyWith<$Res> implements $MonthStateCopyWith<$
   factory _$MonthStateCopyWith(_MonthState value, $Res Function(_MonthState) _then) = __$MonthStateCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime month, List<List<MonthCell>> weeks, MonthExtraWork? extraWork, MonthLeave? leave
+ DateTime month, List<List<MonthCell>> weeks, MonthExtraWork extraWork, MonthLeave leave
 });
 
 
-@override $MonthExtraWorkCopyWith<$Res>? get extraWork;@override $MonthLeaveCopyWith<$Res>? get leave;
+@override $MonthExtraWorkCopyWith<$Res> get extraWork;@override $MonthLeaveCopyWith<$Res> get leave;
 
 }
 /// @nodoc
@@ -1580,13 +1574,13 @@ class __$MonthStateCopyWithImpl<$Res>
 
 /// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? month = null,Object? weeks = null,Object? extraWork = freezed,Object? leave = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? month = null,Object? weeks = null,Object? extraWork = null,Object? leave = null,}) {
   return _then(_MonthState(
 month: null == month ? _self.month : month // ignore: cast_nullable_to_non_nullable
 as DateTime,weeks: null == weeks ? _self._weeks : weeks // ignore: cast_nullable_to_non_nullable
-as List<List<MonthCell>>,extraWork: freezed == extraWork ? _self.extraWork : extraWork // ignore: cast_nullable_to_non_nullable
-as MonthExtraWork?,leave: freezed == leave ? _self.leave : leave // ignore: cast_nullable_to_non_nullable
-as MonthLeave?,
+as List<List<MonthCell>>,extraWork: null == extraWork ? _self.extraWork : extraWork // ignore: cast_nullable_to_non_nullable
+as MonthExtraWork,leave: null == leave ? _self.leave : leave // ignore: cast_nullable_to_non_nullable
+as MonthLeave,
   ));
 }
 
@@ -1594,24 +1588,18 @@ as MonthLeave?,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$MonthExtraWorkCopyWith<$Res>? get extraWork {
-    if (_self.extraWork == null) {
-    return null;
-  }
-
-  return $MonthExtraWorkCopyWith<$Res>(_self.extraWork!, (value) {
+$MonthExtraWorkCopyWith<$Res> get extraWork {
+  
+  return $MonthExtraWorkCopyWith<$Res>(_self.extraWork, (value) {
     return _then(_self.copyWith(extraWork: value));
   });
 }/// Create a copy of MonthState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$MonthLeaveCopyWith<$Res>? get leave {
-    if (_self.leave == null) {
-    return null;
-  }
-
-  return $MonthLeaveCopyWith<$Res>(_self.leave!, (value) {
+$MonthLeaveCopyWith<$Res> get leave {
+  
+  return $MonthLeaveCopyWith<$Res>(_self.leave, (value) {
     return _then(_self.copyWith(leave: value));
   });
 }

@@ -33,6 +33,8 @@ abstract final class MonthTexts {
   static const weekendLabel = '주말';
   static const holidayLabel = '공휴일';
   static const amountLabel = '예상 금액';
+  /// 계산은 되지만 그 기간 기록이 없음 (주말·공휴일 행)
+  static const noRecord = '기록 없음';
   static const wageNudge = '시급을 알려주시면 예상 금액을 보여드려요';
   static String minutes(int m) => formatHm(m);
   static String amount(int won) => formatWon(won);
@@ -43,7 +45,10 @@ abstract final class MonthTexts {
   static const leaveUsedLabel = '사용';
   static const leaveRemainLabel = '잔여';
   static const leaveOverLabel = '초과';
+  /// 입력값이 없어 계산할 수 없는 값 (잔여 연차 · 예상 금액)
   static const none = '—';
+  /// 사용자가 넣는 값을 아직 안 넣음 (총 연차)
+  static const notEntered = '미입력';
   static String days(int halfDays) => formatLeaveDays(halfDays);
   static String plannedLine(int halfDays) => '예정 ${formatLeaveDays(halfDays)} 포함';
   static const leaveNudge = '올해 연차 개수를 알려주시면 남은 연차를 보여드려요';

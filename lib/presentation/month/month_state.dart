@@ -32,7 +32,7 @@ abstract class MonthCell with _$MonthCell {
   }) = _MonthCell;
 }
 
-/// 그 달 주말·공휴일 근무 카드. 합계가 0인 달은 카드 자체가 없다(null).
+/// 그 달 주말·공휴일 근무 카드. 항상 보인다 — 근무가 없으면 행에 "기록 없음", 시급이 없으면 금액 "—" + 유도 줄.
 @freezed
 abstract class MonthExtraWork with _$MonthExtraWork {
   const factory MonthExtraWork({
@@ -43,7 +43,7 @@ abstract class MonthExtraWork with _$MonthExtraWork {
   }) = _MonthExtraWork;
 }
 
-/// 그 해 연차 카드. 총 연차도 없고 사용도 0이면 카드가 없다(null).
+/// 그 해 연차 카드. 항상 보인다 — 총 연차가 없으면 "미입력" · 잔여 "—" + 유도 줄, 사용 0은 숫자 "0일".
 @freezed
 abstract class MonthLeave with _$MonthLeave {
   const factory MonthLeave({
@@ -64,7 +64,7 @@ abstract class MonthState with _$MonthState {
   const factory MonthState({
     required DateTime month,
     required List<List<MonthCell>> weeks,
-    MonthExtraWork? extraWork,
-    MonthLeave? leave,
+    required MonthExtraWork extraWork,
+    required MonthLeave leave,
   }) = _MonthState;
 }
