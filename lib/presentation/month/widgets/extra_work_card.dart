@@ -56,7 +56,7 @@ class ExtraWorkCard extends StatelessWidget {
                 if (pay != null)
                   Text(MonthTexts.amount(pay), style: AppTextStyles.extraAmount)
                 else
-                  Text(MonthTexts.none, style: AppTextStyles.extraAmountNone),
+                  Text(MonthTexts.none, style: AppTextStyles.valueNone),
               ],
             ),
           ),

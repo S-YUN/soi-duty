@@ -248,7 +248,8 @@ void main() {
       expect(find.text('예상 금액'), findsOneWidget);
       final amountNone = find.descendant(of: find.byType(ExtraWorkCard), matching: find.text('—'));
       expect(amountNone, findsOneWidget);
-      expect(tester.widget<Text>(amountNone).style?.color, AppColors.weekendNone);
+      expect(tester.widget<Text>(amountNone).style?.color, AppColors.subtle);
+      expect(tester.widget<Text>(amountNone).style?.fontSize, AppTextStyles.extraRowLabel.fontSize! / 13.5 * 15);
       expect(find.text('시급을 알려주시면 예상 금액을 보여드려요'), findsOneWidget);
       expect(find.text('2026년 연차'), findsOneWidget);
       expect(find.text('미입력'), findsOneWidget);
@@ -256,7 +257,10 @@ void main() {
       expect(find.text('0일'), findsOneWidget); // 기록으로 나온 0은 숫자
       final remainNone = find.descendant(of: find.byType(LeaveCard), matching: find.text('—'));
       expect(remainNone, findsOneWidget);
-      expect(tester.widget<Text>(remainNone).style?.color, AppColors.weekendNone);
+      expect(tester.widget<Text>(remainNone).style?.color, AppColors.subtle);
+      expect(tester.widget<Text>(remainNone).style?.fontWeight, FontWeight.w400);
+      // 작은 글자(15)라 위 여백을 2 더 줘 "미입력"과 같은 선에 — 두 칸의 글자 밑선이 같다
+      expect(tester.getBottomLeft(remainNone).dy, closeTo(tester.getBottomLeft(find.text('미입력')).dy, 0.5));
       expect(find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요'), findsOneWidget);
     });
 

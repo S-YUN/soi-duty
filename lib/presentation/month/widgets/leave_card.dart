@@ -21,7 +21,7 @@ class LeaveCard extends StatelessWidget {
     final total = leave.totalDays;
     final remaining = leave.remainingHalfDays;
     final over = remaining != null && remaining < 0;
-    final noneStyle = AppTextStyles.leaveValueNone;
+    final noneStyle = AppTextStyles.valueNone;
     final cells = [
       (MonthTexts.leaveTotalLabel, total == null ? MonthTexts.notEntered : MonthTexts.days(total * 2), total == null ? AppTextStyles.leaveTotalNotEntered : AppTextStyles.summaryValue, null),
       (MonthTexts.leaveUsedLabel, MonthTexts.days(leave.usedHalfDays), AppTextStyles.summaryValue, leave.plannedHalfDays > 0 ? MonthTexts.plannedLine(leave.plannedHalfDays) : null),
@@ -52,7 +52,12 @@ class LeaveCard extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(cells[i].$1, style: AppTextStyles.summaryLabel),
-                          SizedBox(height: i == 0 && total == null ? AppSizes.leaveNotEnteredTop : AppSizes.leaveValueTop),
+                          // "미입력"·"—"는 작은 글자라 위 여백을 더 줘 숫자 칸과 밑선을 맞춘다
+                          SizedBox(
+                            height: cells[i].$3.fontSize == AppTextStyles.summaryValue.fontSize
+                                ? AppSizes.leaveValueTop
+                                : AppSizes.leaveSmallValueTop,
+                          ),
                           Text(cells[i].$2, style: cells[i].$3),
                           if (cells[i].$4 != null) ...[
                             SizedBox(height: AppSizes.plannedLineTop),
