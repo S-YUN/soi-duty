@@ -487,3 +487,7 @@ iOS는 TestFlight 외부 그룹 `소이회사`(공개 링크)에도 배포한다
 App Store Connect 팀 키·Play 서비스 계정을 쓴다. fastlane은 rbenv Ruby 3.4.6에만 있어 스크립트가 `RBENV_VERSION`을 잡는다.
 iOS 서명은 Xcode 자동 서명(이 맥의 Xcode 계정)이고 `ios/ExportOptions.plist`가 내보내기 설정.
 `ITSAppUsesNonExemptEncryption = false`는 업로드마다 수출 규정 질문에 멈추지 않게 하려는 것.
+스크립트는 rbenv shims와 UTF-8 로케일을 스스로 잡는다(비대화형 셸에서 fastlane을 못 찾거나 한글 노트가 깨지던 문제, 2026-10-25).
+업로드는 됐는데 changelog·외부 그룹 배포 단계만 실패했으면 다시 빌드하지 말고 배포만 한다:
+`fastlane run upload_to_testflight api_key_path:<json> app_identifier:com.nuyoes.soiduty app_platform:ios distribute_only:true app_version:1.0.2 build_number:4 distribute_external:true groups:소이회사 changelog:"..."`
+(`app_platform`을 빼면 비대화형에서 플랫폼을 물어보다 멈춘다).
