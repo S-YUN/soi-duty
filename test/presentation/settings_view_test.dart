@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/presentation/settings/settings_screen.dart';
+import 'package:soi_duty/presentation/shared/stroke_icons.dart';
+import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/fonts.dart';
@@ -95,5 +97,14 @@ void main() {
       await pump(tester, const AppSettings(), width: w);
       expect(tester.takeException(), isNull, reason: 'width $w empty');
     }
+  });
+
+  testWidgets('뒤로가기 화살표가 화면 왼쪽(8 + 16)에 그려지고 제목은 화면 가운데', (tester) async {
+    await pump(tester, const AppSettings());
+    final arrow = tester.getRect(find.byType(BackArrowIcon));
+    expect(arrow.width, AppSizes.backArrow.width);
+    expect(arrow.left, closeTo(AppSizes.settingsBackLeft + (AppSizes.gearSize - AppSizes.backArrow.width) / 2, 0.5));
+    expect(tester.getCenter(find.text('설정')).dx, closeTo(201, 0.5));
+    expect(tester.getCenter(find.text('설정')).dy, closeTo(tester.getCenter(find.byType(BackArrowIcon)).dy, 0.5));
   });
 }

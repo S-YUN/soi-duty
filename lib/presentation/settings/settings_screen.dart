@@ -154,7 +154,9 @@ class SettingsView extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.only(top: AppSizes.topInset),
+              // 폭을 화면 전체로 — Stack은 배치 안 된 자식(제목) 크기로 줄어들어 뒤로가기가 제목 옆에 붙는다.
               child: SizedBox(
+                width: double.infinity,
                 height: AppSizes.settingsHeader,
                 child: Stack(
                   alignment: Alignment.center,

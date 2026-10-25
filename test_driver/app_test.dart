@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_driver/flutter_driver.dart';
 import 'package:test/test.dart';
 
-/// 시드 → 주간 → 월간 → 시트를 눌러보고 docs/screenshots/에 남기는 스모크 드라이브.
+/// 시드 → 주간 → 월간(카드 포함) → 시트 → 설정을 눌러보고 docs/screenshots/에 남기는 스모크 드라이브.
 /// 실행: `flutter drive --flavor dev --target test_driver/app.dart -d 시뮬레이터ID`
 void main() {
   late FlutterDriver driver;
@@ -16,6 +16,10 @@ void main() {
   bool isWeekday(DateTime d) => d.weekday <= DateTime.friday;
 
   final today = DateTime.now();
+  // 월간 타이틀도 실행 시점 기준 — 달 이름을 박아 두면 달이 바뀔 때 깨진다 (2026-10-25에 실제로 깨졌다).
+  String monthTitle(DateTime m) => '${m.year}년 ${m.month}월';
+  final thisMonth = DateTime(today.year, today.month);
+  final prevMonth = DateTime(today.year, today.month - 1);
   /// 이번 달의 지난 평일 하나 (기록이 있는 날 — 시드가 두 달치를 채운다).
   final pastWeekday = () {
     for (var day = today.day - 1; day >= 1; day--) {
@@ -60,11 +64,18 @@ void main() {
     await driver.waitFor(find.text('토'));
     await shot('month-current');
     await driver.tap(find.text('◀'));
-    await driver.waitFor(find.text('2026년 8월'));
+    await driver.waitFor(find.text(monthTitle(prevMonth)));
     await shot('month-previous');
     await driver.tap(find.text('▶'));
     // 상태 변경은 다음 프레임에 애니메이션을 시작하므로, 타이틀 갱신을 본 뒤에 애니메이션 종료를 기다린다.
-    await driver.waitFor(find.text('2026년 9월'));
+    await driver.waitFor(find.text(monthTitle(thisMonth)));
+    await driver.waitUntilNoTransientCallbacks();
+
+    // 범례 아래 카드(수당 · 연차) — 시드가 올해 총 연차 15 · 시급 12,500을 넣어 연차 카드는 항상 있다.
+    await driver.scroll(find.byType('CalendarCard'), 0, -700, const Duration(milliseconds: 400));
+    await driver.waitFor(find.text('${today.year}년 연차'));
+    await shot('month-cards');
+    await driver.scroll(find.byType('CalendarCard'), 0, 700, const Duration(milliseconds: 400));
     await driver.waitUntilNoTransientCallbacks();
 
     // 퇴근 전 오늘을 탭하면 시트 대신 토스트
@@ -103,6 +114,18 @@ void main() {
     }
 
     await driver.tap(find.text('오늘'));
+    await driver.waitFor(find.text('퇴근하기'));
+
+    // 설정: 톱니 → 화면 → 시급 시트(OS 키패드 위) → 저장 → 뒤로
+    await driver.tap(find.byTooltip('설정'));
+    await driver.waitFor(find.text('올해 총 연차'));
+    await shot('settings');
+    await driver.tap(find.text('시급'));
+    await driver.waitFor(find.text('이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.'));
+    await shot('settings-wage-sheet');
+    await driver.tap(find.text('저장'));
+    await driver.waitForAbsent(find.text('이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.'));
+    await driver.tap(find.byTooltip('뒤로'));
     await driver.waitFor(find.text('퇴근하기'));
   });
 }

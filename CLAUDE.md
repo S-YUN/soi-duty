@@ -141,6 +141,29 @@
 잔여 시간은 1분 단위로 줄어든다. "n분째 근무중"도 분 단위다 — 초 단위로 바꿔도 부담은 없지만
 그대로 두기로 했다 (2026-09-18).
 
+### 연차 (2026-10-25)
+
+```
+사용(반일 단위) = Σ 연차 × 2 + Σ 반차 × 1   — 그 해 전체, 미리 찍은 미래 날짜 포함
+예정             = 그중 날짜가 오늘보다 뒤인 것 (오늘은 예정이 아니다)
+잔여             = 그 해 총 연차 × 2 − 사용      — 예정 포함해서 뺀다. 음수면 "초과"
+```
+
+- 총 연차는 사용자가 설정에서 넣는 값이고 **해마다 따로 저장**한다(`annual_leave_days_<year>`). 새해에 고친 값이 지난해 카드를 바꾸지 않게.
+  없는 해는 "사용 안 함" — 월간 카드가 "—" + 유도 줄로 입력을 유도한다. 기준 기간은 1월~12월 고정.
+- 월간 탭 연차 카드의 해 = **보고 있는 달이 속한 해**. 카드 유도 줄에서 저장하면 그 해에 저장된다.
+
+### 주말·공휴일 수당 (2026-10-25)
+
+```
+주말 분   = Σ 그 달 토·일 기록 중 출퇴근 둘 다 있는 날의 실근무 (점심 공제 없음)
+공휴일 분 = Σ 그 달 평일 공휴일 기록 중 출퇴근 둘 다 있는 날의 실근무 (점심 공제 없음)
+예상 금액 = floor((주말 분 + 공휴일 분) ÷ 60 × 시급 × WorkRules.extraWorkPayMultiplier)   — 1.5 고정, 사용자 설정 아님
+```
+
+- 급여 기간은 달력 월. 근무 중인 오늘은 넣지 않는다(찍힌 시간만). 시급은 설정의 옵트인 값 — 없으면 시간만 보이고 유도 줄.
+- 이것은 주 단위 리셋과 무관한 **월별 합산**이라 "월간 초과/부족 합계 금지"에 해당하지 않는다.
+
 ### 첫 기록일
 
 최초 기록을 저장하는 시점에 별도로 저장한다. DB에서 파생하지 않는다.
@@ -194,6 +217,8 @@
   (KS X ISO 8601 관례. 8/31–9/6은 "9월 1째주", 9/28–10/4는 "10월 1째주").
 - **월간**: 첫 기록 달 ~ **올해 12월**. 연차·공휴일을 연말까지 미리 찍기 위한 것이고, 해가 바뀌면 새해 12월까지
   열린다. 타이틀은 "2026년 9월".
+- **월간 캘린더 시작 요일**은 설정(월/일, 기본 월요일). 요일 헤더는 첫 주의 실제 날짜로 그린다. 바뀌는 건 월간 캘린더 열 순서뿐 —
+  주간 탭, 주 40시간 계산, "n월 n째주", 설치 전 날짜 판정(`earliestMonday`)은 월~일 고정 (2026-10-25).
 - **이동은 화살표로만.** 스와이프는 오늘/주간/월간 탭 전환 전용이다. 캘린더 안 스와이프로 달을 넘기는 것은
   탭 스와이프와 겹쳐 어색해서 만들었다가 뺐다 (2026-09-18).
 
@@ -213,6 +238,7 @@ class WorkRules {
     this.deductionStepMinutes   = 10,       // 시간공제 휠 분 단위
     this.defaultClockInMinutes  = 8 * 60,   // 시트에서 빈 행을 열 때 휠의 시작 시각
     this.defaultClockOutMinutes = 17 * 60,
+    this.extraWorkPayMultiplier = 1.5,     // 주말·공휴일 수당 배율 (테스트 회사 규정, 사용자 설정 아님)
   });
 }
 ```
@@ -247,6 +273,10 @@ class WorkRecord with _$WorkRecord {
   `dart run drift_dev schema generate drift_schemas/ test/generated_migrations/`로 덤프·검증 코드를 만들고
   `test/data/migration_test.dart`에 이전 버전 데이터 보존 테스트를 추가한다.
 
+- **사용자 설정 `AppSettings`**(2026-10-25)는 기존 `Settings`(key/value) 테이블에 키로 저장한다 — 스키마 변경 없음(v2 유지).
+  키: `week_start`(`monday`|`sunday`) · `annual_leave_days_<year>` · `hourly_wage` · `last_export_date`(`yyyy-MM-dd`). null은 행 삭제.
+  `first_record_date`도 같은 테이블이지만 소유자는 `WorkRecordRepository`. 저장소는 `AppSettingsRepository`(포트) / `DriftAppSettingsRepository`.
+  **저장소 코드에서 Drift `watch().first`를 쓰지 않는다** — 위젯 테스트의 가짜 시간에서 첫 값이 나오지 않고 `db.close`까지 멈춘다. 일회성은 `get()`.
 - **주말 근무도 `normal`로 저장한다.** 주말 여부는 `date.weekday`로 판단하고
   집계에서 필터링한다. `enum`에 주말을 넣지 않는다 — 날짜만 보면 알 수 있는 정보다.
 - **파생값은 저장하지 않는다.** 근무시간·잔여시간·기준 대비는 항상 계산으로 도출한다.
@@ -264,20 +294,29 @@ class WorkRecord with _$WorkRecord {
 - **로컬 저장: Drift** — 쿼리 결과를 스트림으로 흘려주므로 `StreamProvider`와 맞물린다.
   한 화면에서 기록을 고치면 다른 화면의 집계가 자동 갱신되는 게 이 앱의 핵심 요구사항이다.
 - **반응형 사이즈: 커스텀 SizeConfig** (비율 기반)
+- **플랫폼 패키지**: `share_plus`(내보내기 공유 시트) · `file_picker`(가져오기) · `path_provider`(임시 파일) · `package_info_plus`(버전) · `url_launcher`(처리방침; Android `<queries>` https)
 - **아키텍처: Clean Architecture** (presentation / domain / data)
   UseCase 레이어는 두지 않아도 되지만 필요하다면 사용해도 괜찮다. 
 
 ### Repository
 
-Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구현이 붙을 때를 위한 것이다.
-**백업·내보내기는 아직 없다** (2026-09-25). 완전 로컬이라 앱을 지우면 기록도 사라진다 — 남은 가장 큰 공백이다.
+Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettingsRepository` · `BackupRepository` 셋, 구현은 전부 Drift.
+
+**백업 = JSON 파일 내보내기/가져오기** (2026-10-25). 서버·계정 없음. `domain/backup/backup_codec.dart`가 파일 형식(`app: "soi_duty"`, `format: 1`,
+`firstRecordDate`, `settings{weekStart, annualLeaveDaysByYear, hourlyWage}`, `records[WorkRecord.toJson]`)을 맡고, `DriftBackupRepository.restore`가
+한 트랜잭션에서 기록 전부 교체 · 첫 기록일(파일 값 ?? 최소 날짜 ?? 삭제) · 설정 세 값 덮어쓰기(`last_export_date`는 기기 값이라 유지)를 한다.
+내보내기는 임시 파일 `soi_duty_backup_yyyy-MM-dd.json` → OS 공유 시트(`share_plus`), 닫지 않았으면 마지막 내보내기 날짜를 오늘로.
+가져오기는 OS 파일 선택(`file_picker`) → 디코드 실패 토스트 / 확인 다이얼로그("지금 기록 n건이 …") → 복원 → 토스트. 파일 I/O는
+`presentation/settings/backup_files.dart`의 `BackupFiles` 뒤에 있어 테스트는 Fake로 바꾼다. 같은 OS끼리의 폰 교체는 OS 백업(iCloud·Google)으로도
+따라올 수 있지만 검증하지 않았다 — 내보내기가 확실한 길이다.
 
 **Fake 구현체는 만들지 않는다.** Fake는 보통 UI를 미완성 데이터 소스에서 떼어놓기
 위한 것인데, Drift는 로컬이라 항상 준비돼 있고 네트워크 대기도 실패도 없다.
 테스트가 필요하면 `NativeDatabase.memory()` 로 실제 Drift를 인메모리 구동한다.
 
 대신 **디버그용 시드 함수**와 **디버그 시계 이동**(`DebugClockOffset` — 실제 시각에 오프셋을 더해 `clockProvider`가 돌려준다)을 둔다.
-날짜 헤더를 길게 누르면 요일·시각을 옮기고 시드를 넣을 수 있다. 시드는 옮긴 시계 기준으로 들어간다. 오늘 화면의 상태들, 첫 주 예외,
+날짜 헤더를 길게 누르면 요일·시각을 옮기고 시드를 넣을 수 있다. 시드는 옮긴 시계 기준으로 들어간다. 시드는 기록·첫 기록일만 바꾸고 사용자 설정은 두되,
+'두 달치 기록'은 올해 총 연차 15 · 시급 12,500을 함께 넣는다. 오늘 화면의 상태들, 첫 주 예외,
 기록 누락이 있는 주 같은 상황을 손으로 만들지 않고 바로 확인하기 위한 것이다.
 릴리즈 빌드에는 포함하지 않는다.
 
@@ -295,6 +334,8 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
 - 첫 주 예외 판정 (월요일 시작 여부)
 - 기록 누락 범위 (첫 주는 월요일부터, 그 주가 지나면 첫 기록일부터) 와 오래된 순 정렬
 - `isTodayWorking` — 근무 중인 오늘만 편집 잠금 (출근 전 오늘은 유형 전용 시트)
+- 일요일 시작 캘린더(첫 셀·헤더·설치 전 판정 불변), 연차 사용/예정/초과, 수당 월 합계·버림, 백업 왕복·거부·복원(첫 기록일·설정·`last_export_date` 유지),
+  숫자 시트 자릿수·0 비활성, 설정 화면 빈/채운 상태, 내보내기·가져오기 흐름(Fake 파일, 취소·실패·확인)
 
 레이아웃도 어긋나기 쉬운 곳만 고정한다. 글꼴·간격 토큰을 바꾸면 여기서 먼저 터진다.
 
@@ -303,7 +344,7 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
 - 오늘 화면 상태들의 주 버튼 Y가 같은지 — 단 평일 근무 중은 "남은 시간 공제하고 퇴근" 줄만큼 아래일 수 있다
 
 스모크 드라이브: `flutter drive --flavor dev --target test_driver/app.dart -d <시뮬레이터 ID>` —
-드라이버 진입점이 '두 달치 기록' 시드를 넣고 오늘/주간/월간/시트를 눌러 `docs/screenshots/`에 스크린샷을 남긴다
+드라이버 진입점이 '두 달치 기록' 시드(올해 총 연차 15 · 시급 12,500 포함)를 넣고 오늘/주간/월간(카드)/시트/설정을 눌러 `docs/screenshots/`에 스크린샷을 남긴다
 (고정 이름, git 추적 안 함 — 확인용 산출물이다).
 드라이버는 캘린더 셀을 `calendarCellKey`(= `cell-2026-9-24`)로 집고 날짜는 실행 시점에 고른다 — 날짜 숫자를 하드코딩하면 오늘이 바뀔 때 깨진다.
 드라이버 스크린샷은 오버레이 토스트를 담지 못한다 — 토스트는 문구 등장·소멸만 검증하고, 모양은 시뮬레이터에서 본다.
@@ -325,6 +366,8 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
   네이티브 스플래시를 오늘 상태가 준비될 때까지 잡아두었다가(`FlutterNativeSplash.preserve/remove`) 걷는다.
   인위적인 최소 노출 시간은 두지 않는다.
 - **캘린더 안 스와이프로 달 이동.** 스와이프는 탭 전환 전용.
+- **공휴일 자동 가져오기.** 보류(2026-10-25) — 기기 캘린더는 권한·기기별 편차·데이터 품질 문제, 외부 API는 마지막에 다시 본다.
+- **수당 배율·급여 기간·연차 기준일 설정, 유도 줄 숨기기(×), 클라우드 동기화.**
 
 ---
 
@@ -364,6 +407,16 @@ Repository 인터페이스(Port)는 둔다. 나중에 백업·내보내기 구�
   캘린더 요일 헤더 12.5 · 날짜 13, 범례 12.5, 시트 칩 13.5 · 휠 제목 13, 확인 다이얼로그 16/14.
   기간 네비게이터 화살표는 18(히트 영역 40), 라벨 최소 너비 140.
   **가장 작은 글자는 캘린더 값 11.5** — 칸 폭(44px) 한계라 더 키우면 잘린다.
+- **설정 (브리프 4, 2026-10-25)**: 진입은 알약 탭 줄 오른쪽 **톱니**(44 히트, 세 탭 공통, `ShellTabBar`). 설정은 `/settings` 전체 화면이
+  오른쪽에서 밀려오고(260ms) 뒤로가기로 닫힌다. 섹션: 캘린더(시작 요일 세그먼트 월|일) · 연차(올해 총 연차) · 수당(시급) · 데이터(내보내기 · 가져오기 ·
+  마지막 내보내기 줄) · 앱 정보(버전 · 개인정보 처리방침 → `https://s-yun.github.io/soi-duty/privacy.html`).
+  연차·수당은 **옵트인** — 값을 넣으면 켜지고 시트의 "사용 안 함으로 되돌리기"로 끈다. 토글 없음. 값 없는 행은 보조 설명이 "넣으면 무엇이 생기는지" 말한다.
+- **숫자 입력 시트**(`shared/number_input_sheet.dart`, 총 연차·시급 공용): OS 숫자 키패드(앱이 그리지 않음), 값 28/600 브랜드색 + 밑줄 2px,
+  빈 값은 "0" 플레이스홀더, 단위 "일"/"원". 총 연차 1~99 정수(2자리), 시급 1~9,999,999(7자리, 콤마 실시간). 빈 값·0은 저장 비활성.
+  시급 시트에는 잠금 아이콘 + "이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요." — 테스터가 실제로 물었던 질문.
+- **월간 탭 카드** (범례 아래, 수당 → 연차 순): 수당 카드는 그 달 주말·공휴일 근무가 있을 때만(시간 행은 0인 쪽 생략, 시급 있으면 예상 금액 22/600 브랜드,
+  없으면 유도 줄 → 시급 시트). 연차 카드는 총 연차가 있거나 그 해 사용 > 0일 때만 — 총 연차 | 사용(+"예정 n일 포함" 12) | 잔여/초과 3칸,
+  총 연차 없으면 "—" + 유도 줄 → 그 해 총 연차 시트. 월간 캘린더 자체에는 시간공제처럼 연차·수당을 표시하지 않는다.
 - **스플래시**: 핸드오프 3의 딥그린 `#1B473A` + 로고 폭 252. 로고 등장 애니메이션과 대기 바는 인앱 스플래시를 빼면서 같이 뺐다.
 
 
@@ -376,20 +429,22 @@ Clean Architecture, 단일 패키지. DI는 Riverpod 프로바이더가 겸한�
 ```
 lib/
 ├─ main.dart                 ProviderScope + MaterialApp.router
-├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치 — PageView 컨테이너, 스와이프 전환), route_paths.dart
+├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치 — PageView 컨테이너, 스와이프 전환 + /settings 슬라이드), route_paths.dart
 ├─ core/presentation/        SizeConfig, format/(date_format·time_format)
-├─ core/providers/           clock(디버그 시계·매 분 now), database, workRules
+├─ core/providers/           clock(디버그 시계·매 분 now), database(기록·설정·백업 저장소, workRules), app_info(버전)
 ├─ ui/                       색상·타이포·사이즈 토큰
-├─ domain/model/             WorkRecord, WorkType (freezed)
+├─ domain/model/             WorkRecord, WorkType, AppSettings(WeekStart), BackupSnapshot (freezed)
+├─ domain/backup/            백업 JSON 코덱 (순수 Dart)
 ├─ domain/rules/             WorkRules + 계산 함수 (순수 Dart, 테스트 1순위)
 ├─ domain/repository/        Repository 인터페이스
 ├─ data/database/            Drift 테이블·AppDatabase
 ├─ data/repository/          Drift 구현체
 ├─ data/seed/                디버그 시드 (kDebugMode 가드)
-├─ presentation/shell/       탭 셸 (알약 탭 + 브랜치)
+├─ presentation/shell/       탭 셸 (알약 탭 + 톱니 ShellTabBar + 브랜치)
 ├─ presentation/shared/      기간 네비게이터, 토스트(app_toast), 확인 다이얼로그 등 공용 위젯
 ├─ presentation/splash/      NativeSplashHold — 오늘 상태 준비까지 네이티브 스플래시 유지
 ├─ presentation/record_edit/ 시간 수정 시트 (오늘·주간·월간·누락 리스트가 공유). 미래 날짜는 type_rows, 과거는 type_chips
+├─ presentation/settings/    설정 화면(SettingsScreen/View · 컨트롤러 · 텍스트 · backup_files) + widgets/(섹션·행·세그먼트)
 ├─ presentation/debug/       시드·시계 이동 시트 (kDebugMode에서만 진입)
 └─ presentation/<feature>/   @riverpod Notifier/Provider + Screen + <feature>_texts + <feature>_state(_builder)
                              (today / week / month). 오늘 화면의 '출근 변경' 시트는 today/widgets/clock_in_edit_sheet

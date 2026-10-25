@@ -2,8 +2,10 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/data/database/app_database.dart';
+import 'package:soi_duty/data/repository/drift_app_settings_repository.dart';
 import 'package:soi_duty/data/repository/drift_work_record_repository.dart';
 import 'package:soi_duty/data/seed/debug_seed.dart';
+import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_calculator.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
@@ -86,6 +88,21 @@ void main() {
     expect(todayRec.clockOut, isNull);
     final first = await repo.watchFirstRecordDate().first;
     expect(first, addDays(mondayOf(today), -56));
+  });
+
+  test('history: 올해 총 연차 15 · 시급 12,500도 넣어 월간 카드가 보인다', () async {
+    await applySeed(db, SeedScenario.history, today: today);
+    final settings = await DriftAppSettingsRepository(db).read();
+    expect(settings.annualLeaveDaysOf(today.year), 15);
+    expect(settings.hourlyWage, 12500);
+  });
+
+  test('시드는 사용자 설정(시작 요일)을 지우지 않고 첫 기록일만 다시 잡는다', () async {
+    final settingsRepo = DriftAppSettingsRepository(db);
+    await settingsRepo.save(const AppSettings(weekStart: WeekStart.sunday));
+    await applySeed(db, SeedScenario.beforeWork, today: today);
+    expect((await settingsRepo.read()).weekStart, WeekStart.sunday);
+    expect(await repo.watchFirstRecordDate().first, addDays(mondayOf(today), -7));
   });
 
   test('history: 출장·시간공제·공휴일 근무가 섞여 있다', () async {
