@@ -1,4 +1,5 @@
 import '../../core/presentation/format/date_format.dart';
+import '../../core/presentation/format/number_format.dart';
 import '../../core/presentation/format/time_format.dart';
 import '../../domain/model/work_type.dart';
 import 'month_state.dart';
@@ -26,4 +27,24 @@ abstract final class MonthTexts {
         MonthCellWorking() => '···',
         MonthCellUnrecorded() => '—',
       };
+
+  // 수당 카드 (그 달)
+  static String extraWorkTitle(DateTime month) => '${month.month}월 주말·공휴일 근무';
+  static const weekendLabel = '주말';
+  static const holidayLabel = '공휴일';
+  static const amountLabel = '예상 금액';
+  static const wageNudge = '시급을 알려주시면 예상 금액을 보여드려요';
+  static String minutes(int m) => formatHm(m);
+  static String amount(int won) => formatWon(won);
+
+  // 연차 카드 (그 해)
+  static String leaveTitle(int year) => '$year년 연차';
+  static const leaveTotalLabel = '총 연차';
+  static const leaveUsedLabel = '사용';
+  static const leaveRemainLabel = '잔여';
+  static const leaveOverLabel = '초과';
+  static const none = '—';
+  static String days(int halfDays) => formatLeaveDays(halfDays);
+  static String plannedLine(int halfDays) => '예정 ${formatLeaveDays(halfDays)} 포함';
+  static const leaveNudge = '올해 연차 개수를 알려주시면 남은 연차를 보여드려요';
 }

@@ -6,8 +6,10 @@ import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/month/month_screen.dart';
+import 'package:soi_duty/presentation/month/month_state.dart';
 import 'package:soi_duty/presentation/month/month_state_builder.dart';
 import 'package:soi_duty/presentation/month/widgets/calendar_card.dart';
+import 'package:soi_duty/presentation/month/widgets/leave_card.dart';
 import 'package:soi_duty/ui/app_colors.dart';
 import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_text_styles.dart';
@@ -52,6 +54,8 @@ void main() {
           onCellTap: (d) => tapped = d,
           onPrev: () {},
           onNext: () {},
+          onOpenWage: () {},
+          onOpenAnnual: () {},
         ),
       ),
     ));
@@ -131,7 +135,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       theme: AppTheme.light,
       home: Scaffold(
-        body: MonthView(state: state, canGoPrev: true, canGoNext: true, onCellTap: (_) {}, onPrev: () {}, onNext: () {}),
+        body: MonthView(state: state, canGoPrev: true, canGoNext: true, onCellTap: (_) {}, onPrev: () {}, onNext: () {}, onOpenWage: () {}, onOpenAnnual: () {}),
       ),
     ));
     await tester.pump(const Duration(milliseconds: 500));
@@ -164,6 +168,8 @@ void main() {
               onCellTap: (_) {},
               onPrev: () {},
               onNext: () {},
+              onOpenWage: () {},
+              onOpenAnnual: () {},
             ),
           ),
         ));
@@ -174,5 +180,125 @@ void main() {
     expect(tester.getCenter(find.text('토')).dx, greaterThan(tester.getCenter(find.text('금')).dx));
     expect(tester.widget<Text>(find.text('일')).style?.color, AppColors.calendarWeekendNum);
     expect(tester.widget<Text>(find.text('월')).style?.color, AppColors.subtle);
+  });
+
+  group('월간 카드', () {
+    var wageTaps = 0, annualTaps = 0;
+    MonthState base() => buildMonthState(
+          records: [],
+          firstRecordDate: DateTime(2026, 8, 20),
+          now: d(16, 12),
+          rules: rules,
+          month: DateTime(2026, 9),
+          settings: const AppSettings(),
+        );
+    Future<void> pump(WidgetTester tester, MonthState state, {double width = 402}) async {
+      wageTaps = 0;
+      annualTaps = 0;
+      SizeConfig.init(width);
+      tester.view.physicalSize = Size(width * 3, 1400 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: MonthView(
+            state: state,
+            canGoPrev: true,
+            canGoNext: true,
+            onCellTap: (_) {},
+            onPrev: () {},
+            onNext: () {},
+            onOpenWage: () => wageTaps++,
+            onOpenAnnual: () => annualTaps++,
+          ),
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('extraWork null이면 수당 카드 없음, leave null이면 연차 카드 없음', (tester) async {
+      await pump(tester, base());
+      expect(find.text('9월 주말·공휴일 근무'), findsNothing);
+      expect(find.text('2026년 연차'), findsNothing);
+    });
+
+    testWidgets('수당 카드 — 주말 7h, 공휴일 0이면 공휴일 행 없음, payWon 206250 → "206,250원"', (tester) async {
+      await pump(tester, base().copyWith(extraWork: const MonthExtraWork(weekendMinutes: 420, holidayMinutes: 0, payWon: 206250)));
+      expect(find.text('9월 주말·공휴일 근무'), findsOneWidget);
+      expect(find.text('주말'), findsOneWidget);
+      expect(find.text('7h'), findsOneWidget);
+      expect(find.text('공휴일'), findsOneWidget); // 범례만
+      expect(find.text('예상 금액'), findsOneWidget);
+      expect(find.text('206,250원'), findsOneWidget);
+      expect(find.text('시급을 알려주시면 예상 금액을 보여드려요'), findsNothing);
+    });
+
+    testWidgets('수당 카드 — payWon null이면 유도 줄, 탭 → onOpenWage', (tester) async {
+      await pump(tester, base().copyWith(extraWork: const MonthExtraWork(weekendMinutes: 60, holidayMinutes: 240)));
+      expect(find.text('1h'), findsOneWidget);
+      expect(find.text('4h'), findsOneWidget);
+      expect(find.text('예상 금액'), findsNothing);
+      final nudge = find.text('시급을 알려주시면 예상 금액을 보여드려요');
+      await tester.ensureVisible(nudge);
+      await tester.pumpAndSettle();
+      await tester.tap(nudge);
+      expect(wageTaps, 1);
+    });
+
+    testWidgets('연차 카드 — total 15 used 15(반일) → "15일" "7.5일" "7.5일"; 초과면 라벨 "초과" 값 "1.5일" 붉은색', (tester) async {
+      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 15, plannedHalfDays: 0, remainingHalfDays: 15)));
+      expect(find.text('2026년 연차'), findsOneWidget);
+      expect(find.text('총 연차'), findsOneWidget);
+      expect(find.text('사용'), findsOneWidget);
+      expect(find.text('잔여'), findsOneWidget);
+      expect(find.text('15일'), findsOneWidget);
+      expect(find.text('7.5일'), findsNWidgets(2));
+      expect(find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요'), findsNothing);
+
+      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 6, usedHalfDays: 15, plannedHalfDays: 0, remainingHalfDays: -3)));
+      expect(find.text('잔여'), findsNothing);
+      expect(find.text('초과'), findsOneWidget);
+      expect(find.text('1.5일'), findsOneWidget);
+      expect(tester.widget<Text>(find.text('1.5일')).style?.color, AppColors.minus);
+    });
+
+    testWidgets('연차 카드 — plannedHalfDays 3 → "예정 1.5일 포함", 0이면 없음. 세 칸 값의 y가 같다', (tester) async {
+      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 7, plannedHalfDays: 3, remainingHalfDays: 23)));
+      expect(find.text('예정 1.5일 포함'), findsOneWidget);
+      final y = tester.getTopLeft(find.text('15일')).dy;
+      expect(tester.getTopLeft(find.text('3.5일')).dy, closeTo(y, 0.5));
+      expect(tester.getTopLeft(find.text('11.5일')).dy, closeTo(y, 0.5));
+
+      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 7, plannedHalfDays: 0, remainingHalfDays: 23)));
+      expect(find.textContaining('예정'), findsNothing);
+    });
+
+    testWidgets('연차 카드 — total null → "—" 둘 + 유도 줄, 탭 → onOpenAnnual', (tester) async {
+      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, usedHalfDays: 2, plannedHalfDays: 0)));
+      expect(find.descendant(of: find.byType(LeaveCard), matching: find.text('—')), findsNWidgets(2));
+      expect(find.text('1일'), findsOneWidget);
+      final nudge = find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요');
+      await tester.ensureVisible(nudge);
+      await tester.pumpAndSettle();
+      await tester.tap(nudge);
+      expect(annualTaps, 1);
+    });
+
+    for (final width in [320.0, 360.0, 375.0, 393.0, 402.0, 430.0, 480.0, 600.0]) {
+      testWidgets('폭 ${width.toInt()}에서 두 카드가 넘치지 않는다', (tester) async {
+        await pump(
+          tester,
+          base().copyWith(
+            extraWork: const MonthExtraWork(weekendMinutes: 1234, holidayMinutes: 999, payWon: 99999999),
+            leave: const MonthLeave(year: 2026, totalDays: 99, usedHalfDays: 199, plannedHalfDays: 101, remainingHalfDays: -1),
+          ),
+          width: width,
+        );
+        expect(tester.takeException(), isNull, reason: 'width $width');
+        await pump(tester, base().copyWith(extraWork: const MonthExtraWork(weekendMinutes: 1234, holidayMinutes: 999), leave: const MonthLeave(year: 2026, usedHalfDays: 199, plannedHalfDays: 101)), width: width);
+        expect(tester.takeException(), isNull, reason: 'width $width nudges');
+      });
+    }
   });
 }
