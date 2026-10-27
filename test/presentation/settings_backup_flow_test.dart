@@ -10,10 +10,12 @@ import 'package:soi_duty/core/providers/app_info_provider.dart';
 import 'package:soi_duty/core/providers/clock_provider.dart';
 import 'package:soi_duty/core/providers/database_providers.dart';
 import 'package:soi_duty/data/database/app_database.dart';
+import 'package:soi_duty/data/repository/drift_app_settings_repository.dart';
 import 'package:soi_duty/data/repository/drift_work_record_repository.dart';
 import 'package:soi_duty/domain/backup/backup_codec.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/backup_snapshot.dart';
+import 'package:soi_duty/domain/model/leave_balance.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/repository/backup_files.dart';
 import 'package:soi_duty/presentation/settings/settings_screen.dart';
@@ -143,7 +145,7 @@ void main() {
       exportedAt: DateTime(2026, 9, 15),
       firstRecordDate: d(14),
       weekStart: WeekStart.sunday,
-      annualLeaveDaysByYear: const {2026: 15},
+      leaveBalanceByYear: {2026: LeaveBalance(remainingMinutes: 7200, baseDate: DateTime(2026, 1, 1))},
       hourlyWage: 12500,
       records: [rec(14, inH: 9, outH: 18), rec(15, type: WorkType.halfDay, inH: 13, outH: 18)],
     ));
@@ -166,6 +168,7 @@ void main() {
     final first = await (db.select(db.settings)..where((t) => t.key.equals('first_record_date'))).getSingle();
     expect(first.value, '2026-09-14');
     expect(find.text('15일'), findsOneWidget);
+    expect(find.text('1월 1일 기준'), findsOneWidget);
     expect(find.text('12,500원'), findsOneWidget);
     await finish(tester);
   });
@@ -228,5 +231,57 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('월간 캘린더가 월요일부터 시작해요'), findsOneWidget);
     await finish(tester);
+  });
+
+  group('남은 연차 시트', () {
+    testWidgets('"8.5" 저장 → LeaveBalance(4080, 오늘) · 행에 "8.5일" "9월 16일 기준"; 되돌리기 → null', (tester) async {
+      await pumpSettings(tester);
+      await tapRow(tester, '남은 연차');
+      expect(find.text('오늘(9월 16일) 기준 남은 연차'), findsOneWidget);
+      expect(find.text('회사에서 보여주는 지금 남은 연차를 그대로 넣어주세요.'), findsOneWidget);
+      expect(find.text('1월~12월 기준이에요.'), findsNothing);
+      expect(find.textContaining('이 뒤로 찍어둔 연차'), findsNothing);
+      await tester.enterText(find.byType(TextField), '8.5');
+      await tester.pump();
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+      expect(
+        (await DriftAppSettingsRepository(db).read()).leaveBalanceOf(2026),
+        LeaveBalance(remainingMinutes: 4080, baseDate: d(16)),
+      );
+      expect(find.text('8.5일'), findsOneWidget);
+      expect(find.text('9월 16일 기준'), findsOneWidget);
+
+      await tapRow(tester, '남은 연차');
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, '8.5');
+      await tester.tap(find.text('사용 안 함으로 되돌리기'));
+      await tester.pumpAndSettle();
+      expect((await DriftAppSettingsRepository(db).read()).leaveBalanceOf(2026), isNull);
+      expect(find.text('알려주시면 월간 탭에서 잔여 연차를 볼 수 있어요'), findsOneWidget);
+      await finish(tester);
+    });
+
+    testWidgets('"0" 저장 → LeaveBalance(0, 오늘) · 행에 "0일"', (tester) async {
+      await pumpSettings(tester);
+      await tapRow(tester, '남은 연차');
+      await tester.enterText(find.byType(TextField), '0');
+      await tester.pump();
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+      expect((await DriftAppSettingsRepository(db).read()).leaveBalanceOf(2026), LeaveBalance(remainingMinutes: 0, baseDate: d(16)));
+      expect(find.text('0일'), findsOneWidget);
+      await finish(tester);
+    });
+
+    testWidgets('그 해에 오늘보다 뒤인 연차·반차가 있으면 강조 줄 "이 뒤로 찍어둔 연차 1.5일은 여기서 빼서 보여드려요."', (tester) async {
+      final repo = DriftWorkRecordRepository(db);
+      await repo.save(rec(14, type: WorkType.dayOff)); // 오늘(16) 전 — 안 센다
+      await repo.save(rec(24, type: WorkType.dayOff));
+      await repo.save(rec(25, inH: 9, outH: 13, type: WorkType.halfDay));
+      await pumpSettings(tester);
+      await tapRow(tester, '남은 연차');
+      expect(find.text('이 뒤로 찍어둔 연차 1.5일은 여기서 빼서 보여드려요.'), findsOneWidget);
+      await finish(tester);
+    });
   });
 }

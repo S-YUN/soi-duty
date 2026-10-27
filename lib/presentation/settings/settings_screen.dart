@@ -7,6 +7,7 @@ import '../../core/providers/app_info_provider.dart';
 import '../../core/providers/clock_provider.dart';
 import '../../core/providers/database_providers.dart';
 import '../../domain/model/app_settings.dart';
+import '../../domain/model/work_record.dart';
 import '../../domain/rules/work_rules.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
@@ -15,6 +16,7 @@ import '../shared/app_toast.dart';
 import '../shared/confirm_dialog.dart';
 import '../shared/number_input_sheet.dart';
 import '../shared/stroke_icons.dart';
+import 'leave_sheet.dart';
 import 'settings_controller.dart';
 import 'settings_texts.dart';
 import 'widgets/segment_toggle.dart';
@@ -54,6 +56,8 @@ class SettingsScreen extends ConsumerWidget {
     final version = ref.watch(appVersionProvider).value ?? '';
     final year = ref.watch(clockProvider)().year;
     final rules = ref.watch(workRulesProvider);
+    // 연차 시트의 "이 뒤로 찍어둔 연차" 줄을 위해 — 구독해 두어야 탭 순간 값이 있다.
+    final records = ref.watch(allRecordsProvider).value ?? const <WorkRecord>[];
     final controller = ref.read(settingsControllerProvider.notifier);
     return SettingsView(
       settings: settings,
@@ -63,17 +67,14 @@ class SettingsScreen extends ConsumerWidget {
       callbacks: SettingsCallbacks(
         onBack: () => context.pop(),
         onWeekStart: (w) => _changeWeekStart(context, ref, settings.weekStart, w),
-        onTapAnnual: () => showNumberInputSheet(
+        onTapAnnual: () => showLeaveBalanceSheet(
           context,
-          title: SettingsTexts.annualLabel,
-          unit: SettingsTexts.annualUnit,
-          notes: const [SettingsTexts.annualNote],
-          maxDigits: SettingsTexts.annualMaxDigits,
-          initial: null, // Task 6에서 남은 연차 시트로 교체
-          saveLabel: SettingsTexts.save,
-          clearLabel: SettingsTexts.clearLink,
-          onSave: (_) {},
-          onClear: null,
+          year: year,
+          today: ref.read(clockProvider)(),
+          current: settings.leaveBalanceOf(year),
+          records: records,
+          rules: rules,
+          controller: controller,
         ),
         onTapWage: () => showNumberInputSheet(
           context,
@@ -181,7 +182,7 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final annual = settings.leaveBalanceOf(year)?.remainingMinutes; // Task 6에서 표기 교체
+    final annual = settings.leaveBalanceOf(year);
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       body: SafeArea(
@@ -230,8 +231,8 @@ class SettingsView extends StatelessWidget {
                       rows: [
                         SettingsRow(
                           label: SettingsTexts.annualLabel,
-                          sub: annual == null ? SettingsTexts.annualSub : null,
-                          value: SettingsTexts.annualValue(annual),
+                          sub: annual == null ? SettingsTexts.annualSub : SettingsTexts.annualBaseLine(annual.baseDate),
+                          value: SettingsTexts.annualValue(annual, rules.dayOffCreditMinutes),
                           valueSet: annual != null,
                           chevron: true,
                           onTap: callbacks.onTapAnnual,

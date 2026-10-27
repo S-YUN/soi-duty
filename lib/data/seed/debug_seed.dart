@@ -2,6 +2,7 @@ import '../../domain/model/leave_balance.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
+import '../../domain/rules/work_rules.dart';
 import '../database/app_database.dart';
 import '../repository/drift_app_settings_repository.dart';
 import '../repository/drift_work_record_repository.dart';
@@ -26,8 +27,8 @@ enum SeedScenario {
 
 /// 기존 기록과 첫 기록일을 지우고 시나리오를 넣는다. 사용자 설정(시작 요일 등)은 건드리지 않는다.
 /// 기록은 이른 날짜부터 저장해 첫 기록일이 자연스럽게 잡히게 한다.
-/// '두 달치 기록'은 올해 총 연차 15 · 시급 12,500도 넣어 월간 카드가 바로 보이게 한다.
-Future<void> applySeed(AppDatabase db, SeedScenario scenario, {required DateTime today}) async {
+/// '두 달치 기록'은 올해 남은 연차 15일(기준일 1월 1일) · 시급 12,500도 넣어 월간 카드가 바로 보이게 한다.
+Future<void> applySeed(AppDatabase db, SeedScenario scenario, {required DateTime today, WorkRules rules = const WorkRules()}) async {
   await db.transaction(() async {
     await db.delete(db.workRecords).go();
     await (db.delete(db.settings)..where((t) => t.key.equals(DriftWorkRecordRepository.firstRecordDateKey))).go();

@@ -1,5 +1,6 @@
 import '../../core/presentation/format/number_format.dart';
 import '../../domain/model/app_settings.dart';
+import '../../domain/model/leave_balance.dart';
 import '../../domain/rules/work_rules.dart';
 
 /// 설정 화면과 숫자 입력 시트의 모든 문구.
@@ -15,11 +16,26 @@ abstract final class SettingsTexts {
       switch (w) { WeekStart.monday => '월간 캘린더가 월요일부터 시작해요', WeekStart.sunday => '월간 캘린더가 일요일부터 시작해요' };
 
   static const sectionLeave = '연차';
-  static const annualLabel = '올해 총 연차';
-  static const annualSub = '알려주시면 월간 탭에서 남은 연차를 볼 수 있어요';
+  // 남은 연차 + 기준일 (2026-10-27, 브리프 5)
+  static const annualLabel = '남은 연차';
+  static const annualSub = '알려주시면 월간 탭에서 잔여 연차를 볼 수 있어요';
   static const annualUnit = '일';
-  static const annualNote = '1월~12월 기준이에요.';
+  /// 값이 있을 때 행 보조 설명 — 다시 넣을 때 헷갈리지 않게 기준일을 보인다.
+  static String annualBaseLine(DateTime d) => '${d.month}월 ${d.day}일 기준';
+  /// 시트 제목 아래 한 줄
+  static String annualHeadline(DateTime today) => '오늘(${today.month}월 ${today.day}일) 기준 남은 연차';
+  static const annualNotes = [
+    '회사에서 보여주는 지금 남은 연차를 그대로 넣어주세요.',
+    '오늘이 기준일이 되고, 내일부터 찍는 연차를 빼서 보여드려요.',
+    '신청해 둔 연차도 아직 안 쓴 것으로 쳐서 넣어주세요.',
+  ];
+  /// 그 해에 오늘보다 뒤인 연차·반차가 찍혀 있을 때만 — 회사 숫자에 이미 빠져 있을 수 있어 사용자가 맞추게.
+  static String annualFutureNote(int minutes, int dayMinutes) => '이 뒤로 찍어둔 연차 ${formatLeaveDays(minutes, dayMinutes)}은 여기서 빼서 보여드려요.';
+  /// 빈 입력줄 "0" 옆 — 저장 가능한 0과 구분
+  static const annualEmptyCaption = '입력 전';
+  static String annualInvalidNote(WorkRules rules) => '${formatLeaveDays(rules.leaveStepMinutes, rules.dayOffCreditMinutes)} 단위로 넣어주세요';
   static final annualMaxDigits = AppSettings.maxLeaveDays.toString().length;
+  static const annualDecimalPlaces = 2;
 
   static const sectionPay = '수당';
   static const wageLabel = '시급';
@@ -55,7 +71,7 @@ abstract final class SettingsTexts {
   static const privacyUrl = 'https://s-yun.github.io/soi-duty/privacy.html';
 
   static const unset = '사용 안 함';
-  static String annualValue(int? days) => days == null ? unset : '$days일';
+  static String annualValue(LeaveBalance? b, int dayMinutes) => b == null ? unset : formatLeaveDays(b.remainingMinutes, dayMinutes);
   static String wageValue(int? won) => won == null ? unset : formatWon(won);
 
   static const save = '저장';

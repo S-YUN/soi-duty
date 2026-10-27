@@ -8,7 +8,9 @@ import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
 import '../../ui/app_text_styles.dart';
 import '../../domain/model/app_settings.dart';
+import '../../domain/model/work_record.dart';
 import '../record_edit/record_edit_sheet.dart';
+import '../settings/leave_sheet.dart';
 import '../settings/settings_controller.dart';
 import '../settings/settings_texts.dart';
 import '../shared/app_toast.dart';
@@ -33,6 +35,7 @@ class MonthScreen extends ConsumerWidget {
     final first = ref.watch(firstRecordDateProvider).value;
     final today = ref.watch(clockProvider)();
     final settings = ref.watch(appSettingsProvider).value ?? const AppSettings();
+    final records = ref.watch(allRecordsProvider).value ?? const <WorkRecord>[];
     final controller = ref.read(settingsControllerProvider.notifier);
     return async.when(
       loading: () => const ColoredBox(color: AppColors.screenBackground, child: SizedBox.expand()),
@@ -63,18 +66,15 @@ class MonthScreen extends ConsumerWidget {
           onSave: (v) => controller.setHourlyWage(v.toInt()),
           onClear: () => controller.setHourlyWage(null),
         ),
-        // 카드의 해에 저장 — 1월 카드에서 누르면 새해 값
-        onOpenAnnual: () => showNumberInputSheet(
+        // 카드의 해에 저장 — 1월 카드에서 누르면 새해 값. 기준일은 오늘.
+        onOpenAnnual: () => showLeaveBalanceSheet(
           context,
-          title: SettingsTexts.annualLabel,
-          unit: SettingsTexts.annualUnit,
-          notes: const [SettingsTexts.annualNote],
-          maxDigits: SettingsTexts.annualMaxDigits,
-          initial: null, // Task 6에서 남은 연차 시트로 교체
-          saveLabel: SettingsTexts.save,
-          clearLabel: SettingsTexts.clearLink,
-          onSave: (_) {},
-          onClear: null,
+          year: state.month.year,
+          today: today,
+          current: settings.leaveBalanceOf(state.month.year),
+          records: records,
+          rules: ref.read(workRulesProvider),
+          controller: controller,
         ),
       ),
     );
