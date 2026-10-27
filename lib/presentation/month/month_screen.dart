@@ -81,7 +81,7 @@ class MonthScreen extends ConsumerWidget {
   }
 }
 
-/// 월간 화면의 순수 UI. 기간 네비게이터 → 캘린더 → 범례 → 수당 카드 → 연차 카드(둘 다 항상). 달 이동은 화살표로만.
+/// 월간 화면의 순수 UI. 기간 네비게이터 → 캘린더 → 범례 → 연차 카드 → 수당 카드(둘 다 항상). 달 이동은 화살표로만.
 class MonthView extends StatelessWidget {
   const MonthView({
     super.key,
@@ -127,13 +127,14 @@ class MonthView extends StatelessWidget {
                 SizedBox(height: AppSizes.cardGap),
                 const Legend(),
                 SizedBox(height: AppSizes.cardGap),
+                // 연차가 먼저 — 늘 내용이 있다. 수당은 주말·공휴일 근무가 없는 달엔 빈 카드라 뒤로 (2026-10-27).
+                LeaveCard(leave: state.leave, onTapNudge: onOpenAnnual),
+                SizedBox(height: AppSizes.cardGap),
                 ExtraWorkCard(
                   extraWork: state.extraWork,
                   title: MonthTexts.extraWorkTitle(state.month),
                   onTapNudge: onOpenWage,
                 ),
-                SizedBox(height: AppSizes.cardGap),
-                LeaveCard(leave: state.leave, onTapNudge: onOpenAnnual),
               ],
             ),
           ),

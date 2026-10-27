@@ -241,6 +241,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     }
 
+    testWidgets('연차 카드가 수당 카드보다 위 — 연차는 늘 내용이 있고 수당은 대부분의 달에 비어 있어서 (2026-10-27)', (tester) async {
+      await pump(tester, base());
+      expect(tester.getTopLeft(find.byType(LeaveCard)).dy, lessThan(tester.getTopLeft(find.byType(ExtraWorkCard)).dy));
+    });
+
     testWidgets('값 없음 + 기록 없음 — 두 카드가 항상 보이고 "기록 없음"·"—"·"미입력"·"0일"로 구분된다', (tester) async {
       await pump(tester, base());
       expect(find.text('9월 주말·공휴일 근무'), findsOneWidget);
