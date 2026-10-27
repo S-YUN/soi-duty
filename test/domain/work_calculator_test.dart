@@ -619,15 +619,37 @@ void main() {
       rec(24, type: WorkType.dayOff),
       WorkRecord(date: DateTime(2027, 1, 4), type: WorkType.dayOff),
     ];
-    test('usedLeaveHalfDays — 연차 2 · 반차 1, 다른 해 제외, 미래 포함', () {
-      expect(usedLeaveHalfDays(rs, 2026), 5);
-      expect(usedLeaveHalfDays(rs, 2027), 2);
-      expect(usedLeaveHalfDays(rs, 2025), 0);
+    test('leaveMinutesOf — 연차 480 · 반차 240 · 그 외 0', () {
+      expect(leaveMinutesOf(WorkType.dayOff, rules), 480);
+      expect(leaveMinutesOf(WorkType.halfDay, rules), 240);
+      expect(leaveMinutesOf(WorkType.normal, rules), 0);
+      expect(leaveMinutesOf(WorkType.holiday, rules), 0);
+      expect(leaveMinutesOf(WorkType.businessTrip, rules), 0);
     });
-    test('plannedLeaveHalfDays — 오늘보다 뒤인 날만, 오늘은 제외', () {
-      expect(plannedLeaveHalfDays(rs, 2026, d(16, 12)), 3);
-      expect(plannedLeaveHalfDays(rs, 2026, d(17, 9)), 2);
-      expect(plannedLeaveHalfDays(rs, 2026, d(14, 9)), 3);
+    test('leaveMinutesUsed — 그 해 전체, 미래 포함, 다른 해 제외', () {
+      expect(leaveMinutesUsed(rs, 2026, rules), 1200); // 연차 2 + 반차 1
+      expect(leaveMinutesUsed(rs, 2027, rules), 480);
+      expect(leaveMinutesUsed(rs, 2025, rules), 0);
+    });
+    test('leaveMinutesUsed(after:) — 기준일 당일은 빼지 않고 다음 날부터', () {
+      // rs(2026): 14 연차 · 17 반차 · 24 연차
+      expect(leaveMinutesUsed(rs, 2026, rules, after: d(13)), 1200);
+      expect(leaveMinutesUsed(rs, 2026, rules, after: d(14)), 720);
+      expect(leaveMinutesUsed(rs, 2026, rules, after: d(17)), 480);
+      expect(leaveMinutesUsed(rs, 2026, rules, after: d(24)), 0);
+      expect(leaveMinutesUsed(rs, 2026, rules, after: d(14, 23, 59)), 720); // after는 날짜만 본다
+    });
+    test('isValidLeaveMinutes — 0 허용, 0.5일 단위, 99일 한도', () {
+      expect(isValidLeaveMinutes(0, rules), isTrue);
+      expect(isValidLeaveMinutes(240, rules), isTrue);
+      expect(isValidLeaveMinutes(4080, rules), isTrue);
+      expect(isValidLeaveMinutes(120, rules), isFalse);
+      expect(isValidLeaveMinutes(99 * 480, rules), isTrue);
+      expect(isValidLeaveMinutes(99 * 480 + 240, rules), isFalse);
+      expect(isValidLeaveMinutes(-240, rules), isFalse);
+    });
+    test('입력 단위는 WorkRules — 반반차가 오면 120', () {
+      expect(isValidLeaveMinutes(120, const WorkRules(leaveStepMinutes: 120)), isTrue);
     });
   });
 }

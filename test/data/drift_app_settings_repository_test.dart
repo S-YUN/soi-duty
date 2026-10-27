@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/data/repository/drift_app_settings_repository.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
+import 'package:soi_duty/domain/model/leave_balance.dart';
 
 void main() {
   late AppDatabase db;
@@ -61,12 +62,14 @@ void main() {
     await future;
   });
 
-  test('annualLeaveDaysOf / withAnnualLeaveDays', () {
-    const s = AppSettings(annualLeaveDaysByYear: {2026: 15});
-    expect(s.annualLeaveDaysOf(2026), 15);
-    expect(s.annualLeaveDaysOf(2027), isNull);
-    expect(s.withAnnualLeaveDays(2027, 16).annualLeaveDaysByYear, {2026: 15, 2027: 16});
-    expect(s.withAnnualLeaveDays(2026, null).annualLeaveDaysByYear, isEmpty);
+  test('leaveBalanceOf / withLeaveBalance', () {
+    final b26 = LeaveBalance(remainingMinutes: 4080, baseDate: DateTime(2026, 10, 26));
+    final b27 = LeaveBalance(remainingMinutes: 7680, baseDate: DateTime(2027, 1, 1));
+    final s = AppSettings(leaveBalanceByYear: {2026: b26});
+    expect(s.leaveBalanceOf(2026), b26);
+    expect(s.leaveBalanceOf(2027), isNull);
+    expect(s.withLeaveBalance(2027, b27).leaveBalanceByYear, {2026: b26, 2027: b27});
+    expect(s.withLeaveBalance(2026, null).leaveBalanceByYear, isEmpty);
   });
 
   test("'annual_leave_days' 접두 키만 지운다 — LIKE의 '_' 와일드카드에 비슷한 키가 휩쓸리지 않는다", () async {
