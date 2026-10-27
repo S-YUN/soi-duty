@@ -1009,11 +1009,12 @@ as int?,
 /// @nodoc
 mixin _$MonthLeave {
 
- int get year;/// 그 해 총 연차(일). 없으면 "—" + 유도 줄.
- int? get totalDays;/// 반일 단위. 미리 찍은 미래 날짜 포함.
- int get usedHalfDays;/// 사용 중 오늘보다 뒤인 것(반일 단위). 0보다 크면 "예정 n일 포함".
- int get plannedHalfDays;/// total×2 − used. 음수면 초과. total 없으면 null.
- int? get remainingHalfDays;
+ int get year;/// 사용자가 넣은 남은 연차 + 기준일. 없으면 "미입력" + 유도 줄.
+ LeaveBalance? get balance;/// 분. 값이 있으면 기준일 다음 날부터, 없으면 그 해 전체. 미리 찍은 미래 날짜 포함.
+ int get usedMinutes;/// 사용 중 오늘(과 기준일)보다 뒤인 것(분). 0보다 크면 "예정 n일 포함".
+ int get plannedMinutes;/// balance.remainingMinutes − usedMinutes. 음수면 초과. balance 없으면 null.
+ int? get remainingMinutes;/// 연차 1일의 분(표기용, `WorkRules.dayOffCreditMinutes`).
+ int get dayMinutes;
 /// Create a copy of MonthLeave
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1025,20 +1026,20 @@ $MonthLeaveCopyWith<MonthLeave> get copyWith => _$MonthLeaveCopyWithImpl<MonthLe
 @override
 bool operator ==(Object other) {
   final _this = this as MonthLeave;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthLeave&&(identical(other.year, _this.year) || other.year == _this.year)&&(identical(other.totalDays, _this.totalDays) || other.totalDays == _this.totalDays)&&(identical(other.usedHalfDays, _this.usedHalfDays) || other.usedHalfDays == _this.usedHalfDays)&&(identical(other.plannedHalfDays, _this.plannedHalfDays) || other.plannedHalfDays == _this.plannedHalfDays)&&(identical(other.remainingHalfDays, _this.remainingHalfDays) || other.remainingHalfDays == _this.remainingHalfDays));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthLeave&&(identical(other.year, _this.year) || other.year == _this.year)&&(identical(other.balance, _this.balance) || other.balance == _this.balance)&&(identical(other.usedMinutes, _this.usedMinutes) || other.usedMinutes == _this.usedMinutes)&&(identical(other.plannedMinutes, _this.plannedMinutes) || other.plannedMinutes == _this.plannedMinutes)&&(identical(other.remainingMinutes, _this.remainingMinutes) || other.remainingMinutes == _this.remainingMinutes)&&(identical(other.dayMinutes, _this.dayMinutes) || other.dayMinutes == _this.dayMinutes));
 }
 
 
 @override
 int get hashCode {
   final _this = this as MonthLeave;
-  return Object.hash(runtimeType,_this.year,_this.totalDays,_this.usedHalfDays,_this.plannedHalfDays,_this.remainingHalfDays);
+  return Object.hash(runtimeType,_this.year,_this.balance,_this.usedMinutes,_this.plannedMinutes,_this.remainingMinutes,_this.dayMinutes);
 }
 
 @override
 String toString() {
   final _this = this as MonthLeave;
-  return 'MonthLeave(year: ${_this.year}, totalDays: ${_this.totalDays}, usedHalfDays: ${_this.usedHalfDays}, plannedHalfDays: ${_this.plannedHalfDays}, remainingHalfDays: ${_this.remainingHalfDays})';
+  return 'MonthLeave(year: ${_this.year}, balance: ${_this.balance}, usedMinutes: ${_this.usedMinutes}, plannedMinutes: ${_this.plannedMinutes}, remainingMinutes: ${_this.remainingMinutes}, dayMinutes: ${_this.dayMinutes})';
 }
 
 
@@ -1049,11 +1050,11 @@ abstract mixin class $MonthLeaveCopyWith<$Res>  {
   factory $MonthLeaveCopyWith(MonthLeave value, $Res Function(MonthLeave) _then) = _$MonthLeaveCopyWithImpl;
 @useResult
 $Res call({
- int year, int? totalDays, int usedHalfDays, int plannedHalfDays, int? remainingHalfDays
+ int year, LeaveBalance? balance, int usedMinutes, int plannedMinutes, int? remainingMinutes, int dayMinutes
 });
 
 
-
+$LeaveBalanceCopyWith<$Res>? get balance;
 
 }
 /// @nodoc
@@ -1066,17 +1067,30 @@ class _$MonthLeaveCopyWithImpl<$Res>
 
 /// Create a copy of MonthLeave
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? year = null,Object? totalDays = freezed,Object? usedHalfDays = null,Object? plannedHalfDays = null,Object? remainingHalfDays = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? year = null,Object? balance = freezed,Object? usedMinutes = null,Object? plannedMinutes = null,Object? remainingMinutes = freezed,Object? dayMinutes = null,}) {
   return _then(MonthLeave(
 year: null == year ? _self.year : year // ignore: cast_nullable_to_non_nullable
-as int,totalDays: freezed == totalDays ? _self.totalDays : totalDays // ignore: cast_nullable_to_non_nullable
-as int?,usedHalfDays: null == usedHalfDays ? _self.usedHalfDays : usedHalfDays // ignore: cast_nullable_to_non_nullable
-as int,plannedHalfDays: null == plannedHalfDays ? _self.plannedHalfDays : plannedHalfDays // ignore: cast_nullable_to_non_nullable
-as int,remainingHalfDays: freezed == remainingHalfDays ? _self.remainingHalfDays : remainingHalfDays // ignore: cast_nullable_to_non_nullable
-as int?,
+as int,balance: freezed == balance ? _self.balance : balance // ignore: cast_nullable_to_non_nullable
+as LeaveBalance?,usedMinutes: null == usedMinutes ? _self.usedMinutes : usedMinutes // ignore: cast_nullable_to_non_nullable
+as int,plannedMinutes: null == plannedMinutes ? _self.plannedMinutes : plannedMinutes // ignore: cast_nullable_to_non_nullable
+as int,remainingMinutes: freezed == remainingMinutes ? _self.remainingMinutes : remainingMinutes // ignore: cast_nullable_to_non_nullable
+as int?,dayMinutes: null == dayMinutes ? _self.dayMinutes : dayMinutes // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
+/// Create a copy of MonthLeave
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LeaveBalanceCopyWith<$Res>? get balance {
+    if (_self.balance == null) {
+    return null;
+  }
 
+  return $LeaveBalanceCopyWith<$Res>(_self.balance!, (value) {
+    return _then(_self.copyWith(balance: value));
+  });
+}
 }
 
 
@@ -1158,10 +1172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int year,  int? totalDays,  int usedHalfDays,  int plannedHalfDays,  int? remainingHalfDays)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int year,  LeaveBalance? balance,  int usedMinutes,  int plannedMinutes,  int? remainingMinutes,  int dayMinutes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MonthLeave() when $default != null:
-return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfDays,_that.remainingHalfDays);case _:
+return $default(_that.year,_that.balance,_that.usedMinutes,_that.plannedMinutes,_that.remainingMinutes,_that.dayMinutes);case _:
   return orElse();
 
 }
@@ -1179,10 +1193,10 @@ return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfD
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int year,  int? totalDays,  int usedHalfDays,  int plannedHalfDays,  int? remainingHalfDays)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int year,  LeaveBalance? balance,  int usedMinutes,  int plannedMinutes,  int? remainingMinutes,  int dayMinutes)  $default,) {final _that = this;
 switch (_that) {
 case _MonthLeave():
-return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfDays,_that.remainingHalfDays);case _:
+return $default(_that.year,_that.balance,_that.usedMinutes,_that.plannedMinutes,_that.remainingMinutes,_that.dayMinutes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1199,10 +1213,10 @@ return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfD
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int year,  int? totalDays,  int usedHalfDays,  int plannedHalfDays,  int? remainingHalfDays)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int year,  LeaveBalance? balance,  int usedMinutes,  int plannedMinutes,  int? remainingMinutes,  int dayMinutes)?  $default,) {final _that = this;
 switch (_that) {
 case _MonthLeave() when $default != null:
-return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfDays,_that.remainingHalfDays);case _:
+return $default(_that.year,_that.balance,_that.usedMinutes,_that.plannedMinutes,_that.remainingMinutes,_that.dayMinutes);case _:
   return null;
 
 }
@@ -1214,18 +1228,20 @@ return $default(_that.year,_that.totalDays,_that.usedHalfDays,_that.plannedHalfD
 
 
 class _MonthLeave implements MonthLeave {
-  const _MonthLeave({required this.year, this.totalDays, required this.usedHalfDays, required this.plannedHalfDays, this.remainingHalfDays});
+  const _MonthLeave({required this.year, this.balance, required this.usedMinutes, required this.plannedMinutes, this.remainingMinutes, required this.dayMinutes});
   
 
 @override final  int year;
-/// 그 해 총 연차(일). 없으면 "—" + 유도 줄.
-@override final  int? totalDays;
-/// 반일 단위. 미리 찍은 미래 날짜 포함.
-@override final  int usedHalfDays;
-/// 사용 중 오늘보다 뒤인 것(반일 단위). 0보다 크면 "예정 n일 포함".
-@override final  int plannedHalfDays;
-/// total×2 − used. 음수면 초과. total 없으면 null.
-@override final  int? remainingHalfDays;
+/// 사용자가 넣은 남은 연차 + 기준일. 없으면 "미입력" + 유도 줄.
+@override final  LeaveBalance? balance;
+/// 분. 값이 있으면 기준일 다음 날부터, 없으면 그 해 전체. 미리 찍은 미래 날짜 포함.
+@override final  int usedMinutes;
+/// 사용 중 오늘(과 기준일)보다 뒤인 것(분). 0보다 크면 "예정 n일 포함".
+@override final  int plannedMinutes;
+/// balance.remainingMinutes − usedMinutes. 음수면 초과. balance 없으면 null.
+@override final  int? remainingMinutes;
+/// 연차 1일의 분(표기용, `WorkRules.dayOffCreditMinutes`).
+@override final  int dayMinutes;
 
 /// Create a copy of MonthLeave
 /// with the given fields replaced by the non-null parameter values.
@@ -1237,18 +1253,18 @@ _$MonthLeaveCopyWith<_MonthLeave> get copyWith => __$MonthLeaveCopyWithImpl<_Mon
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthLeave&&(identical(other.year, year) || other.year == year)&&(identical(other.totalDays, totalDays) || other.totalDays == totalDays)&&(identical(other.usedHalfDays, usedHalfDays) || other.usedHalfDays == usedHalfDays)&&(identical(other.plannedHalfDays, plannedHalfDays) || other.plannedHalfDays == plannedHalfDays)&&(identical(other.remainingHalfDays, remainingHalfDays) || other.remainingHalfDays == remainingHalfDays));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthLeave&&(identical(other.year, year) || other.year == year)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.usedMinutes, usedMinutes) || other.usedMinutes == usedMinutes)&&(identical(other.plannedMinutes, plannedMinutes) || other.plannedMinutes == plannedMinutes)&&(identical(other.remainingMinutes, remainingMinutes) || other.remainingMinutes == remainingMinutes)&&(identical(other.dayMinutes, dayMinutes) || other.dayMinutes == dayMinutes));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,year,totalDays,usedHalfDays,plannedHalfDays,remainingHalfDays);
+    return Object.hash(runtimeType,year,balance,usedMinutes,plannedMinutes,remainingMinutes,dayMinutes);
 }
 
 @override
 String toString() {
-    return 'MonthLeave(year: $year, totalDays: $totalDays, usedHalfDays: $usedHalfDays, plannedHalfDays: $plannedHalfDays, remainingHalfDays: $remainingHalfDays)';
+    return 'MonthLeave(year: $year, balance: $balance, usedMinutes: $usedMinutes, plannedMinutes: $plannedMinutes, remainingMinutes: $remainingMinutes, dayMinutes: $dayMinutes)';
 }
 
 
@@ -1259,11 +1275,11 @@ abstract mixin class _$MonthLeaveCopyWith<$Res> implements $MonthLeaveCopyWith<$
   factory _$MonthLeaveCopyWith(_MonthLeave value, $Res Function(_MonthLeave) _then) = __$MonthLeaveCopyWithImpl;
 @override @useResult
 $Res call({
- int year, int? totalDays, int usedHalfDays, int plannedHalfDays, int? remainingHalfDays
+ int year, LeaveBalance? balance, int usedMinutes, int plannedMinutes, int? remainingMinutes, int dayMinutes
 });
 
 
-
+@override $LeaveBalanceCopyWith<$Res>? get balance;
 
 }
 /// @nodoc
@@ -1276,18 +1292,31 @@ class __$MonthLeaveCopyWithImpl<$Res>
 
 /// Create a copy of MonthLeave
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? year = null,Object? totalDays = freezed,Object? usedHalfDays = null,Object? plannedHalfDays = null,Object? remainingHalfDays = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? year = null,Object? balance = freezed,Object? usedMinutes = null,Object? plannedMinutes = null,Object? remainingMinutes = freezed,Object? dayMinutes = null,}) {
   return _then(_MonthLeave(
 year: null == year ? _self.year : year // ignore: cast_nullable_to_non_nullable
-as int,totalDays: freezed == totalDays ? _self.totalDays : totalDays // ignore: cast_nullable_to_non_nullable
-as int?,usedHalfDays: null == usedHalfDays ? _self.usedHalfDays : usedHalfDays // ignore: cast_nullable_to_non_nullable
-as int,plannedHalfDays: null == plannedHalfDays ? _self.plannedHalfDays : plannedHalfDays // ignore: cast_nullable_to_non_nullable
-as int,remainingHalfDays: freezed == remainingHalfDays ? _self.remainingHalfDays : remainingHalfDays // ignore: cast_nullable_to_non_nullable
-as int?,
+as int,balance: freezed == balance ? _self.balance : balance // ignore: cast_nullable_to_non_nullable
+as LeaveBalance?,usedMinutes: null == usedMinutes ? _self.usedMinutes : usedMinutes // ignore: cast_nullable_to_non_nullable
+as int,plannedMinutes: null == plannedMinutes ? _self.plannedMinutes : plannedMinutes // ignore: cast_nullable_to_non_nullable
+as int,remainingMinutes: freezed == remainingMinutes ? _self.remainingMinutes : remainingMinutes // ignore: cast_nullable_to_non_nullable
+as int?,dayMinutes: null == dayMinutes ? _self.dayMinutes : dayMinutes // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
+/// Create a copy of MonthLeave
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LeaveBalanceCopyWith<$Res>? get balance {
+    if (_self.balance == null) {
+    return null;
+  }
 
+  return $LeaveBalanceCopyWith<$Res>(_self.balance!, (value) {
+    return _then(_self.copyWith(balance: value));
+  });
+}
 }
 
 /// @nodoc

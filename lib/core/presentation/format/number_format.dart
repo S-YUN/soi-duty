@@ -12,5 +12,9 @@ String formatThousands(int n) {
 /// 206250 → "206,250원"
 String formatWon(int won) => '${formatThousands(won)}원';
 
-/// 반일 단위 → 일. 15 → "7.5일", 30 → "15일", 1 → "0.5일"
-String formatLeaveDays(int halfDays) => halfDays.isEven ? '${halfDays ~/ 2}일' : '${halfDays ~/ 2}.5일';
+/// 연차 분 → 일. 7200/480 → "15일", 4080 → "8.5일", 3960 → "8.25일", 0 → "0일". 소수 둘째 자리까지, 끝 0 제거.
+String formatLeaveDays(int minutes, int dayMinutes) {
+  if (minutes % dayMinutes == 0) return '${minutes ~/ dayMinutes}일';
+  final text = (minutes / dayMinutes).toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
+  return '$text일';
+}

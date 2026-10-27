@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/providers/database_providers.dart';
 import '../../domain/backup/backup_codec.dart';
 import '../../domain/model/app_settings.dart';
+import '../../domain/model/leave_balance.dart';
 import '../../domain/model/backup_snapshot.dart';
 import '../../domain/rules/work_calculator.dart';
 import 'settings_texts.dart';
@@ -18,8 +19,8 @@ class SettingsController extends _$SettingsController {
 
   Future<void> setWeekStart(WeekStart weekStart) => _update((s) => s.copyWith(weekStart: weekStart));
 
-  /// days가 null이면 그 해 총 연차를 지운다("사용 안 함").
-  Future<void> setAnnualLeaveDays(int year, int? days) => _update((s) => s.withAnnualLeaveDays(year, days));
+  /// balance가 null이면 그 해 남은 연차를 지운다("사용 안 함").
+  Future<void> setLeaveBalance(int year, LeaveBalance? balance) => _update((s) => s.withLeaveBalance(year, balance));
 
   Future<void> setHourlyWage(int? won) => _update((s) => s.copyWith(hourlyWage: won));
 

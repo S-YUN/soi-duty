@@ -68,9 +68,10 @@ void main() {
     expect(formatThousands(12500), '12,500');
     expect(formatThousands(1234567), '1,234,567');
     expect(formatWon(206250), '206,250원');
-    expect(formatLeaveDays(30), '15일');
-    expect(formatLeaveDays(15), '7.5일');
-    expect(formatLeaveDays(1), '0.5일');
-    expect(formatLeaveDays(0), '0일');
+    expect(formatLeaveDays(7200, 480), '15일');
+    expect(formatLeaveDays(4080, 480), '8.5일');
+    expect(formatLeaveDays(3960, 480), '8.25일');
+    expect(formatLeaveDays(240, 480), '0.5일');
+    expect(formatLeaveDays(0, 480), '0일');
   });
 }

@@ -6,6 +6,7 @@ import 'package:soi_duty/data/repository/drift_app_settings_repository.dart';
 import 'package:soi_duty/data/repository/drift_work_record_repository.dart';
 import 'package:soi_duty/data/seed/debug_seed.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
+import 'package:soi_duty/domain/model/leave_balance.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_calculator.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
@@ -93,7 +94,7 @@ void main() {
   test('history: 올해 총 연차 15 · 시급 12,500도 넣어 월간 카드가 보인다', () async {
     await applySeed(db, SeedScenario.history, today: today);
     final settings = await DriftAppSettingsRepository(db).read();
-    expect(settings.annualLeaveDaysOf(today.year), 15);
+    expect(settings.leaveBalanceOf(today.year), LeaveBalance(remainingMinutes: 15 * 480, baseDate: DateTime(today.year, 1, 1)));
     expect(settings.hourlyWage, 12500);
   });
 

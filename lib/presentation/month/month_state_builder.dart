@@ -26,7 +26,7 @@ MonthState buildMonthState({
     month: start,
     weeks: [for (var i = 0; i < cells.length; i += 7) cells.sublist(i, i + 7)],
     extraWork: _extraWork(records, start, settings, rules),
-    leave: _leave(records, start.year, today, settings),
+    leave: _leave(records, start.year, today, settings, rules),
   );
 }
 
@@ -42,15 +42,17 @@ MonthExtraWork _extraWork(List<WorkRecord> records, DateTime month, AppSettings 
   );
 }
 
-MonthLeave _leave(List<WorkRecord> records, int year, DateTime today, AppSettings settings) {
-  final total = settings.annualLeaveDaysOf(year);
-  final used = usedLeaveHalfDays(records, year);
+MonthLeave _leave(List<WorkRecord> records, int year, DateTime today, AppSettings settings, WorkRules rules) {
+  final balance = settings.leaveBalanceOf(year);
+  final used = leaveMinutesUsed(records, year, rules, after: balance?.baseDate);
+  final plannedFrom = balance == null || today.isAfter(balance.baseDate) ? today : balance.baseDate;
   return MonthLeave(
     year: year,
-    totalDays: total,
-    usedHalfDays: used,
-    plannedHalfDays: plannedLeaveHalfDays(records, year, today),
-    remainingHalfDays: total == null ? null : total * 2 - used,
+    balance: balance,
+    usedMinutes: used,
+    plannedMinutes: leaveMinutesUsed(records, year, rules, after: plannedFrom),
+    remainingMinutes: balance == null ? null : balance.remainingMinutes - used,
+    dayMinutes: rules.dayOffCreditMinutes,
   );
 }
 

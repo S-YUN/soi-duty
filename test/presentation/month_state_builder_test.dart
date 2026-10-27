@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
+import 'package:soi_duty/domain/model/leave_balance.dart';
 import 'package:soi_duty/domain/model/work_record.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
@@ -128,43 +129,51 @@ void main() {
       );
     });
 
-    test('연차 카드 — 항상 있다. 총 연차 없으면 total·remaining null, 사용은 0', () {
-      expect(build([]).leave, const MonthLeave(year: 2026, totalDays: null, usedHalfDays: 0, plannedHalfDays: 0, remainingHalfDays: null));
+    test('연차 카드 — 미입력이면 올해 전체 사용, 잔여 null', () {
+      expect(build([]).leave, const MonthLeave(year: 2026, balance: null, usedMinutes: 0, plannedMinutes: 0, remainingMinutes: null, dayMinutes: 480));
       expect(
-        build([rec(14, type: WorkType.dayOff)]).leave,
-        const MonthLeave(year: 2026, totalDays: null, usedHalfDays: 2, plannedHalfDays: 0, remainingHalfDays: null),
-      );
-      expect(
-        build([], settings: const AppSettings(annualLeaveDaysByYear: {2026: 15})).leave,
-        const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 0, plannedHalfDays: 0, remainingHalfDays: 30),
+        build([rec(14, type: WorkType.dayOff), rec(18, type: WorkType.halfDay)]).leave,
+        const MonthLeave(year: 2026, balance: null, usedMinutes: 720, plannedMinutes: 240, remainingMinutes: null, dayMinutes: 480),
       );
     });
 
-    test('연차 카드 — 총 6일에 사용 7.5일이면 remainingHalfDays == -3', () {
-      final rs = [for (final day in [1, 2, 3, 4, 7, 8, 9]) rec(day, type: WorkType.dayOff), rec(10, inH: 9, outH: 13, type: WorkType.halfDay)];
-      final leave = build(rs, settings: const AppSettings(annualLeaveDaysByYear: {2026: 6})).leave;
-      expect(leave.usedHalfDays, 15);
-      expect(leave.remainingHalfDays, -3);
+    test('연차 카드 — 값 있음: 기준일 다음 날부터만 빼고, 예정은 오늘 뒤', () {
+      final b = LeaveBalance(remainingMinutes: 4080, baseDate: DateTime(2026, 9, 14));
+      final leave = build(
+        [rec(14, type: WorkType.dayOff), rec(15, type: WorkType.halfDay), rec(18, type: WorkType.dayOff)],
+        settings: AppSettings(leaveBalanceByYear: {2026: b}),
+      ).leave;
+      expect(leave.balance, b);
+      expect(leave.usedMinutes, 720); // 14일은 기준일 당일 → 제외, 15 반차 + 18 연차
+      expect(leave.plannedMinutes, 480); // 18일만 오늘(16) 뒤
+      expect(leave.remainingMinutes, 4080 - 720);
     });
 
-    test('연차 카드 — 2027-01이면 year 2027, 총 연차는 2027 키, 2026년 사용분은 빠진다', () {
-      final rs = [rec(14, type: WorkType.dayOff), WorkRecord(date: DateTime(2027, 1, 5), type: WorkType.halfDay)];
-      const settings = AppSettings(annualLeaveDaysByYear: {2026: 15});
-      expect(
-        build(rs, month: DateTime(2027, 1), settings: settings).leave,
-        const MonthLeave(year: 2027, totalDays: null, usedHalfDays: 1, plannedHalfDays: 1, remainingHalfDays: null),
-      );
-      expect(
-        build(rs, month: DateTime(2027, 1), settings: settings.withAnnualLeaveDays(2027, 16)).leave.remainingHalfDays,
-        31,
-      );
+    test('연차 카드 — 초과면 잔여 음수', () {
+      final b = LeaveBalance(remainingMinutes: 240, baseDate: DateTime(2026, 9, 1));
+      expect(build([rec(14, type: WorkType.dayOff)], settings: AppSettings(leaveBalanceByYear: {2026: b})).leave.remainingMinutes, -240);
     });
 
-    test('연차 카드 — plannedHalfDays는 오늘 이후 연차·반차만 (오늘 9/16)', () {
-      final rs = [rec(14, type: WorkType.dayOff), rec(16, type: WorkType.dayOff), rec(17, type: WorkType.halfDay), rec(24, type: WorkType.dayOff)];
-      final leave = build(rs).leave;
-      expect(leave.usedHalfDays, 7);
-      expect(leave.plannedHalfDays, 3);
+    test('연차 카드 — 기준일이 오늘보다 뒤여도 예정은 기준일 뒤만', () {
+      final b = LeaveBalance(remainingMinutes: 4080, baseDate: DateTime(2026, 9, 20));
+      final leave = build([rec(18, type: WorkType.dayOff), rec(24, type: WorkType.dayOff)], settings: AppSettings(leaveBalanceByYear: {2026: b})).leave;
+      expect(leave.usedMinutes, 480);
+      expect(leave.plannedMinutes, 480);
+    });
+
+    test('연차 카드 — 12월에 1월 카드에서 넣은 값: 해 2027, 기준일 2026-12-20, 2027 기록은 전부 이후, 2026 기록은 제외', () {
+      final b = LeaveBalance(remainingMinutes: 7200, baseDate: DateTime(2026, 12, 20));
+      final leave = build(
+        [rec(28, type: WorkType.dayOff), WorkRecord(date: DateTime(2027, 1, 5), type: WorkType.dayOff)],
+        month: DateTime(2027, 1),
+        settings: AppSettings(leaveBalanceByYear: {2027: b}),
+      ).leave;
+      expect(leave.year, 2027);
+      expect(leave.usedMinutes, 480);
+      expect(leave.plannedMinutes, 480);
+      expect(leave.remainingMinutes, 7200 - 480);
+      // 2026 값만 있으면 2027 카드는 미입력
+      expect(build([], month: DateTime(2027, 1), settings: AppSettings(leaveBalanceByYear: {2026: b})).leave.balance, isNull);
     });
   });
 }

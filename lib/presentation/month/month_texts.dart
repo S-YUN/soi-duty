@@ -39,17 +39,21 @@ abstract final class MonthTexts {
   static String minutes(int m) => formatHm(m);
   static String amount(int won) => formatWon(won);
 
-  // 연차 카드 (그 해)
+  // 연차 카드 (그 해) — 2026-10-27: 남은 연차 + 기준일
   static String leaveTitle(int year) => '$year년 연차';
-  static const leaveTotalLabel = '총 연차';
-  static const leaveUsedLabel = '사용';
-  static const leaveRemainLabel = '잔여';
+  /// 제목 아래 줄. 1월 1일 기준이어도 라벨은 "남은 연차" — 이 줄이 기준일을 말한다.
+  static String leaveBaseLine(DateTime d) => '${d.month}월 ${d.day}일 기준';
+  static const leaveBalanceLabel = '남은 연차';
+  /// 값이 없을 때 2칸 — 그 해 전체 사용. 값을 넣는 순간 "이후 사용"으로 뜻이 바뀐다.
+  static const leaveUsedYearLabel = '올해 사용';
+  static const leaveUsedAfterLabel = '이후 사용';
+  static const leaveRemainLabel = '지금 잔여';
   static const leaveOverLabel = '초과';
   /// 입력값이 없어 계산할 수 없는 값 (잔여 연차 · 예상 금액)
   static const none = '—';
-  /// 사용자가 넣는 값을 아직 안 넣음 (총 연차)
+  /// 사용자가 넣는 값을 아직 안 넣음 (남은 연차)
   static const notEntered = '미입력';
-  static String days(int halfDays) => formatLeaveDays(halfDays);
-  static String plannedLine(int halfDays) => '예정 ${formatLeaveDays(halfDays)} 포함';
-  static const leaveNudge = '올해 연차 개수를 알려주시면 남은 연차를 보여드려요';
+  static String days(int minutes, int dayMinutes) => formatLeaveDays(minutes, dayMinutes);
+  static String plannedLine(int minutes, int dayMinutes) => '예정 ${formatLeaveDays(minutes, dayMinutes)} 포함';
+  static const leaveNudge = '지금 남은 연차를 알려주시면 잔여를 보여드려요';
 }

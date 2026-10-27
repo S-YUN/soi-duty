@@ -390,20 +390,24 @@ List<DateTime> unrecordedWeekdays({
 int extraPayWon(int minutes, int hourlyWage, WorkRules rules) =>
     (minutes * hourlyWage * rules.extraWorkPayMultiplier / 60).floor();
 
-/// 그 해 사용한 연차(반일 단위). 연차 2 · 반차 1. 미리 찍은 미래 날짜도 포함 — 이미 계획한 날은 더 쓸 수 없는 날이다.
-int usedLeaveHalfDays(List<WorkRecord> records, int year) =>
-    records.where((r) => r.date.year == year).fold(0, (sum, r) => sum + _leaveHalfDays(r.type));
-
-/// 그 해 사용분 중 날짜가 오늘보다 뒤인 것(반일 단위). 오늘은 예정이 아니다.
-int plannedLeaveHalfDays(List<WorkRecord> records, int year, DateTime today) {
-  final t = dateOnly(today);
-  return records
-      .where((r) => r.date.year == year && r.date.isAfter(t))
-      .fold(0, (sum, r) => sum + _leaveHalfDays(r.type));
-}
-
-int _leaveHalfDays(WorkType t) => switch (t) {
-      WorkType.dayOff => 2,
-      WorkType.halfDay => 1,
+/// 유형 하나가 연차에서 까는 분. 연차 1일 · 반차 반일 · 그 외 0.
+int leaveMinutesOf(WorkType t, WorkRules rules) => switch (t) {
+      WorkType.dayOff => rules.dayOffCreditMinutes,
+      WorkType.halfDay => rules.halfDayCreditMinutes,
       WorkType.normal || WorkType.holiday || WorkType.businessTrip => 0,
     };
+
+/// 그 해에 쓴(쓸) 연차 분. 미리 찍은 미래 날짜도 포함 — 이미 계획한 날은 더 쓸 수 없는 날이다.
+/// [after]가 있으면 그 날짜 **다음 날부터**만 센다(기준일 당일은 회사 숫자에 이미 반영된 것으로 본다). 날짜만 본다.
+int leaveMinutesUsed(List<WorkRecord> records, int year, WorkRules rules, {DateTime? after}) {
+  final from = after == null ? null : dateOnly(after);
+  return records
+      .where((r) => r.date.year == year && (from == null || r.date.isAfter(from)))
+      .fold(0, (sum, r) => sum + leaveMinutesOf(r.type, rules));
+}
+
+/// 남은 연차 입력값 검사 — 0 이상, 99일 이하, 입력 단위(`leaveStepMinutes`)의 배수.
+bool isValidLeaveMinutes(int minutes, WorkRules rules) =>
+    minutes >= 0 &&
+    minutes <= AppSettings.maxLeaveDays * rules.dayOffCreditMinutes &&
+    minutes % rules.leaveStepMinutes == 0;

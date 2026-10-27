@@ -150,6 +150,16 @@ abstract final class AppTextStyles {
   static TextStyle get numberFieldEmpty => _style(28, FontWeight.w600, letterSpacingEm: -0.02, color: AppColors.dotInactive);
   static TextStyle get numberUnit => _style(20, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get clearLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
+  /// 연차 시트 — 제목 아래 "오늘(10월 26일) 기준 남은 연차"
+  static TextStyle get numberHeadline => _style(13, FontWeight.w400, color: AppColors.subtle);
+  /// 빈 입력줄 "0" 옆 "입력 전"
+  static TextStyle get numberEmptyCaption => _style(13, FontWeight.w400, color: AppColors.subtle);
+  /// "0.5일 단위로 넣어주세요"
+  static TextStyle get numberInvalid => _style(13, FontWeight.w400, color: AppColors.minus);
+  /// 안내 여러 줄 (lh 1.55)
+  static TextStyle get numberNotes => _style(13, FontWeight.w400, height: 1.55, color: AppColors.subtle);
+  /// 조건부 강조 줄 — "이 뒤로 찍어둔 연차 n일은 여기서 빼서 보여드려요"
+  static TextStyle get numberHighlightNote => _style(13, FontWeight.w400, height: 1.55, color: AppColors.brand);
 
   // 월간 탭 카드 (수당 · 연차)
   static TextStyle get extraRowLabel => _style(13.5, FontWeight.w400, color: AppColors.subtle);
@@ -161,6 +171,8 @@ abstract final class AppTextStyles {
   static TextStyle get leaveTotalNotEntered => _style(15, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get nudge => _style(14, FontWeight.w500, height: 1.45, color: AppColors.brand);
   static TextStyle get plannedLine => _style(12, FontWeight.w400, color: AppColors.subtle);
+  /// 연차 카드 제목 아래 "10월 26일 기준"
+  static TextStyle get leaveBaseLine => _style(13, FontWeight.w400, height: 1.45, color: AppColors.subtle);
 
   // 확인 다이얼로그
   static TextStyle get dialogTitle => _style(16, FontWeight.w600);

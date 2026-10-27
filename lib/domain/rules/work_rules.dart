@@ -11,6 +11,7 @@ class WorkRules {
     this.defaultClockInMinutes = 8 * 60,
     this.defaultClockOutMinutes = 17 * 60,
     this.extraWorkPayMultiplier = 1.5,
+    this.leaveStepMinutes = 240,
   });
 
   final int weeklyTargetMinutes;
@@ -34,6 +35,9 @@ class WorkRules {
 
   /// 주말·공휴일 근무 수당 배율. 사용자 설정이 아니다 — 테스트 회사 규정(1.5배 고정).
   final double extraWorkPayMultiplier;
+
+  /// 남은 연차 입력 단위(0.5일). 반반차가 생기면 120으로.
+  final int leaveStepMinutes;
 
   /// 평일 하루 기준시간 (8h). 연차 1일 차감량과 같다.
   int get dailyStandardMinutes => dayOffCreditMinutes;

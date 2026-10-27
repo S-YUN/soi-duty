@@ -71,7 +71,7 @@ void main() {
     await driver.waitFor(find.text(monthTitle(thisMonth)));
     await driver.waitUntilNoTransientCallbacks();
 
-    // 범례 아래 카드(수당 · 연차) — 시드가 올해 총 연차 15 · 시급 12,500을 넣어 연차 카드는 항상 있다.
+    // 범례 아래 카드(수당 · 연차) — 시드가 남은 연차 15일(기준일 1/1) · 시급 12,500을 넣어 연차 카드는 항상 있다.
     await driver.scroll(find.byType('CalendarCard'), 0, -700, const Duration(milliseconds: 400));
     await driver.waitFor(find.text('${today.year}년 연차'));
     await shot('month-cards');
@@ -118,7 +118,7 @@ void main() {
 
     // 설정: 톱니 → 화면 → 시급 시트(OS 키패드 위) → 저장 → 뒤로
     await driver.tap(find.bySemanticsLabel('설정'));
-    await driver.waitFor(find.text('올해 총 연차'));
+    await driver.waitFor(find.text('남은 연차'));
     await shot('settings');
     await driver.tap(find.text('시급'));
     await driver.waitFor(find.text('이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.'));

@@ -26,7 +26,7 @@ class DriftBackupRepository implements BackupRepository {
       exportedAt: now,
       firstRecordDate: first == null ? null : parseDateKey(first.value),
       weekStart: settings.weekStart,
-      annualLeaveDaysByYear: settings.annualLeaveDaysByYear,
+      leaveBalanceByYear: settings.leaveBalanceByYear,
       hourlyWage: settings.hourlyWage,
       records: rows.map(DriftWorkRecordRepository.toDomain).toList(),
     );
@@ -52,7 +52,7 @@ class DriftBackupRepository implements BackupRepository {
         final current = await _settings.read();
         await _settings.save(current.copyWith(
           weekStart: s.weekStart,
-          annualLeaveDaysByYear: s.annualLeaveDaysByYear,
+          leaveBalanceByYear: s.leaveBalanceByYear,
           hourlyWage: s.hourlyWage,
         ));
       });
