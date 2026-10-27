@@ -67,7 +67,7 @@ void main() {
       rules: rules,
     );
     expect(TodayTexts.clockInLine(s), '09:12 출근');
-    expect(TodayTexts.workingLine(s), '7시간 15분째 근무중');
+    expect(TodayTexts.workingLine(s), '6시간 15분째 근무중'); // 경과 7h 15m − 점심 60 (위 카드와 같은 실근무 기준)
     expect(s.expectedClockOut, d(16, 18, 12)); // 계산은 되지만 화면엔 아직 안 띄움
     expect(TodayTexts.buttonLabel(s), '퇴근하기');
   });

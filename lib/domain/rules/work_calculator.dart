@@ -85,12 +85,25 @@ int? actualMinutes(WorkRecord r, WorkRules rules) {
 }
 
 /// 근무 중인 오늘의 진행분. 오늘이 아니거나 출근·퇴근 조건이 안 맞으면 null.
+///
+/// 점심 공제는 출근 직후가 아니라 **점심 창**(`lunchStartMinutes`부터 `lunchBreakMinutes` 동안)에서 한다 —
+/// 창 전에는 경과가 그대로 오르고, 창 안에서는 멈추고, 창이 끝나면 정액 전부를 뺀 값으로 다시 오른다.
+/// 창이 끝난 뒤에는 출근 시각과 무관하게 정액이라 퇴근 순간 [actualMinutes]와 같은 값이 된다 (2026-10-27).
 int? ongoingMinutes(WorkRecord r, DateTime now, WorkRules rules) {
   if (dateOnly(now) != dateOnly(r.date)) return null;
   final clockIn = r.clockIn;
   if (clockIn == null || r.clockOut != null) return null;
   final raw = minutesBetween(clockIn, now);
-  final lunch = deductsLunch(r) ? rules.lunchBreakMinutes : 0;
+  if (!deductsLunch(r)) return math.max(0, raw);
+  final lunchStart = dateOnly(now).add(Duration(minutes: rules.lunchStartMinutes));
+  final lunchEnd = lunchStart.add(Duration(minutes: rules.lunchBreakMinutes));
+  final int lunch;
+  if (!minuteOnly(now).isBefore(lunchEnd)) {
+    lunch = rules.lunchBreakMinutes;
+  } else {
+    final from = minuteOnly(clockIn).isAfter(lunchStart) ? minuteOnly(clockIn) : lunchStart;
+    lunch = math.max(0, minutesBetween(from, now));
+  }
   return math.max(0, raw - lunch);
 }
 
