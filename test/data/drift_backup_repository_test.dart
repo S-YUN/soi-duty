@@ -5,8 +5,10 @@ import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/data/repository/drift_app_settings_repository.dart';
 import 'package:soi_duty/data/repository/drift_backup_repository.dart';
 import 'package:soi_duty/data/repository/drift_work_record_repository.dart';
+import 'package:soi_duty/domain/backup/backup_codec.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/backup_snapshot.dart';
+import 'package:soi_duty/domain/model/leave_balance.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 
 import '../helpers/records.dart';
@@ -28,6 +30,8 @@ void main() {
 
   tearDown(() => db.close());
 
+  final b26 = LeaveBalance(remainingMinutes: 7200, baseDate: DateTime(2026, 1, 1));
+
   Future<String?> settingValue(String key) async =>
       (await (db.select(db.settings)..where((t) => t.key.equals(key))).getSingleOrNull())?.value;
 
@@ -35,13 +39,13 @@ void main() {
     for (final r in [rec(7, inH: 9, outH: 18), rec(8, inH: 9, outH: 18), rec(9, type: WorkType.dayOff)]) {
       await records.save(r);
     }
-    await settings.save(AppSettings(hourlyWage: 10000, annualLeaveDaysByYear: const {2026: 10}, lastExportDate: DateTime(2026, 10, 24)));
+    await settings.save(AppSettings(hourlyWage: 10000, leaveBalanceByYear: {2026: LeaveBalance(remainingMinutes: 4800, baseDate: DateTime(2026, 10, 1))}, lastExportDate: DateTime(2026, 10, 24)));
 
     await backup.restore(BackupSnapshot(
       exportedAt: DateTime(2026, 10, 25),
       firstRecordDate: DateTime(2026, 9, 14),
       weekStart: WeekStart.sunday,
-      annualLeaveDaysByYear: const {2026: 15},
+      leaveBalanceByYear: {2026: b26},
       hourlyWage: 12500,
       records: [rec(14, inH: 9, outH: 18), rec(15, type: WorkType.dayOff)],
     ));
@@ -50,7 +54,7 @@ void main() {
     expect(await records.watchFirstRecordDate().first, DateTime(2026, 9, 14));
     expect(
       await settings.watch().first,
-      AppSettings(weekStart: WeekStart.sunday, annualLeaveDaysByYear: const {2026: 15}, hourlyWage: 12500, lastExportDate: DateTime(2026, 10, 24)),
+      AppSettings(weekStart: WeekStart.sunday, leaveBalanceByYear: {2026: b26}, hourlyWage: 12500, lastExportDate: DateTime(2026, 10, 24)),
     );
     expect(await backup.recordCount(), 2);
   });
@@ -60,7 +64,7 @@ void main() {
     await backup.restore(BackupSnapshot(
       exportedAt: DateTime(2026, 10, 25),
       weekStart: WeekStart.monday,
-      annualLeaveDaysByYear: const {},
+      leaveBalanceByYear: const {},
       records: [rec(16, inH: 9, outH: 18), rec(15, type: WorkType.dayOff)],
     ));
     expect(await records.watchFirstRecordDate().first, d(15));
@@ -68,7 +72,7 @@ void main() {
     await backup.restore(BackupSnapshot(
       exportedAt: DateTime(2026, 10, 25),
       weekStart: WeekStart.monday,
-      annualLeaveDaysByYear: const {},
+      leaveBalanceByYear: const {},
       records: const [],
     ));
     expect(await records.watchAll().first, isEmpty);
@@ -79,7 +83,7 @@ void main() {
     await backup.restore(BackupSnapshot(
       exportedAt: DateTime(2026, 10, 25),
       weekStart: WeekStart.monday,
-      annualLeaveDaysByYear: const {},
+      leaveBalanceByYear: const {},
       records: [rec(16, inH: 9, inM: 12), rec(15, inH: 9, outH: 18, type: WorkType.dayOff, ded: 60)],
     ));
     final all = await records.watchAll().first;
@@ -90,13 +94,20 @@ void main() {
   test('snapshot — 현재 기록·첫 기록일·설정이 담기고 lastExportDate는 담기지 않는다', () async {
     await records.save(rec(14, inH: 9, outH: 18));
     await records.save(rec(10, type: WorkType.halfDay));
-    await settings.save(AppSettings(weekStart: WeekStart.sunday, annualLeaveDaysByYear: const {2026: 15}, hourlyWage: 12500, lastExportDate: DateTime(2026, 10, 24)));
+    await settings.save(AppSettings(weekStart: WeekStart.sunday, leaveBalanceByYear: {2026: b26}, hourlyWage: 12500, lastExportDate: DateTime(2026, 10, 24)));
     final s = await backup.snapshot(DateTime(2026, 10, 25, 9, 12));
     expect(s.exportedAt, DateTime(2026, 10, 25, 9, 12));
     expect(s.firstRecordDate, d(10));
     expect(s.weekStart, WeekStart.sunday);
-    expect(s.annualLeaveDaysByYear, {2026: 15});
+    expect(s.leaveBalanceByYear, {2026: b26});
     expect(s.hourlyWage, 12500);
     expect(s.records, containsAll([rec(14, inH: 9, outH: 18), rec(10, type: WorkType.halfDay)]));
+  });
+
+  test('format 1 파일 → 복원 → 읽기: 총 연차 15가 기준일 1/1 · 7200분으로 보인다', () async {
+    const text = '{"app":"soi_duty","format":1,"exportedAt":"2026-10-25T09:12:00.000","firstRecordDate":"2026-09-14",'
+        '"settings":{"weekStart":"monday","annualLeaveDaysByYear":{"2026":15},"hourlyWage":null},"records":[]}';
+    await backup.restore(decodeBackup(text));
+    expect((await settings.read()).leaveBalanceOf(2026), b26);
   });
 }

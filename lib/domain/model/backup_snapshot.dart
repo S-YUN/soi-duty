@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'app_settings.dart';
+import 'leave_balance.dart';
 import 'work_record.dart';
 
 part 'backup_snapshot.freezed.dart';
@@ -13,7 +14,7 @@ abstract class BackupSnapshot with _$BackupSnapshot {
     required DateTime exportedAt,
     DateTime? firstRecordDate,
     required WeekStart weekStart,
-    required Map<int, int> annualLeaveDaysByYear,
+    required Map<int, LeaveBalance> leaveBalanceByYear,
     int? hourlyWage,
     required List<WorkRecord> records,
   }) = _BackupSnapshot;
