@@ -210,6 +210,13 @@ abstract final class AppSizes {
   static double get numberFieldGap => 6.w;
   static double get numberNoteTop => 10.w;
   static double get numberSaveTop => 18.w;
+  // 헤드라인이 있는 연차 시트 — 줄이 늘어난 만큼 간격을 줄인다 (브리프 5 시안)
+  static double get numberHeadlineTop => 12.w;
+  static double get numberFieldTopWithHeadline => 4.w;
+  static EdgeInsets get numberFieldPaddingCompact => EdgeInsets.fromLTRB(2.w, 6.w, 2.w, 8.w);
+  static double get numberInvalidTop => 6.w;
+  static double get numberNotesTop => 12.w;
+  static double get numberSaveTopCompact => 12.w;
   static double get clearLinkTop => 2.w;
   static double get clearLinkMinHeight => 44.w;
   static EdgeInsets get clearLinkPadding => EdgeInsets.symmetric(horizontal: 4.w);
