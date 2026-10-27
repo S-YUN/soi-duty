@@ -117,10 +117,16 @@ void main() {
       expect(lines.map((l) => l.label), ['근무', '점심 공제']);
       expect(lines.map((l) => l.value), ['4h 30m', '없음']);
     });
-    test('시각이 비면 근무·기준 대비는 —', () {
+    test('시각이 비면 근무·기준 대비는 —, 점심은 최대치', () {
       final draft = RecordDraft.fromRecord(date: d(14), today: today, record: null);
       final values = calcLines(draft, rules).map((l) => l.value).toList();
       expect(values, ['—', '1h', '8h', '—']);
+    });
+    test('점심 창과 겹친 만큼만 — 14시 출근은 "없음", 12:30 출근은 "30m"', () {
+      final late = RecordDraft.fromRecord(date: d(14), today: today, record: rec(14, inH: 14, outH: 18));
+      expect(calcLines(late, rules).map((l) => l.value).toList(), ['4h', '없음', '8h', '−4h']);
+      final half = RecordDraft.fromRecord(date: d(14), today: today, record: rec(14, inH: 12, inM: 30, outH: 18));
+      expect(calcLines(half, rules).map((l) => l.value).toList(), ['5h', '30m', '8h', '−3h']);
     });
   });
 

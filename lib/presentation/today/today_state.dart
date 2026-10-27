@@ -24,7 +24,7 @@ abstract class TodayState with _$TodayState {
     required bool isHalfDay,
     DateTime? clockIn,
     DateTime? clockOut,
-    /// working일 때 now − clockIn (점심 미공제)
+    /// working일 때 실근무 진행분 — now − clockIn − 점심 창과 겹친 분 (`ongoingMinutes`)
     int? elapsedMinutes,
     /// working일 때만. 첫 주 예외·주말·연차·이미 채움이면 null
     DateTime? expectedClockOut,

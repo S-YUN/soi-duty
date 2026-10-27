@@ -46,8 +46,20 @@ void main() {
   });
 
   group('actualMinutes', () {
-    test('일반: 퇴근 − 출근 − 60분', () {
-      expect(actualMinutes(rec(14, inH: 9, outH: 18), rules), 480);
+    test('일반: 퇴근 − 출근 − 점심 창(12:00–13:00)과 겹친 분', () {
+      expect(actualMinutes(rec(14, inH: 9, outH: 18), rules), 480); // 겹침 60
+      expect(actualMinutes(rec(14, inH: 14, outH: 18), rules), 240); // 창 지난 뒤 출근 — 공제 없음
+      expect(actualMinutes(rec(14, inH: 12, inM: 30, outH: 18), rules), 300); // 겹침 30
+      expect(actualMinutes(rec(14, inH: 9, outH: 12, outM: 30), rules), 180); // 겹침 30
+      expect(actualMinutes(rec(14, inH: 23, inM: 30, outH: 23, outM: 40), rules), 10); // 밤 출퇴근
+    });
+    test('lunchMinutes — 겹친 분, 공제 없는 유형·주말은 0', () {
+      expect(lunchMinutes(rec(14, inH: 9, outH: 18), rules), 60);
+      expect(lunchMinutes(rec(14, inH: 12, inM: 10, outH: 12, outM: 40), rules), 30);
+      expect(lunchMinutes(rec(14, inH: 9, outH: 18, type: WorkType.halfDay), rules), 0);
+      expect(lunchMinutes(rec(19, inH: 9, outH: 18), rules), 0);
+      expect(lunchMinutes(rec(14, inH: 9), rules), isNull); // 시각이 없으면 모름
+      expect(lunchMinutes(rec(14, inH: 9, outH: 18), const WorkRules(lunchStartMinutes: 11 * 60 + 30)), 60);
     });
     test('반차: 점심 공제 없음', () {
       expect(actualMinutes(rec(14, inH: 9, outH: 13, type: WorkType.halfDay), rules), 240);
@@ -63,8 +75,9 @@ void main() {
       expect(actualMinutes(rec(14, outH: 18), rules), isNull);
       expect(actualMinutes(rec(14), rules), isNull);
     });
-    test('공제 후 음수면 0', () {
-      expect(actualMinutes(rec(14, inH: 9, outH: 9, outM: 30), rules), 0);
+    test('점심 창 안에서만 일했으면 0 (음수 없음)', () {
+      expect(actualMinutes(rec(14, inH: 12, inM: 10, outH: 12, outM: 40), rules), 0);
+      expect(actualMinutes(rec(14, inH: 9, outH: 9, outM: 30), rules), 30); // 창 밖 30분은 그대로
     });
     test('초는 버리고 화면에 보이는 분끼리 뺀다 (09:10:45 → 11:10:20 = 2h)', () {
       final r = WorkRecord(
@@ -86,17 +99,18 @@ void main() {
       expect(ongoingMinutes(rec(14, inH: 9), d(14, 12, 30), rules), 180);
       expect(ongoingMinutes(rec(14, inH: 9), d(14, 13), rules), 180);
     });
-    test('점심 창이 끝나면 정액 60분을 뺀 값으로 다시 오른다 — 퇴근 저장값과 같다', () {
+    test('점심 창이 끝나면 겹친 60분을 뺀 값으로 다시 오른다 — 퇴근 저장값과 같다', () {
       expect(ongoingMinutes(rec(14, inH: 9), d(14, 14), rules), 240);
       expect(ongoingMinutes(rec(14, inH: 9), d(14, 18), rules), actualMinutes(rec(14, inH: 9, outH: 18), rules));
     });
     test('점심 창 중간에 출근하면 겹친 만큼만 멈춘다', () {
       expect(ongoingMinutes(rec(14, inH: 12, inM: 30), d(14, 12, 50), rules), 0);
-      expect(ongoingMinutes(rec(14, inH: 12, inM: 30), d(14, 14), rules), 30);
+      expect(ongoingMinutes(rec(14, inH: 12, inM: 30), d(14, 14), rules), 60); // 12:30~13:00은 점심
     });
-    test('점심 창이 지난 뒤 출근한 일반 근무는 처음부터 정액 공제 (하루 합계 규칙과 같게)', () {
-      expect(ongoingMinutes(rec(14, inH: 14), d(14, 14, 30), rules), 0);
-      expect(ongoingMinutes(rec(14, inH: 14), d(14, 16), rules), 60);
+    test('점심 창이 지난 뒤 출근하면 공제 없이 바로 오른다 (밤 출근이 0에 멈춰 있던 문제, 2026-10-27)', () {
+      expect(ongoingMinutes(rec(14, inH: 14), d(14, 14, 30), rules), 30);
+      expect(ongoingMinutes(rec(14, inH: 23, inM: 30), d(14, 23, 41), rules), 11);
+      expect(ongoingMinutes(rec(14, inH: 14), d(14, 18), rules), actualMinutes(rec(14, inH: 14, outH: 18), rules));
     });
     test('출근 시각이 미래면 0', () {
       expect(ongoingMinutes(rec(14, inH: 15), d(14, 12), rules), 0);
@@ -326,8 +340,15 @@ void main() {
   });
 
   group('expectedClockOut', () {
-    test('일반: 출근 + 오늘 목표 + 점심', () {
+    test('일반: 출근 + 오늘 목표 + 점심 창을 지나면 60', () {
       expect(expectedClockOut(rec(16, inH: 9, inM: 12), 420, rules), d(16, 17, 12));
+    });
+    test('점심 창 뒤 출근은 점심 없음, 창 안 출근은 13시부터, 창 전에 끝나면 없음, 창에 걸치면 13시 뒤로 밀림', () {
+      expect(expectedClockOut(rec(16, inH: 14), 240, rules), d(16, 18));
+      expect(expectedClockOut(rec(16, inH: 12, inM: 20), 60, rules), d(16, 14));
+      expect(expectedClockOut(rec(16, inH: 9), 120, rules), d(16, 11));
+      expect(expectedClockOut(rec(16, inH: 11, inM: 30), 40, rules), d(16, 13, 10));
+      expect(expectedClockOut(rec(16, inH: 11, inM: 30), 30, rules), d(16, 12));
     });
     test('반차: 점심 없음', () {
       expect(expectedClockOut(rec(16, inH: 9, inM: 12, type: WorkType.halfDay), 240, rules), d(16, 13, 12));

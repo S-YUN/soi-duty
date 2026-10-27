@@ -73,38 +73,47 @@ int dayStandardMinutes(WorkRecord? r, WorkRules rules) {
   return math.max(0, standardMinutes(r.type, rules) - deduction);
 }
 
-/// 하루 실근무. 연차·출장은 0, 시각 없는 공휴일은 0, 출퇴근이 비면 null.
+/// 하루 실근무. 점심 공제는 정액이 아니라 **근무 구간이 점심 창(12:00–13:00)과 겹친 만큼**(2026-10-27) —
+/// 9~18시는 60분, 14~18시는 0분, 12:30~18시는 30분. 밤에 찍은 10분짜리 근무가 0이 되던 문제를 없앤다.
 int? actualMinutes(WorkRecord r, WorkRules rules) {
   if (r.type == WorkType.dayOff || r.type == WorkType.businessTrip) return 0;
   final clockIn = r.clockIn;
   final clockOut = r.clockOut;
   if (clockIn == null || clockOut == null) return r.type == WorkType.holiday ? 0 : null;
-  final raw = minutesBetween(clockIn, clockOut);
-  final lunch = deductsLunch(r) ? rules.lunchBreakMinutes : 0;
-  return math.max(0, raw - lunch);
+  return math.max(0, minutesBetween(clockIn, clockOut) - _lunchOverlap(r, clockIn, clockOut, rules));
+}
+
+/// 그 기록의 점심 공제 분(겹친 만큼). 공제 없는 유형·주말은 0, 출퇴근 중 하나라도 없으면 null(모름).
+int? lunchMinutes(WorkRecord r, WorkRules rules) {
+  final clockIn = r.clockIn;
+  final clockOut = r.clockOut;
+  if (clockIn == null || clockOut == null) return null;
+  return _lunchOverlap(r, clockIn, clockOut, rules);
+}
+
+/// [from]~[to]가 [from] 날짜의 점심 창과 겹친 분. 분 단위로 자른 시각끼리 센다.
+int _lunchOverlap(WorkRecord r, DateTime from, DateTime to, WorkRules rules) {
+  if (!deductsLunch(r)) return 0;
+  final (start, end) = lunchWindow(from, rules);
+  final a = minuteOnly(from).isAfter(start) ? minuteOnly(from) : start;
+  final b = minuteOnly(to).isBefore(end) ? minuteOnly(to) : end;
+  return math.max(0, b.difference(a).inMinutes);
+}
+
+/// [day]의 점심 창 (시작, 끝).
+(DateTime, DateTime) lunchWindow(DateTime day, WorkRules rules) {
+  final start = dateOnly(day).add(Duration(minutes: rules.lunchStartMinutes));
+  return (start, start.add(Duration(minutes: rules.lunchBreakMinutes)));
 }
 
 /// 근무 중인 오늘의 진행분. 오늘이 아니거나 출근·퇴근 조건이 안 맞으면 null.
-///
-/// 점심 공제는 출근 직후가 아니라 **점심 창**(`lunchStartMinutes`부터 `lunchBreakMinutes` 동안)에서 한다 —
-/// 창 전에는 경과가 그대로 오르고, 창 안에서는 멈추고, 창이 끝나면 정액 전부를 뺀 값으로 다시 오른다.
-/// 창이 끝난 뒤에는 출근 시각과 무관하게 정액이라 퇴근 순간 [actualMinutes]와 같은 값이 된다 (2026-10-27).
+/// [actualMinutes]와 같은 규칙(점심 창과 겹친 만큼) — 창 전에는 경과가 그대로 오르고, 창 안에서는 멈추고, 창 뒤 출근은 바로 오른다.
+/// 퇴근 순간 저장값과 같다.
 int? ongoingMinutes(WorkRecord r, DateTime now, WorkRules rules) {
   if (dateOnly(now) != dateOnly(r.date)) return null;
   final clockIn = r.clockIn;
   if (clockIn == null || r.clockOut != null) return null;
-  final raw = minutesBetween(clockIn, now);
-  if (!deductsLunch(r)) return math.max(0, raw);
-  final lunchStart = dateOnly(now).add(Duration(minutes: rules.lunchStartMinutes));
-  final lunchEnd = lunchStart.add(Duration(minutes: rules.lunchBreakMinutes));
-  final int lunch;
-  if (!minuteOnly(now).isBefore(lunchEnd)) {
-    lunch = rules.lunchBreakMinutes;
-  } else {
-    final from = minuteOnly(clockIn).isAfter(lunchStart) ? minuteOnly(clockIn) : lunchStart;
-    lunch = math.max(0, minutesBetween(from, now));
-  }
-  return math.max(0, raw - lunch);
+  return math.max(0, minutesBetween(clockIn, now) - _lunchOverlap(r, clockIn, now, rules));
 }
 
 /// 기준 대비 (실근무 − 그날 기준시간). 주말·공휴일은 기준이 없으므로 null.
@@ -322,12 +331,17 @@ bool isLastWorkday(List<WorkRecord> records, DateTime today) {
   return days.isNotEmpty && days.last == day;
 }
 
-/// 퇴근 예상 = 출근 + 오늘 몫 + 점심 공제(해당 시).
+/// 퇴근 예상 = 출근 + 오늘 몫, 점심 창에 걸리면 창이 끝난 뒤로 밀린다 (창 뒤 출근은 점심 없음, 창 전에 끝나면 없음).
 DateTime? expectedClockOut(WorkRecord today, int todayShare, WorkRules rules) {
   final clockIn = today.clockIn;
   if (clockIn == null) return null;
-  final lunch = deductsLunch(today) ? rules.lunchBreakMinutes : 0;
-  return clockIn.add(Duration(minutes: todayShare + lunch));
+  if (!deductsLunch(today)) return clockIn.add(Duration(minutes: todayShare));
+  final (start, end) = lunchWindow(clockIn, rules);
+  final from = minuteOnly(clockIn);
+  if (!from.isBefore(end)) return clockIn.add(Duration(minutes: todayShare));
+  final beforeLunch = math.max(0, start.difference(from).inMinutes);
+  if (todayShare <= beforeLunch) return clockIn.add(Duration(minutes: todayShare));
+  return end.add(Duration(minutes: todayShare - beforeLunch));
 }
 
 // ---- 기록 누락 ----

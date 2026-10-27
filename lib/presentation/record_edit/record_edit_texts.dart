@@ -76,13 +76,19 @@ List<CalcLine> calcLines(RecordDraft d, WorkRules rules) {
   final record = d.toRecord();
   final actual = actualMinutes(record, rules);
   final noBaseline = d.isWeekend || d.type == WorkType.holiday;
+  // 점심은 겹친 만큼 — 시각이 다 있으면 그 값(0이면 "없음"), 아직 없으면 최대치.
+  final deducted = lunchMinutes(record, rules);
   final lunch = d.isWeekend
       ? '없음'
       : d.type == WorkType.halfDay
           ? '없음 (반차)'
           : d.type == WorkType.holiday
               ? '없음 (공휴일)'
-              : formatHm(rules.lunchBreakMinutes);
+              : deducted == null
+                  ? formatHm(rules.lunchBreakMinutes)
+                  : deducted == 0
+                      ? '없음'
+                      : formatHm(deducted);
   final lines = [
     CalcLine('근무', actual == null ? RecordEditTexts.dash : formatHm(actual), CalcKind.value),
     CalcLine('점심 공제', lunch, CalcKind.note),
