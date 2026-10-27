@@ -33,7 +33,7 @@ void main() {
     final s = build([...past, rec(16, inH: 9, inM: 12)], now: d(16, 16, 27));
     expect(s.phase, TodayPhase.working);
     expect(s.screenState, TodayScreenState.working);
-    expect(s.elapsedMinutes, 7 * 60 + 15);
+    expect(s.elapsedMinutes, 6 * 60 + 15); // 09:12부터 7h 15m 경과, 점심 창이 지나 60분 공제 — 위 카드와 같은 기준
     expect(s.todayShareMinutes, 480); // 남은 24h / 수·목·금 3일
     expect(s.expectedClockOut, d(16, 18, 12)); // 09:12 + 8h + 1h
     expect(s.week.workedMinutes, 960 + (7 * 60 + 15 - 60));

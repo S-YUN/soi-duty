@@ -3,6 +3,7 @@ class WorkRules {
   const WorkRules({
     this.weeklyTargetMinutes = 2400,
     this.lunchBreakMinutes = 60,
+    this.lunchStartMinutes = 12 * 60,
     this.halfDayCreditMinutes = 240,
     this.dayOffCreditMinutes = 480,
     this.businessTripCreditMinutes = 480,
@@ -14,6 +15,10 @@ class WorkRules {
 
   final int weeklyTargetMinutes;
   final int lunchBreakMinutes;
+
+  /// 점심 창 시작(자정 기준 분). 근무 중인 오늘의 진행분이 이 시각부터 [lunchBreakMinutes] 동안 멈춘다.
+  /// 하루 합계(`actualMinutes`)는 정액 공제라 이 값과 무관하다. 지금은 기본값만 쓴다 — 설정으로 뺄 때 시작 시각만 받는다.
+  final int lunchStartMinutes;
   final int halfDayCreditMinutes;
   final int dayOffCreditMinutes;
 

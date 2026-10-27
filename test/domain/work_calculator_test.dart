@@ -77,14 +77,40 @@ void main() {
   });
 
   group('ongoingMinutes', () {
-    test('오늘 출근만 찍었으면 현재까지 − 점심', () {
-      expect(ongoingMinutes(rec(14, inH: 9), d(14, 12), rules), 120);
+    test('점심 창 전에는 경과가 그대로', () {
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 9, 30), rules), 30);
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 11, 30), rules), 150);
     });
-    test('점심 공제 전이면 0', () {
-      expect(ongoingMinutes(rec(14, inH: 9), d(14, 9, 30), rules), 0);
+    test('점심 창(12:00–13:00) 안에서는 멈춘다', () {
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 12), rules), 180);
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 12, 30), rules), 180);
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 13), rules), 180);
     });
-    test('반차면 점심 공제 없음', () {
-      expect(ongoingMinutes(rec(14, inH: 9, type: WorkType.halfDay), d(14, 12), rules), 180);
+    test('점심 창이 끝나면 정액 60분을 뺀 값으로 다시 오른다 — 퇴근 저장값과 같다', () {
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 14), rules), 240);
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 18), rules), actualMinutes(rec(14, inH: 9, outH: 18), rules));
+    });
+    test('점심 창 중간에 출근하면 겹친 만큼만 멈춘다', () {
+      expect(ongoingMinutes(rec(14, inH: 12, inM: 30), d(14, 12, 50), rules), 0);
+      expect(ongoingMinutes(rec(14, inH: 12, inM: 30), d(14, 14), rules), 30);
+    });
+    test('점심 창이 지난 뒤 출근한 일반 근무는 처음부터 정액 공제 (하루 합계 규칙과 같게)', () {
+      expect(ongoingMinutes(rec(14, inH: 14), d(14, 14, 30), rules), 0);
+      expect(ongoingMinutes(rec(14, inH: 14), d(14, 16), rules), 60);
+    });
+    test('출근 시각이 미래면 0', () {
+      expect(ongoingMinutes(rec(14, inH: 15), d(14, 12), rules), 0);
+    });
+    test('반차·주말·공휴일은 점심 창에서도 멈추지 않는다', () {
+      expect(ongoingMinutes(rec(14, inH: 9, type: WorkType.halfDay), d(14, 12, 30), rules), 210);
+      expect(ongoingMinutes(rec(19, inH: 9), d(19, 12, 30), rules), 210);
+      expect(ongoingMinutes(rec(14, inH: 9, type: WorkType.holiday), d(14, 12, 30), rules), 210);
+    });
+    test('점심 창 시작은 WorkRules로 바꿀 수 있다', () {
+      const r = WorkRules(lunchStartMinutes: 11 * 60 + 30);
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 12), r), 150);
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 12, 30), r), 150);
+      expect(ongoingMinutes(rec(14, inH: 9), d(14, 13), r), 180);
     });
     test('오늘이 아니면 null (과거 미완 기록은 진행분이 아님)', () {
       expect(ongoingMinutes(rec(14, inH: 9), d(15, 12), rules), isNull);
@@ -184,7 +210,8 @@ void main() {
 
     test('근무 중인 오늘의 진행분 포함', () {
       final s = week([rec(14, inH: 9, outH: 18), rec(15, inH: 9)], now: d(15, 12));
-      expect(s.workedMinutes, 480 + 120);
+      expect(s.workedMinutes, 480 + 180); // 12:00 — 점심 창 시작, 아직 공제 전
+      expect(week([rec(14, inH: 9, outH: 18), rec(15, inH: 9)], now: d(15, 14)).workedMinutes, 480 + 240);
     });
 
     test('출퇴근이 빈 과거 기록은 0으로 집계 (목표는 그대로 8h)', () {
