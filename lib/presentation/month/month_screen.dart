@@ -101,7 +101,7 @@ class MonthView extends StatelessWidget {
   final ValueChanged<DateTime> onCellTap;
   final VoidCallback onPrev;
   final VoidCallback onNext;
-  /// 카드의 유도 줄 — 시급 / 그 해 총 연차 입력 시트.
+  /// 카드의 유도 줄 — 시급 / 그 해 남은 연차 입력 시트.
   final VoidCallback onOpenWage;
   final VoidCallback onOpenAnnual;
 

@@ -202,7 +202,7 @@ abstract final class AppSizes {
   static double get segmentPadding => 3.w;
   static EdgeInsets get segmentItemPadding => EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.w);
 
-  // 숫자 입력 시트 (총 연차 · 시급)
+  // 숫자 입력 시트 (남은 연차 · 시급)
   static double get numberSheetBottom => 14.w;
   static double get numberFieldTop => 14.w;
   static EdgeInsets get numberFieldPadding => EdgeInsets.fromLTRB(2.w, 8.w, 2.w, 10.w);

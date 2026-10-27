@@ -9,7 +9,7 @@ import 'drift_work_record_repository.dart';
 
 /// 기록·첫 기록일·설정을 한 번에 담고(snapshot) 한 트랜잭션으로 바꾼다(restore).
 class DriftBackupRepository implements BackupRepository {
-  DriftBackupRepository(this._db, {this.rules = const WorkRules()}) : _settings = DriftAppSettingsRepository(_db);
+  DriftBackupRepository(this._db, {this.rules = const WorkRules()}) : _settings = DriftAppSettingsRepository(_db, rules: rules);
 
   final AppDatabase _db;
   final WorkRules rules;

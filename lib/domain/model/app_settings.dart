@@ -23,7 +23,7 @@ abstract class AppSettings with _$AppSettings {
   }) = _AppSettings;
 
   /// 입력 한도. 설정 시트의 자릿수와 백업 가져오기의 범위 검사가 같은 값을 본다.
-  /// 남은 연차 한도(일). 분 한도·단위 검사는 `isValidLeaveMinutes`(WorkRules 필요).
+  /// 남은 연차는 일 단위 한도만 여기에 — 분 한도·단위 검사는 `isValidLeaveMinutes`(WorkRules 필요).
   static const maxLeaveDays = 99;
   static const maxHourlyWage = 9999999;
   static bool isValidHourlyWage(int won) => won >= 1 && won <= maxHourlyWage;

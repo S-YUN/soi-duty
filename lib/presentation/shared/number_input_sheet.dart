@@ -11,7 +11,7 @@ import 'confirm_dialog.dart';
 ///
 /// - [decimalPlaces] > 0이면 소수점 키패드. 정수 [maxDigits]자리 · 점 하나 · 소수 [decimalPlaces]자리. ","는 "."로 받는다.
 /// - 저장 활성 = 비어 있지 않고 숫자로 읽히고 [isValid](기본 `> 0`). 비어 있지 않은데 점이 있고 끝이 점이 아닌 값이
-///   [isValid]에 걸리면 입력줄 아래 [invalidNote]를 붉게 띄운다.
+///   [isValid]에 걸리면 입력줄 아래 [invalidNote]가 그 값에 대해 돌려준 문구를 붉게 띄운다(단위 안 맞음·한도 초과 구분).
 /// - [headline]은 제목 아래 한 줄, [notes]는 안내 여러 줄, [highlightNote]는 그 아래 브랜드색 한 줄(조건부).
 /// - [emptyCaption]은 빈 값일 때 입력줄 안 "0" 플레이스홀더 옆에 — 저장 가능한 0과 구분.
 /// - 본문은 스크롤, 저장·되돌리기는 키보드 위 고정 — 높이가 모자란 기기에서 제목이 잘리지 않게 (2026-10-27).
@@ -29,7 +29,7 @@ Future<void> showNumberInputSheet(
   bool grouping = false,
   String? emptyCaption,
   bool Function(num value)? isValid,
-  String? invalidNote,
+  String Function(num value)? invalidNote,
   num? initial,
   required String saveLabel,
   required String clearLabel,
@@ -98,7 +98,7 @@ class NumberInputSheet extends StatefulWidget {
   final bool grouping;
   final String? emptyCaption;
   final bool Function(num value) isValid;
-  final String? invalidNote;
+  final String Function(num value)? invalidNote;
   final num? initial;
   final String saveLabel;
   final String clearLabel;
@@ -254,7 +254,7 @@ class _NumberInputSheetState extends State<NumberInputSheet> {
                     if (_showInvalid)
                       Padding(
                         padding: inset.copyWith(top: AppSizes.numberInvalidTop),
-                        child: Text(widget.invalidNote!, style: AppTextStyles.numberInvalid),
+                        child: Text(widget.invalidNote!(_value!), style: AppTextStyles.numberInvalid),
                       ),
                     Padding(
                       padding: inset.copyWith(top: compact ? AppSizes.numberNotesTop : AppSizes.numberNoteTop),

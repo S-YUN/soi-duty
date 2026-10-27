@@ -9,6 +9,7 @@ import 'package:soi_duty/domain/backup/backup_codec.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/backup_snapshot.dart';
 import 'package:soi_duty/domain/model/leave_balance.dart';
+import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 
 import '../helpers/records.dart';
@@ -109,5 +110,11 @@ void main() {
         '"settings":{"weekStart":"monday","annualLeaveDaysByYear":{"2026":15},"hourlyWage":null},"records":[]}';
     await backup.restore(decodeBackup(text));
     expect((await settings.read()).leaveBalanceOf(2026), b26);
+  });
+
+  test('백업 저장소의 WorkRules가 설정 저장소까지 전해진다 — 옛 키를 그 규칙으로 읽는다', () async {
+    await db.into(db.settings).insert(SettingsCompanion.insert(key: 'annual_leave_days_2026', value: '15'));
+    final b = DriftBackupRepository(db, rules: const WorkRules(dayOffCreditMinutes: 600));
+    expect((await b.snapshot(DateTime(2026, 10, 25))).leaveBalanceByYear[2026]!.remainingMinutes, 15 * 600);
   });
 }

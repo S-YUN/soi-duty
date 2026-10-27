@@ -91,7 +91,7 @@ void main() {
     expect(first, addDays(mondayOf(today), -56));
   });
 
-  test('history: 올해 총 연차 15 · 시급 12,500도 넣어 월간 카드가 보인다', () async {
+  test('history: 올해 남은 연차 15일(기준일 1/1) · 시급 12,500도 넣어 월간 카드가 보인다', () async {
     await applySeed(db, SeedScenario.history, today: today);
     final settings = await DriftAppSettingsRepository(db).read();
     expect(settings.leaveBalanceOf(today.year), LeaveBalance(remainingMinutes: 15 * 480, baseDate: DateTime(today.year, 1, 1)));

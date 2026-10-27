@@ -4,6 +4,7 @@ import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/leave_balance.dart';
 import 'package:soi_duty/presentation/settings/settings_screen.dart';
+import 'package:soi_duty/presentation/settings/settings_texts.dart';
 import 'package:soi_duty/presentation/shared/stroke_icons.dart';
 import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
@@ -110,5 +111,10 @@ void main() {
     expect(arrow.left, closeTo(AppSizes.settingsBackLeft + (AppSizes.gearSize - AppSizes.backArrow.width) / 2, 0.5));
     expect(tester.getCenter(find.text('설정')).dx, closeTo(201, 0.5));
     expect(tester.getCenter(find.text('설정')).dy, closeTo(tester.getCenter(find.byType(BackArrowIcon)).dy, 0.5));
+  });
+
+  test('연차 시트 헤드라인 — 올해면 해 없이, 다른 해(12월에 1월 카드)면 해를 붙인다', () {
+    expect(SettingsTexts.annualHeadline(DateTime(2026, 10, 26), 2026), '오늘(10월 26일) 기준 남은 연차');
+    expect(SettingsTexts.annualHeadline(DateTime(2026, 12, 20), 2027), '오늘(12월 20일) 기준 2027년 남은 연차');
   });
 }

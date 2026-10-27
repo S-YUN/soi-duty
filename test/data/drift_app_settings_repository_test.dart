@@ -5,6 +5,7 @@ import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/data/repository/drift_app_settings_repository.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/leave_balance.dart';
+import 'package:soi_duty/domain/rules/work_rules.dart';
 
 void main() {
   late AppDatabase db;
@@ -53,6 +54,12 @@ void main() {
   test('옛 키 annual_leave_days_<year>는 일 × 480 · 기준일 1/1로 읽는다', () async {
     await db.into(db.settings).insert(SettingsCompanion.insert(key: 'annual_leave_days_2026', value: '15'));
     expect((await repo.read()).leaveBalanceOf(2026), LeaveBalance(remainingMinutes: 7200, baseDate: DateTime(2026, 1, 1)));
+  });
+
+  test('옛 키 변환은 받은 WorkRules의 하루 분을 쓴다', () async {
+    await db.into(db.settings).insert(SettingsCompanion.insert(key: 'annual_leave_days_2026', value: '15'));
+    final repo600 = DriftAppSettingsRepository(db, rules: const WorkRules(dayOffCreditMinutes: 600));
+    expect((await repo600.read()).leaveBalanceOf(2026)!.remainingMinutes, 15 * 600);
   });
 
   test('옛 키와 새 키가 같이 있으면 새 키가 이기고, 저장하면 옛 키가 사라진다', () async {

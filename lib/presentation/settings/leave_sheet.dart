@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../domain/model/app_settings.dart';
 import '../../domain/model/leave_balance.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/rules/work_calculator.dart';
@@ -25,7 +26,7 @@ Future<void> showLeaveBalanceSheet(
   return showNumberInputSheet(
     context,
     title: SettingsTexts.annualLabel,
-    headline: SettingsTexts.annualHeadline(today),
+    headline: SettingsTexts.annualHeadline(today, year),
     unit: SettingsTexts.annualUnit,
     notes: SettingsTexts.annualNotes,
     highlightNote: future > 0 ? SettingsTexts.annualFutureNote(future, day) : null,
@@ -33,7 +34,7 @@ Future<void> showLeaveBalanceSheet(
     decimalPlaces: SettingsTexts.annualDecimalPlaces,
     emptyCaption: SettingsTexts.annualEmptyCaption,
     isValid: (v) => isValidLeaveMinutes((v * day).round(), rules),
-    invalidNote: SettingsTexts.annualInvalidNote(rules),
+    invalidNote: (v) => v > AppSettings.maxLeaveDays ? SettingsTexts.annualLimitNote : SettingsTexts.annualStepNote(rules),
     initial: current == null ? null : current.remainingMinutes / day,
     saveLabel: SettingsTexts.save,
     clearLabel: SettingsTexts.clearLink,

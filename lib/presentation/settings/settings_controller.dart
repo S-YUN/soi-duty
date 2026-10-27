@@ -41,7 +41,7 @@ class SettingsController extends _$SettingsController {
     final text = await ref.read(backupFilesProvider).pickJson();
     if (text == null) return const BackupPickCancelled();
     try {
-      final snapshot = decodeBackup(text);
+      final snapshot = decodeBackup(text, rules: ref.read(workRulesProvider));
       return BackupPickReady(snapshot, await ref.read(backupRepositoryProvider).recordCount());
     } on BackupFormatException {
       return const BackupPickInvalid();

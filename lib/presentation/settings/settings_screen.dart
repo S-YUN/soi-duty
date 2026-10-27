@@ -173,7 +173,7 @@ class SettingsView extends StatelessWidget {
   });
 
   final AppSettings settings;
-  /// 올해 — "올해 총 연차"가 보여주고 고치는 해.
+  /// 올해 — "남은 연차" 행이 보여주고 고치는 해.
   final int year;
   final String version;
   final SettingsCallbacks callbacks;

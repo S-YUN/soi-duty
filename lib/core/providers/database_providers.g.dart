@@ -258,7 +258,7 @@ final class AppSettingsRepositoryProvider
 }
 
 String _$appSettingsRepositoryHash() =>
-    r'e9b6bfe02a6c0c5663bf85f2f5a76518f88c68fb';
+    r'd53bfb7dca185d180449844152e99c3c83d677a8';
 
 @ProviderFor(appSettings)
 final appSettingsProvider = AppSettingsProvider._();

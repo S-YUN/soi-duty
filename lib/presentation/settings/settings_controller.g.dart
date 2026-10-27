@@ -48,7 +48,7 @@ final class SettingsControllerProvider
 }
 
 String _$settingsControllerHash() =>
-    r'6f4711214ddc39f28781c6b4a39680068cc25a99';
+    r'3e228fb71a5d2a91b61850676b118e9e23caeeab';
 
 /// 설정값 변경과 백업 동작. 상태가 없는 액션 모음이라 keepAlive — 화면이 붙잡아 둘 필요가 없다.
 /// 현재 값을 읽어 한 필드만 바꿔 저장한다 — 스트림이 화면들을 갱신한다.

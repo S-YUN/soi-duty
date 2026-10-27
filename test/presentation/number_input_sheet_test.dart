@@ -62,8 +62,8 @@ void main() {
               decimalPlaces: leave ? 2 : 0,
               grouping: grouping,
               emptyCaption: leave ? '입력 전' : null,
-              isValid: leave ? (v) => v >= 0 && (v * 480) % 240 == 0 : null,
-              invalidNote: leave ? '0.5일 단위로 넣어주세요' : null,
+              isValid: leave ? (v) => v >= 0 && v <= 99 && (v * 480) % 240 == 0 : null,
+              invalidNote: leave ? (v) => v > 99 ? '99일까지 넣을 수 있어요' : '0.5일 단위로 넣어주세요' : null,
               initial: initial,
               saveLabel: '저장',
               clearLabel: '사용 안 함으로 되돌리기',
@@ -230,6 +230,16 @@ void main() {
       expect(saved, isNull);
       await type(tester, '8.5');
       expect(find.text('0.5일 단위로 넣어주세요'), findsNothing);
+    });
+
+    testWidgets('"99.5" — 한도 초과는 단위 문구가 아니라 한도 문구', (tester) async {
+      await pumpSheet(tester, leave: true);
+      await type(tester, '99.5');
+      expect(find.text('99일까지 넣을 수 있어요'), findsOneWidget);
+      expect(find.text('0.5일 단위로 넣어주세요'), findsNothing);
+      await tester.tap(saveButton());
+      await tester.pumpAndSettle();
+      expect(saved, isNull);
     });
 
     testWidgets('포매터 — ","는 ".", 소수 셋째 자리 무시, 정수 3자리 무시, 점 하나만, "."부터 치면 "0.", 앞자리 0 정리', (tester) async {

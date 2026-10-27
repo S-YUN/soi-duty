@@ -38,7 +38,8 @@ Stream<DateTime?> firstRecordDate(Ref ref) =>
     ref.watch(workRecordRepositoryProvider).watchFirstRecordDate();
 
 @Riverpod(keepAlive: true)
-AppSettingsRepository appSettingsRepository(Ref ref) => DriftAppSettingsRepository(ref.watch(appDatabaseProvider));
+AppSettingsRepository appSettingsRepository(Ref ref) =>
+    DriftAppSettingsRepository(ref.watch(appDatabaseProvider), rules: ref.watch(workRulesProvider));
 
 @riverpod
 Stream<AppSettings> appSettings(Ref ref) => ref.watch(appSettingsRepositoryProvider).watch();

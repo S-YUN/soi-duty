@@ -22,8 +22,9 @@ abstract final class SettingsTexts {
   static const annualUnit = '일';
   /// 값이 있을 때 행 보조 설명 — 다시 넣을 때 헷갈리지 않게 기준일을 보인다.
   static String annualBaseLine(DateTime d) => '${d.month}월 ${d.day}일 기준';
-  /// 시트 제목 아래 한 줄
-  static String annualHeadline(DateTime today) => '오늘(${today.month}월 ${today.day}일) 기준 남은 연차';
+  /// 시트 제목 아래 한 줄. 카드의 해가 올해가 아니면(12월에 1월 카드) 해를 붙여 어느 해 값인지 말한다.
+  static String annualHeadline(DateTime today, int year) =>
+      '오늘(${today.month}월 ${today.day}일) 기준 ${year == today.year ? '' : '$year년 '}남은 연차';
   static const annualNotes = [
     '회사에서 보여주는 지금 남은 연차를 그대로 넣어주세요.',
     '오늘이 기준일이 되고, 내일부터 찍는 연차를 빼서 보여드려요.',
@@ -33,7 +34,8 @@ abstract final class SettingsTexts {
   static String annualFutureNote(int minutes, int dayMinutes) => '이 뒤로 찍어둔 연차 ${formatLeaveDays(minutes, dayMinutes)}은 여기서 빼서 보여드려요.';
   /// 빈 입력줄 "0" 옆 — 저장 가능한 0과 구분
   static const annualEmptyCaption = '입력 전';
-  static String annualInvalidNote(WorkRules rules) => '${formatLeaveDays(rules.leaveStepMinutes, rules.dayOffCreditMinutes)} 단위로 넣어주세요';
+  static String annualStepNote(WorkRules rules) => '${formatLeaveDays(rules.leaveStepMinutes, rules.dayOffCreditMinutes)} 단위로 넣어주세요';
+  static const annualLimitNote = '${AppSettings.maxLeaveDays}일까지 넣을 수 있어요';
   static final annualMaxDigits = AppSettings.maxLeaveDays.toString().length;
   static const annualDecimalPlaces = 2;
 
