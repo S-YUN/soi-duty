@@ -106,6 +106,51 @@ void main() {
     });
   });
 
+  group('입력줄 폭 (IntrinsicWidth 회귀 감시)', () {
+    testWidgets('필드가 0폭으로 접히지 않고, 캡션은 필드 오른쪽에, 폭 320에서도 넘치지 않는다', (tester) async {
+      await pumpSheet(tester, leave: true);
+      final emptyWidth = tester.getSize(find.byType(TextField)).width;
+      expect(emptyWidth, greaterThan(10)); // "0" 플레이스홀더 폭
+      expect(tester.getTopLeft(find.text('입력 전')).dx, greaterThan(tester.getTopRight(find.byType(TextField)).dx - 1));
+      await type(tester, '12.5');
+      expect(tester.getSize(find.byType(TextField)).width, greaterThan(emptyWidth));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('폭 320 시급 7자리 — 넘치지 않고 단위는 오른쪽 끝', (tester) async {
+      SizeConfig.init(320);
+      tester.view.physicalSize = const Size(320 * 3, 874 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showNumberInputSheet(
+                context,
+                title: '시급',
+                unit: '원',
+                notes: const ['이 기기에만 저장돼요.'],
+                maxDigits: 7,
+                grouping: true,
+                saveLabel: '저장',
+                clearLabel: '되돌리기',
+                onSave: (v) => saved = v,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await type(tester, '9999999');
+      expect(tester.takeException(), isNull);
+      expect(tester.getTopRight(find.text('원')).dx, closeTo(320 - AppSizes.sheetPadding.left - AppSizes.numberFieldPadding.right, 0.5));
+    });
+  });
+
   group('시급 모드 (기존)', () {
     testWidgets('비어 있거나 0이면 저장 비활성, 1 이상이면 onSave(값)', (tester) async {
       await pumpSheet(tester);
