@@ -2,6 +2,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/model/work_type.dart';
 
+import '../../domain/model/leave_balance.dart';
+
 part 'month_state.freezed.dart';
 
 @freezed
@@ -43,19 +45,22 @@ abstract class MonthExtraWork with _$MonthExtraWork {
   }) = _MonthExtraWork;
 }
 
-/// 그 해 연차 카드. 항상 보인다 — 총 연차가 없으면 "미입력" · 잔여 "—" + 유도 줄, 사용 0은 숫자 "0일".
+/// 그 해 연차 카드. 항상 보인다 — 값이 없으면 "미입력" · 잔여 "—" + 유도 줄, 사용 0은 숫자 "0일".
+/// 값이 있으면 제목 아래 "n월 n일 기준" 줄, 2칸은 기준일 다음 날부터의 "이후 사용", 없으면 올해 전체 "올해 사용" (2026-10-27).
 @freezed
 abstract class MonthLeave with _$MonthLeave {
   const factory MonthLeave({
     required int year,
-    /// 그 해 총 연차(일). 없으면 "—" + 유도 줄.
-    int? totalDays,
-    /// 반일 단위. 미리 찍은 미래 날짜 포함.
-    required int usedHalfDays,
-    /// 사용 중 오늘보다 뒤인 것(반일 단위). 0보다 크면 "예정 n일 포함".
-    required int plannedHalfDays,
-    /// total×2 − used. 음수면 초과. total 없으면 null.
-    int? remainingHalfDays,
+    /// 사용자가 넣은 남은 연차 + 기준일. 없으면 "미입력" + 유도 줄.
+    LeaveBalance? balance,
+    /// 분. 값이 있으면 기준일 다음 날부터, 없으면 그 해 전체. 미리 찍은 미래 날짜 포함.
+    required int usedMinutes,
+    /// 사용 중 오늘(과 기준일)보다 뒤인 것(분). 0보다 크면 "예정 n일 포함".
+    required int plannedMinutes,
+    /// balance.remainingMinutes − usedMinutes. 음수면 초과. balance 없으면 null.
+    int? remainingMinutes,
+    /// 연차 1일의 분(표기용, `WorkRules.dayOffCreditMinutes`).
+    required int dayMinutes,
   }) = _MonthLeave;
 }
 

@@ -69,11 +69,11 @@ class SettingsScreen extends ConsumerWidget {
           unit: SettingsTexts.annualUnit,
           note: SettingsTexts.annualNote,
           maxDigits: SettingsTexts.annualMaxDigits,
-          initial: settings.annualLeaveDaysOf(year),
+          initial: null, // Task 6에서 남은 연차 시트로 교체
           saveLabel: SettingsTexts.save,
           clearLabel: SettingsTexts.clearLink,
-          onSave: (v) => controller.setAnnualLeaveDays(year, v),
-          onClear: () => controller.setAnnualLeaveDays(year, null),
+          onSave: (_) {},
+          onClear: null,
         ),
         onTapWage: () => showNumberInputSheet(
           context,
@@ -181,7 +181,7 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final annual = settings.annualLeaveDaysOf(year);
+    final annual = settings.leaveBalanceOf(year)?.remainingMinutes; // Task 6에서 표기 교체
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       body: SafeArea(

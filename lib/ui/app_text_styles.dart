@@ -161,6 +161,8 @@ abstract final class AppTextStyles {
   static TextStyle get leaveTotalNotEntered => _style(15, FontWeight.w500, color: AppColors.subtle);
   static TextStyle get nudge => _style(14, FontWeight.w500, height: 1.45, color: AppColors.brand);
   static TextStyle get plannedLine => _style(12, FontWeight.w400, color: AppColors.subtle);
+  /// 연차 카드 제목 아래 "10월 26일 기준"
+  static TextStyle get leaveBaseLine => _style(13, FontWeight.w400, height: 1.45, color: AppColors.subtle);
 
   // 확인 다이얼로그
   static TextStyle get dialogTitle => _style(16, FontWeight.w600);

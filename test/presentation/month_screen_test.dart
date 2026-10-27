@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/format/time_format.dart';
 import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/domain/model/app_settings.dart';
+import 'package:soi_duty/domain/model/leave_balance.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/month/month_screen.dart';
@@ -261,7 +262,8 @@ void main() {
       expect(tester.widget<Text>(remainNone).style?.fontWeight, FontWeight.w400);
       // 작은 글자(15)라 위 여백을 2 더 줘 "미입력"과 같은 선에 — 두 칸의 글자 밑선이 같다
       expect(tester.getBottomLeft(remainNone).dy, closeTo(tester.getBottomLeft(find.text('미입력')).dy, 0.5));
-      expect(find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요'), findsOneWidget);
+      expect(find.text('올해 사용'), findsOneWidget);
+      expect(find.text('지금 남은 연차를 알려주시면 잔여를 보여드려요'), findsOneWidget);
     });
 
     testWidgets('수당 카드 — 주말 7h, 공휴일 0이면 "기록 없음", payWon 206250 → "206,250원"', (tester) async {
@@ -289,40 +291,57 @@ void main() {
       expect(wageTaps, 1);
     });
 
-    testWidgets('연차 카드 — total 15 used 15(반일) → "15일" "7.5일" "7.5일"; 초과면 라벨 "초과" 값 "1.5일" 붉은색', (tester) async {
-      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 15, plannedHalfDays: 0, remainingHalfDays: 15)));
+    testWidgets('연차 카드 — 값 있음: 기준일 줄 · "남은 연차" "이후 사용" "지금 잔여"; 초과면 "초과" 붉은색', (tester) async {
+      final b = LeaveBalance(remainingMinutes: 4080, baseDate: DateTime(2026, 10, 26));
+      await pump(tester, base().copyWith(leave: MonthLeave(year: 2026, balance: b, usedMinutes: 480, plannedMinutes: 0, remainingMinutes: 3600, dayMinutes: 480)));
       expect(find.text('2026년 연차'), findsOneWidget);
-      expect(find.text('총 연차'), findsOneWidget);
-      expect(find.text('사용'), findsOneWidget);
-      expect(find.text('잔여'), findsOneWidget);
-      expect(find.text('15일'), findsOneWidget);
-      expect(find.text('7.5일'), findsNWidgets(2));
-      expect(find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요'), findsNothing);
+      expect(find.text('10월 26일 기준'), findsOneWidget);
+      expect(find.text('남은 연차'), findsOneWidget);
+      expect(find.text('이후 사용'), findsOneWidget);
+      expect(find.text('올해 사용'), findsNothing);
+      expect(find.text('지금 잔여'), findsOneWidget);
+      expect(find.text('8.5일'), findsOneWidget);
+      expect(find.text('1일'), findsOneWidget);
+      expect(find.text('7.5일'), findsOneWidget);
+      expect(tester.widget<Text>(find.text('7.5일')).style?.color, AppColors.brand);
+      expect(find.text('지금 남은 연차를 알려주시면 잔여를 보여드려요'), findsNothing);
 
-      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 6, usedHalfDays: 15, plannedHalfDays: 0, remainingHalfDays: -3)));
-      expect(find.text('잔여'), findsNothing);
+      await pump(tester, base().copyWith(leave: MonthLeave(year: 2026, balance: b, usedMinutes: 4800, plannedMinutes: 0, remainingMinutes: -720, dayMinutes: 480)));
+      expect(find.text('지금 잔여'), findsNothing);
       expect(find.text('초과'), findsOneWidget);
       expect(find.text('1.5일'), findsOneWidget);
       expect(tester.widget<Text>(find.text('1.5일')).style?.color, AppColors.minus);
     });
 
-    testWidgets('연차 카드 — plannedHalfDays 3 → "예정 1.5일 포함", 0이면 없음. 세 칸 값의 y가 같다', (tester) async {
-      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 7, plannedHalfDays: 3, remainingHalfDays: 23)));
+    testWidgets('연차 카드 — 1월 1일 기준이어도 라벨은 "남은 연차", 줄은 "1월 1일 기준"', (tester) async {
+      final b = LeaveBalance(remainingMinutes: 7200, baseDate: DateTime(2026, 1, 1));
+      await pump(tester, base().copyWith(leave: MonthLeave(year: 2026, balance: b, usedMinutes: 0, plannedMinutes: 0, remainingMinutes: 7200, dayMinutes: 480)));
+      expect(find.text('1월 1일 기준'), findsOneWidget);
+      expect(find.text('남은 연차'), findsOneWidget);
+      expect(find.text('15일'), findsNWidgets(2));
+      expect(find.text('0일'), findsOneWidget);
+    });
+
+    testWidgets('연차 카드 — plannedMinutes 720 → "예정 1.5일 포함", 0이면 없음. 세 칸 값의 y가 같다', (tester) async {
+      final b = LeaveBalance(remainingMinutes: 7200, baseDate: DateTime(2026, 1, 1));
+      await pump(tester, base().copyWith(leave: MonthLeave(year: 2026, balance: b, usedMinutes: 1680, plannedMinutes: 720, remainingMinutes: 5520, dayMinutes: 480)));
       expect(find.text('예정 1.5일 포함'), findsOneWidget);
       final y = tester.getTopLeft(find.text('15일')).dy;
       expect(tester.getTopLeft(find.text('3.5일')).dy, closeTo(y, 0.5));
       expect(tester.getTopLeft(find.text('11.5일')).dy, closeTo(y, 0.5));
 
-      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, totalDays: 15, usedHalfDays: 7, plannedHalfDays: 0, remainingHalfDays: 23)));
+      await pump(tester, base().copyWith(leave: MonthLeave(year: 2026, balance: b, usedMinutes: 1680, plannedMinutes: 0, remainingMinutes: 5520, dayMinutes: 480)));
       expect(find.textContaining('예정'), findsNothing);
     });
 
-    testWidgets('연차 카드 — total null → 총 "미입력" · 잔여 "—" + 유도 줄, 탭 → onOpenAnnual', (tester) async {
-      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, usedHalfDays: 2, plannedHalfDays: 0)));
+    testWidgets('연차 카드 — balance null → "미입력" · "올해 사용" · "—" + 유도 줄, 탭 → onOpenAnnual', (tester) async {
+      await pump(tester, base().copyWith(leave: const MonthLeave(year: 2026, usedMinutes: 480, plannedMinutes: 0, dayMinutes: 480)));
       expect(find.text('미입력'), findsOneWidget);
+      expect(find.textContaining('기준'), findsNothing);
       expect(find.descendant(of: find.byType(LeaveCard), matching: find.text('—')), findsOneWidget);
+      expect(find.text('올해 사용'), findsOneWidget);
       expect(find.text('1일'), findsOneWidget);
-      final nudge = find.text('올해 연차 개수를 알려주시면 남은 연차를 보여드려요');
+      final nudge = find.text('지금 남은 연차를 알려주시면 잔여를 보여드려요');
       await tester.ensureVisible(nudge);
       await tester.pumpAndSettle();
       await tester.tap(nudge);
@@ -335,12 +354,12 @@ void main() {
           tester,
           base().copyWith(
             extraWork: const MonthExtraWork(weekendMinutes: 1234, holidayMinutes: 999, payWon: 99999999),
-            leave: const MonthLeave(year: 2026, totalDays: 99, usedHalfDays: 199, plannedHalfDays: 101, remainingHalfDays: -1),
+            leave: MonthLeave(year: 2026, balance: LeaveBalance(remainingMinutes: 99 * 480, baseDate: DateTime(2026, 12, 31)), usedMinutes: 199 * 240, plannedMinutes: 101 * 240, remainingMinutes: -240, dayMinutes: 480),
           ),
           width: width,
         );
         expect(tester.takeException(), isNull, reason: 'width $width');
-        await pump(tester, base().copyWith(extraWork: const MonthExtraWork(weekendMinutes: 1234, holidayMinutes: 999), leave: const MonthLeave(year: 2026, usedHalfDays: 199, plannedHalfDays: 101)), width: width);
+        await pump(tester, base().copyWith(extraWork: const MonthExtraWork(weekendMinutes: 1234, holidayMinutes: 999), leave: const MonthLeave(year: 2026, usedMinutes: 199 * 240, plannedMinutes: 101 * 240, dayMinutes: 480)), width: width);
         expect(tester.takeException(), isNull, reason: 'width $width nudges');
       });
     }

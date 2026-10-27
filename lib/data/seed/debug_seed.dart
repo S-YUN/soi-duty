@@ -1,3 +1,4 @@
+import '../../domain/model/leave_balance.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
@@ -38,7 +39,9 @@ Future<void> applySeed(AppDatabase db, SeedScenario scenario, {required DateTime
   }
   if (scenario == SeedScenario.history) {
     final settings = DriftAppSettingsRepository(db);
-    await settings.save((await settings.read()).withAnnualLeaveDays(day.year, 15).copyWith(hourlyWage: 12500));
+    await settings.save((await settings.read())
+        .withLeaveBalance(day.year, LeaveBalance(remainingMinutes: 15 * rules.dayOffCreditMinutes, baseDate: DateTime(day.year, 1, 1)))
+        .copyWith(hourlyWage: 12500));
   }
 }
 

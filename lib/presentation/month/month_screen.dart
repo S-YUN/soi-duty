@@ -70,11 +70,11 @@ class MonthScreen extends ConsumerWidget {
           unit: SettingsTexts.annualUnit,
           note: SettingsTexts.annualNote,
           maxDigits: SettingsTexts.annualMaxDigits,
-          initial: settings.annualLeaveDaysOf(state.month.year),
+          initial: null, // Task 6에서 남은 연차 시트로 교체
           saveLabel: SettingsTexts.save,
           clearLabel: SettingsTexts.clearLink,
-          onSave: (v) => controller.setAnnualLeaveDays(state.month.year, v),
-          onClear: () => controller.setAnnualLeaveDays(state.month.year, null),
+          onSave: (_) {},
+          onClear: null,
         ),
       ),
     );

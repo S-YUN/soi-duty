@@ -8,7 +8,8 @@ import '../month_state.dart';
 import '../month_texts.dart';
 import 'nudge_row.dart';
 
-/// 그 해 연차 카드(항상). 총 연차 | 사용(+예정 줄) | 잔여/초과 3칸. 총 연차가 없으면 "미입력" · 잔여 "—" · 유도 줄. 사용 0은 "0일".
+/// 그 해 연차 카드(항상). 제목 (+ "n월 n일 기준") → 남은 연차 | 올해/이후 사용(+예정 줄) | 지금 잔여/초과 3칸.
+/// 값이 없으면 "미입력" · 잔여 "—" · 유도 줄. 사용 0은 "0일".
 /// 퇴근 완료 요약(SummaryRow)과 같은 모양이지만 사용 칸 아래 줄이 붙어 따로 그린다 — 값 줄의 y는 세 칸이 같다.
 class LeaveCard extends StatelessWidget {
   const LeaveCard({super.key, required this.leave, required this.onTapNudge});
@@ -18,16 +19,27 @@ class LeaveCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = leave.totalDays;
-    final remaining = leave.remainingHalfDays;
+    final balance = leave.balance;
+    final remaining = leave.remainingMinutes;
     final over = remaining != null && remaining < 0;
     final noneStyle = AppTextStyles.valueNone;
+    final day = leave.dayMinutes;
     final cells = [
-      (MonthTexts.leaveTotalLabel, total == null ? MonthTexts.notEntered : MonthTexts.days(total * 2), total == null ? AppTextStyles.leaveTotalNotEntered : AppTextStyles.summaryValue, null),
-      (MonthTexts.leaveUsedLabel, MonthTexts.days(leave.usedHalfDays), AppTextStyles.summaryValue, leave.plannedHalfDays > 0 ? MonthTexts.plannedLine(leave.plannedHalfDays) : null),
+      (
+        MonthTexts.leaveBalanceLabel,
+        balance == null ? MonthTexts.notEntered : MonthTexts.days(balance.remainingMinutes, day),
+        balance == null ? AppTextStyles.leaveTotalNotEntered : AppTextStyles.summaryValue,
+        null,
+      ),
+      (
+        balance == null ? MonthTexts.leaveUsedYearLabel : MonthTexts.leaveUsedAfterLabel,
+        MonthTexts.days(leave.usedMinutes, day),
+        AppTextStyles.summaryValue,
+        leave.plannedMinutes > 0 ? MonthTexts.plannedLine(leave.plannedMinutes, day) : null,
+      ),
       (
         over ? MonthTexts.leaveOverLabel : MonthTexts.leaveRemainLabel,
-        remaining == null ? MonthTexts.none : MonthTexts.days(remaining.abs()),
+        remaining == null ? MonthTexts.none : MonthTexts.days(remaining.abs(), day),
         remaining == null ? noneStyle : AppTextStyles.summaryValue.copyWith(color: over ? AppColors.minus : AppColors.brand),
         null,
       ),
@@ -39,6 +51,10 @@ class LeaveCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(MonthTexts.leaveTitle(leave.year), style: AppTextStyles.cardTitle),
+          if (balance != null) ...[
+            SizedBox(height: AppSizes.leaveBaseLineTop),
+            Text(MonthTexts.leaveBaseLine(balance.baseDate), style: AppTextStyles.leaveBaseLine),
+          ],
           SizedBox(height: AppSizes.leaveCellsTop),
           IntrinsicHeight(
             child: Row(
@@ -71,7 +87,7 @@ class LeaveCard extends StatelessWidget {
               ],
             ),
           ),
-          if (total == null) ...[
+          if (balance == null) ...[
             Container(margin: AppSizes.leaveDividerMargin, height: AppSizes.summaryDivider, color: AppColors.rowDivider),
             NudgeRow(text: MonthTexts.leaveNudge, onTap: onTapNudge),
           ],

@@ -19,7 +19,7 @@ abstract final class SettingsTexts {
   static const annualSub = '알려주시면 월간 탭에서 남은 연차를 볼 수 있어요';
   static const annualUnit = '일';
   static const annualNote = '1월~12월 기준이에요.';
-  static final annualMaxDigits = AppSettings.maxAnnualLeaveDays.toString().length;
+  static final annualMaxDigits = AppSettings.maxLeaveDays.toString().length;
 
   static const sectionPay = '수당';
   static const wageLabel = '시급';

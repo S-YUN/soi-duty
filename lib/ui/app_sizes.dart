@@ -223,6 +223,8 @@ abstract final class AppSizes {
   static double get amountRowTop => 4.w;
   static double get nudgeMinHeight => 44.w;
   static double get nudgeGap => 10.w;
+  /// 제목 아래 "n월 n일 기준" 줄
+  static double get leaveBaseLineTop => 4.w;
   static double get leaveCellsTop => 12.w;
   static EdgeInsets get leaveCellPadding => EdgeInsets.fromLTRB(4.w, 6.w, 4.w, 2.w);
   static double get leaveValueTop => 6.w;
