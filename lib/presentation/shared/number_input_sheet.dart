@@ -209,36 +209,42 @@ class _NumberInputSheetState extends State<NumberInputSheet> {
                         ),
                         child: Row(
                           children: [
-                            Flexible(
-                              child: IntrinsicWidth(
-                                child: TextField(
-                                  controller: _controller,
-                                  autofocus: true,
-                                  keyboardType: TextInputType.numberWithOptions(decimal: _decimal),
-                                  inputFormatters: [
-                                    if (_decimal)
-                                      _DecimalFormatter(maxIntDigits: widget.maxDigits, decimalPlaces: widget.decimalPlaces)
-                                    else ...[
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      _DigitsFormatter(maxDigits: widget.maxDigits, grouping: widget.grouping),
-                                    ],
-                                  ],
-                                  onChanged: (_) => setState(() {}),
-                                  style: AppTextStyles.numberField,
-                                  cursorColor: AppColors.brand,
-                                  cursorWidth: AppSizes.numberFieldUnderline,
-                                  decoration: InputDecoration.collapsed(
-                                    hintText: '0',
-                                    hintStyle: AppTextStyles.numberFieldEmpty,
+                            // flex 자식은 이 하나뿐 — 필드와 캡션을 묶어 늘리고 단위는 항상 오른쪽 끝에.
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: IntrinsicWidth(
+                                      child: TextField(
+                                        controller: _controller,
+                                        autofocus: true,
+                                        keyboardType: TextInputType.numberWithOptions(decimal: _decimal),
+                                        inputFormatters: [
+                                          if (_decimal)
+                                            _DecimalFormatter(maxIntDigits: widget.maxDigits, decimalPlaces: widget.decimalPlaces)
+                                          else ...[
+                                            FilteringTextInputFormatter.digitsOnly,
+                                            _DigitsFormatter(maxDigits: widget.maxDigits, grouping: widget.grouping),
+                                          ],
+                                        ],
+                                        onChanged: (_) => setState(() {}),
+                                        style: AppTextStyles.numberField,
+                                        cursorColor: AppColors.brand,
+                                        cursorWidth: AppSizes.numberFieldUnderline,
+                                        decoration: InputDecoration.collapsed(
+                                          hintText: '0',
+                                          hintStyle: AppTextStyles.numberFieldEmpty,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  if (widget.emptyCaption != null && _text.isEmpty) ...[
+                                    SizedBox(width: AppSizes.numberFieldGap),
+                                    Text(widget.emptyCaption!, style: AppTextStyles.numberEmptyCaption),
+                                  ],
+                                ],
                               ),
                             ),
-                            if (widget.emptyCaption != null && _text.isEmpty) ...[
-                              SizedBox(width: AppSizes.numberFieldGap),
-                              Text(widget.emptyCaption!, style: AppTextStyles.numberEmptyCaption),
-                            ],
-                            const Spacer(),
                             SizedBox(width: AppSizes.numberFieldGap),
                             Text(widget.unit, style: AppTextStyles.numberUnit),
                           ],

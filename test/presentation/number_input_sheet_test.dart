@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/presentation/shared/number_input_sheet.dart';
 import 'package:soi_duty/ui/app_colors.dart';
+import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
 import '../helpers/fonts.dart';
@@ -84,6 +85,26 @@ void main() {
     await tester.enterText(find.byType(TextField), text);
     await tester.pump();
   }
+
+  group('단위는 항상 오른쪽 끝', () {
+    // Flexible(필드) + Spacer가 flex를 반씩 나눠 단위가 가운데로 떠다니던 회귀(리뷰 2026-10-27).
+    double unitRight(WidgetTester tester, String unit) => tester.getTopRight(find.text(unit)).dx;
+    final expected = 402 - AppSizes.sheetPadding.left - AppSizes.numberFieldPadding.right;
+
+    testWidgets('시급 모드 — 빈 값·채운 값 모두 "원"이 오른쪽 끝', (tester) async {
+      await pumpSheet(tester, maxDigits: 7, grouping: true, withClear: false);
+      expect(unitRight(tester, '원'), closeTo(expected, 0.5));
+      await type(tester, '12500');
+      expect(unitRight(tester, '원'), closeTo(expected, 0.5));
+    });
+
+    testWidgets('연차 모드 — "입력 전" 캡션이 있어도, 값을 쳐도 "일"이 오른쪽 끝', (tester) async {
+      await pumpSheet(tester, leave: true);
+      expect(unitRight(tester, '일'), closeTo(expected, 0.5));
+      await type(tester, '8.5');
+      expect(unitRight(tester, '일'), closeTo(expected, 0.5));
+    });
+  });
 
   group('시급 모드 (기존)', () {
     testWidgets('비어 있거나 0이면 저장 비활성, 1 이상이면 onSave(값)', (tester) async {
