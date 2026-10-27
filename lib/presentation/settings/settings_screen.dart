@@ -7,7 +7,6 @@ import '../../core/providers/app_info_provider.dart';
 import '../../core/providers/clock_provider.dart';
 import '../../core/providers/database_providers.dart';
 import '../../domain/model/app_settings.dart';
-import '../../domain/model/work_record.dart';
 import '../../domain/rules/work_rules.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
@@ -56,8 +55,6 @@ class SettingsScreen extends ConsumerWidget {
     final version = ref.watch(appVersionProvider).value ?? '';
     final year = ref.watch(clockProvider)().year;
     final rules = ref.watch(workRulesProvider);
-    // 연차 시트의 "이 뒤로 찍어둔 연차" 줄을 위해 — 구독해 두어야 탭 순간 값이 있다.
-    final records = ref.watch(allRecordsProvider).value ?? const <WorkRecord>[];
     final controller = ref.read(settingsControllerProvider.notifier);
     return SettingsView(
       settings: settings,
@@ -72,7 +69,6 @@ class SettingsScreen extends ConsumerWidget {
           year: year,
           today: ref.read(clockProvider)(),
           current: settings.leaveBalanceOf(year),
-          records: records,
           rules: rules,
           controller: controller,
         ),

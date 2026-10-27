@@ -12,7 +12,7 @@ import 'confirm_dialog.dart';
 /// - [decimalPlaces] > 0이면 소수점 키패드. 정수 [maxDigits]자리 · 점 하나 · 소수 [decimalPlaces]자리. ","는 "."로 받는다.
 /// - 저장 활성 = 비어 있지 않고 숫자로 읽히고 [isValid](기본 `> 0`). 비어 있지 않은데 점이 있고 끝이 점이 아닌 값이
 ///   [isValid]에 걸리면 입력줄 아래 [invalidNote]가 그 값에 대해 돌려준 문구를 붉게 띄운다(단위 안 맞음·한도 초과 구분).
-/// - [headline]은 제목 아래 한 줄, [notes]는 안내 여러 줄, [highlightNote]는 그 아래 브랜드색 한 줄(조건부).
+/// - [headline]은 제목 아래 한 줄, [notes]는 안내 여러 줄.
 /// - [emptyCaption]은 빈 값일 때 입력줄 안 "0" 플레이스홀더 옆에 — 저장 가능한 0과 구분.
 /// - 본문은 스크롤, 저장·되돌리기는 키보드 위 고정 — 높이가 모자란 기기에서 제목이 잘리지 않게 (2026-10-27).
 /// [initial]이 있으면 채워서 열리고 [onClear] 링크("사용 안 함으로 되돌리기")가 보인다. 바깥 탭·내리기는 아무것도 저장하지 않는다.
@@ -22,7 +22,6 @@ Future<void> showNumberInputSheet(
   String? headline,
   required String unit,
   required List<String> notes,
-  String? highlightNote,
   bool lockIcon = false,
   required int maxDigits,
   int decimalPlaces = 0,
@@ -48,7 +47,6 @@ Future<void> showNumberInputSheet(
       headline: headline,
       unit: unit,
       notes: notes,
-      highlightNote: highlightNote,
       lockIcon: lockIcon,
       maxDigits: maxDigits,
       decimalPlaces: decimalPlaces,
@@ -72,7 +70,6 @@ class NumberInputSheet extends StatefulWidget {
     required this.headline,
     required this.unit,
     required this.notes,
-    required this.highlightNote,
     required this.lockIcon,
     required this.maxDigits,
     required this.decimalPlaces,
@@ -91,7 +88,6 @@ class NumberInputSheet extends StatefulWidget {
   final String? headline;
   final String unit;
   final List<String> notes;
-  final String? highlightNote;
   final bool lockIcon;
   final int maxDigits;
   final int decimalPlaces;
@@ -273,7 +269,6 @@ class _NumberInputSheetState extends State<NumberInputSheet> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 for (final n in widget.notes) Text(n, style: compact ? AppTextStyles.numberNotes : AppTextStyles.settingsNote),
-                                if (widget.highlightNote != null) Text(widget.highlightNote!, style: AppTextStyles.numberHighlightNote),
                               ],
                             ),
                           ),

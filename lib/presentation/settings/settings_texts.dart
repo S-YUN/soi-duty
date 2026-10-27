@@ -30,8 +30,6 @@ abstract final class SettingsTexts {
     '오늘이 기준일이 되고, 내일부터 찍는 연차를 빼서 보여드려요.',
     '신청해 둔 연차도 아직 안 쓴 것으로 쳐서 넣어주세요.',
   ];
-  /// 그 해에 오늘보다 뒤인 연차·반차가 찍혀 있을 때만 — 회사 숫자에 이미 빠져 있을 수 있어 사용자가 맞추게.
-  static String annualFutureNote(int minutes, int dayMinutes) => '이 뒤로 찍어둔 연차 ${formatLeaveDays(minutes, dayMinutes)}은 여기서 빼서 보여드려요.';
   /// 빈 입력줄 "0" 옆 — 저장 가능한 0과 구분
   static const annualEmptyCaption = '입력 전';
   static String annualStepNote(WorkRules rules) => '${formatLeaveDays(rules.leaveStepMinutes, rules.dayOffCreditMinutes)} 단위로 넣어주세요';

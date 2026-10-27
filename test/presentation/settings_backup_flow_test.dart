@@ -240,7 +240,6 @@ void main() {
       expect(find.text('오늘(9월 16일) 기준 남은 연차'), findsOneWidget);
       expect(find.text('회사에서 보여주는 지금 남은 연차를 그대로 넣어주세요.'), findsOneWidget);
       expect(find.text('1월~12월 기준이에요.'), findsNothing);
-      expect(find.textContaining('이 뒤로 찍어둔 연차'), findsNothing);
       await tester.enterText(find.byType(TextField), '8.5');
       await tester.pump();
       await tester.tap(find.text('저장'));
@@ -270,17 +269,6 @@ void main() {
       await tester.pumpAndSettle();
       expect((await DriftAppSettingsRepository(db).read()).leaveBalanceOf(2026), LeaveBalance(remainingMinutes: 0, baseDate: d(16)));
       expect(find.text('0일'), findsOneWidget);
-      await finish(tester);
-    });
-
-    testWidgets('그 해에 오늘보다 뒤인 연차·반차가 있으면 강조 줄 "이 뒤로 찍어둔 연차 1.5일은 여기서 빼서 보여드려요."', (tester) async {
-      final repo = DriftWorkRecordRepository(db);
-      await repo.save(rec(14, type: WorkType.dayOff)); // 오늘(16) 전 — 안 센다
-      await repo.save(rec(24, type: WorkType.dayOff));
-      await repo.save(rec(25, inH: 9, outH: 13, type: WorkType.halfDay));
-      await pumpSettings(tester);
-      await tapRow(tester, '남은 연차');
-      expect(find.text('이 뒤로 찍어둔 연차 1.5일은 여기서 빼서 보여드려요.'), findsOneWidget);
       await finish(tester);
     });
   });

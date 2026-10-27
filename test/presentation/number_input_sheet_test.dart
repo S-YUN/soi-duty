@@ -23,13 +23,11 @@ void main() {
     '오늘이 기준일이 되고, 내일부터 찍는 연차를 빼서 보여드려요.',
     '신청해 둔 연차도 아직 안 쓴 것으로 쳐서 넣어주세요.',
   ];
-  const leaveHighlight = '이 뒤로 찍어둔 연차 1.5일은 여기서 빼서 보여드려요.';
 
   /// leave: 연차 모드(소수점 2자리 · 0 허용 · 0.5 단위 검증 · 헤드라인 · 안내 세 줄). 아니면 시급 모드(기존 동작).
   Future<void> pumpSheet(
     WidgetTester tester, {
     bool leave = false,
-    bool highlight = false,
     int maxDigits = 2,
     bool grouping = false,
     num? initial,
@@ -57,7 +55,6 @@ void main() {
               headline: leave ? '오늘(10월 26일) 기준 남은 연차' : null,
               unit: leave ? '일' : '원',
               notes: leave ? leaveNotes : const ['이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.'],
-              highlightNote: highlight ? leaveHighlight : null,
               maxDigits: maxDigits,
               decimalPlaces: leave ? 2 : 0,
               grouping: grouping,
@@ -325,24 +322,16 @@ void main() {
       expect(find.text('입력 전'), findsNothing);
     });
 
-    testWidgets('헤드라인·안내 세 줄·강조 줄(brand)이 보인다, 강조 없으면 안 보인다', (tester) async {
-      await pumpSheet(tester, leave: true, highlight: true);
+    testWidgets('헤드라인·안내 세 줄이 보인다', (tester) async {
+      await pumpSheet(tester, leave: true);
       expect(find.text('오늘(10월 26일) 기준 남은 연차'), findsOneWidget);
       for (final n in leaveNotes) {
         expect(find.text(n), findsOneWidget);
       }
-      expect(find.text(leaveHighlight), findsOneWidget);
-      expect(tester.widget<Text>(find.text(leaveHighlight)).style?.color, AppColors.brand);
-    });
-
-    testWidgets('강조 줄이 없으면 안 보인다', (tester) async {
-      await pumpSheet(tester, leave: true);
-      expect(find.text('오늘(10월 26일) 기준 남은 연차'), findsOneWidget);
-      expect(find.text(leaveHighlight), findsNothing);
     });
 
     testWidgets('높이 640 + 키보드 300 — 저장 버튼이 키보드 위에 보이고 제목은 스크롤로 닿는다', (tester) async {
-      await pumpSheet(tester, leave: true, highlight: true, initial: 8.5, height: 640, viewInsets: const EdgeInsets.only(bottom: 300));
+      await pumpSheet(tester, leave: true, initial: 8.5, height: 640, viewInsets: const EdgeInsets.only(bottom: 300));
       expect(tester.getBottomLeft(saveButton()).dy, lessThanOrEqualTo(640 - 300));
       expect(find.byType(SingleChildScrollView), findsOneWidget);
       await tester.ensureVisible(find.text('남은 연차'));

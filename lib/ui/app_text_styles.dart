@@ -158,8 +158,6 @@ abstract final class AppTextStyles {
   static TextStyle get numberInvalid => _style(13, FontWeight.w400, color: AppColors.minus);
   /// 안내 여러 줄 (lh 1.55)
   static TextStyle get numberNotes => _style(13, FontWeight.w400, height: 1.55, color: AppColors.subtle);
-  /// 조건부 강조 줄 — "이 뒤로 찍어둔 연차 n일은 여기서 빼서 보여드려요"
-  static TextStyle get numberHighlightNote => _style(13, FontWeight.w400, height: 1.55, color: AppColors.brand);
 
   // 월간 탭 카드 (수당 · 연차)
   static TextStyle get extraRowLabel => _style(13.5, FontWeight.w400, color: AppColors.subtle);
