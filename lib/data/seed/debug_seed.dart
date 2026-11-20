@@ -134,7 +134,27 @@ List<WorkRecord> _records(SeedScenario scenario, DateTime today) {
         }
       }
       // 지난 주에 출장·시간공제 둘, 2주 전 월요일엔 공휴일 근무 — 날짜 변동과 무관하게 항상 보이게 덮어쓴다.
+      // 시간 출장(기록만, 계산 무관)은 일반·반차+공제·공휴일 근무·주말 근무에 하나씩 + 다음 주 화요일 예정 하나.
+      DateTime at(DateTime day, int h, [int m = 0]) => DateTime(day.year, day.month, day.day, h, m);
+      final lastMon = lastMonday;
+      final lastFri = addDays(lastMonday, 4);
+      final lastSat = addDays(lastMonday, 5);
+      final holidayWorkDay = addDays(lastMonday, -7);
+      final nextTue = addDays(monday, 8);
       final fixed = {
+        // 반차 + 시간 출장 + 공제 — 주간 행 배지 셋
+        lastMon: WorkRecord(
+          date: lastMon,
+          type: WorkType.halfDay,
+          clockIn: at(lastMon, 13, 30),
+          clockOut: at(lastMon, 17, 10),
+          deductionMinutes: 30,
+          tripStart: at(lastMon, 13, 40),
+          tripEnd: at(lastMon, 16),
+        ),
+        lastFri: full(lastFri, outH: 18, outM: 10).copyWith(tripStart: at(lastFri, 9, 20), tripEnd: at(lastFri, 12, 30)),
+        lastSat: full(lastSat, inH: 10, outH: 14).copyWith(tripStart: at(lastSat, 10), tripEnd: at(lastSat, 12)),
+        nextTue: WorkRecord(date: nextTue, tripStart: at(nextTue, 9), tripEnd: at(nextTue, 12)),
         addDays(lastMonday, 1): WorkRecord(date: addDays(lastMonday, 1), type: WorkType.businessTrip),
         addDays(lastMonday, 2): full(addDays(lastMonday, 2), outH: 16).copyWith(deductionMinutes: 120),
         addDays(lastMonday, 3): full(addDays(lastMonday, 3), outH: 17).copyWith(deductionMinutes: 60),
@@ -143,6 +163,8 @@ List<WorkRecord> _records(SeedScenario scenario, DateTime today) {
           type: WorkType.holiday,
           clockIn: DateTime(lastMonday.year, lastMonday.month, lastMonday.day - 7, 10),
           clockOut: DateTime(lastMonday.year, lastMonday.month, lastMonday.day - 7, 15),
+          tripStart: at(holidayWorkDay, 10),
+          tripEnd: at(holidayWorkDay, 13),
         ),
       };
       records

@@ -119,4 +119,19 @@ void main() {
     final todayRec = (await repo.watchAll().first).singleWhere((r) => r.date == today);
     expect((todayRec.type, todayRec.clockIn != null, todayRec.clockOut), (WorkType.holiday, true, null));
   });
+
+  test('history: 시간 출장이 일반·반차+공제·공휴일 근무·주말 근무에 하나씩, 미래 예정 하나 — 범위는 전부 유효', () async {
+    await applySeed(db, SeedScenario.history, today: today);
+    final trips = (await repo.watchAll().first).where(hasTrip).toList();
+    expect(trips, hasLength(5));
+    expect(trips.every((r) => isValidTripRange(r.tripStart, r.tripEnd)), isTrue);
+    expect(trips.where((r) => r.type == WorkType.halfDay && r.deductionMinutes > 0), hasLength(1));
+    expect(trips.where((r) => r.type == WorkType.holiday && r.clockOut != null), hasLength(1));
+    expect(trips.where((r) => isWeekend(r.date) && r.clockOut != null), hasLength(1));
+    expect(trips.where((r) => r.type == WorkType.normal && !isWeekend(r.date) && r.clockOut != null), hasLength(1));
+    final planned = trips.singleWhere((r) => r.date.isAfter(today));
+    expect((planned.clockIn, planned.clockOut), (null, null));
+    // 종일 출장도 그대로 하나 있다
+    expect((await repo.watchAll().first).where((r) => r.type == WorkType.businessTrip), hasLength(1));
+  });
 }
