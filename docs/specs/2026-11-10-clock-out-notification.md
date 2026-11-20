@@ -161,7 +161,7 @@ T주간 ≤ T기준                                     → 주간(N2′) @ T주
 
 - 패키지 `flutter_local_notifications` ^22.3.3 + `timezone`. 23.x는 AGP 9.1.1 · compileSdk 37을 요구해 빌드 도구를 올릴 때 같이 올린다.
 - Android: `POST_NOTIFICATIONS` · `RECEIVE_BOOT_COMPLETED` · 리시버 둘(예약 표시 · 재부팅 뒤 복원) · core library desugaring ·
-  상태바 아이콘 `drawable/ic_stat_soi.xml`(단색 벡터) + `raw/keep.xml`(릴리즈 리소스 축소가 아이콘을 지우지 않게).
+  상태바 아이콘 `drawable/ic_stat_soiduty.xml`(디자인 확정 단색 벡터, 핸드오프 6 §9-2) · 알림 색 브랜드 + `raw/keep.xml`(릴리즈 리소스 축소가 아이콘을 지우지 않게).
   **늘 정시 방식(`exactAllowWhileIdle`)으로만 건다. "알람 및 리마인더"(`SCHEDULE_EXACT_ALARM`) 권한이 없으면 예약하지 않는다.**
   처음엔 권한 없이 가기로 했으나(§6·§7-4) 실기기 측정으로 뒤집었다 (2026-11-20, Galaxy A16 · Android 16):
 

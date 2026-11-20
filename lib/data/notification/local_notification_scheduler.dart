@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../domain/repository/notification_scheduler.dart';
+import '../../ui/app_colors.dart';
 
 /// 퇴근 알림의 플랫폼 구현 (flutter_local_notifications).
 ///
@@ -30,7 +31,7 @@ class LocalNotificationScheduler implements NotificationScheduler {
   /// Android OS 설정에 보이는 알림 채널 이름·설명 — 문구는 presentation의 texts가 넘긴다.
   final String channelName;
   final String channelDescription;
-  static const _androidIcon = 'ic_stat_soi';
+  static const _androidIcon = 'ic_stat_soiduty';
 
   final FlutterLocalNotificationsPlugin _plugin;
   Future<void>? _ready;
@@ -64,6 +65,8 @@ class LocalNotificationScheduler implements NotificationScheduler {
       importance: Importance.high,
       priority: Priority.high,
       category: AndroidNotificationCategory.reminder,
+      // 알림 창 머리의 아이콘·앱 이름을 브랜드색으로 (핸드오프 6 §9-2, 기기마다 다름).
+      color: AppColors.brand,
     ),
     iOS: const DarwinNotificationDetails(
       presentBanner: true,

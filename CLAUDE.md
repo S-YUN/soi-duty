@@ -388,7 +388,7 @@ class WorkRecord with _$WorkRecord {
 - **로컬 저장: Drift** — 쿼리 결과를 스트림으로 흘려주므로 `StreamProvider`와 맞물린다.
   한 화면에서 기록을 고치면 다른 화면의 집계가 자동 갱신되는 게 이 앱의 핵심 요구사항이다.
 - **반응형 사이즈: 커스텀 SizeConfig** (비율 기반)
-- **플랫폼 패키지**: `flutter_local_notifications` ^22.3.3 + `timezone`(퇴근 알림 — 23.x는 AGP 9.1.1·compileSdk 37 필요, Android는 desugaring·리시버 둘·`ic_stat_soi`·`keep.xml`, iOS는 AppDelegate의 알림 delegate) · `share_plus`(내보내기 공유 시트) · `file_picker`(가져오기) · `path_provider`(임시 파일) · `package_info_plus`(버전) · `url_launcher`(처리방침; Android `<queries>` https)
+- **플랫폼 패키지**: `flutter_local_notifications` ^22.3.3 + `timezone`(퇴근 알림 — 23.x는 AGP 9.1.1·compileSdk 37 필요, Android는 desugaring·리시버 둘·`ic_stat_soiduty`·`keep.xml`, iOS는 AppDelegate의 알림 delegate) · `share_plus`(내보내기 공유 시트) · `file_picker`(가져오기) · `path_provider`(임시 파일) · `package_info_plus`(버전) · `url_launcher`(처리방침; Android `<queries>` https)
 - **아키텍처: Clean Architecture** (presentation / domain / data)
   UseCase 레이어는 두지 않아도 되지만 필요하다면 사용해도 괜찮다. 
 
