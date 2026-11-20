@@ -3,6 +3,22 @@
 자동 테스트는 "무엇을 언제 예약·취소하는지"까지만 본다. **OS가 실제로 띄우는지, 워치로 가는지, 얼마나 늦는지**는 기기에서 봐야 한다.
 dev 빌드(`--flavor dev`)로 확인한다 — 디버그 시트가 필요하다.
 
+## 원래 PC에서 먼저 확인 (빌드 환경)
+
+알림 작업은 원래 개발 PC가 아닌 Windows PC에서 했다. **iOS는 한 번도 빌드하지 못했고**, Android 빌드 조건도 그 PC 기준으로 맞췄다.
+
+| # | 확인 | 방법 | 기대 | 결과 |
+|---|---|---|---|---|
+| 0-1 | Flutter 버전 | `flutter --version` | 작업한 PC는 3.47.9. 다르면 아래 빌드가 더 중요하다 | |
+| 0-2 | Android 빌드 | `flutter pub get` → `flutter build apk --flavor dev --debug` | 성공 | |
+| 0-3 | iOS 빌드 | `flutter build ios --flavor dev` | 성공 (`AppDelegate.swift`에 알림 delegate 한 줄 + 새 패키지) | |
+| 0-4 | 알림 패키지 버전 | `pubspec.yaml`의 `flutter_local_notifications: ^22.3.3` | 그대로 둬도 된다. 아래 참고 | |
+
+**알림 패키지를 22.3.x로 묶은 이유.** 23.x는 Android에서 AGP 9.1.1 이상 · compileSdk 37 이상을 요구한다.
+작업 당시 AGP는 9.1.0(`android/settings.gradle.kts`, 레포에 있어 어느 PC든 같다), compileSdk는 36(설치된 Flutter의 기본값 — **PC의 Flutter 버전에 따라 다르다**)이었다.
+원래 PC의 Flutter가 compileSdk 37을 기본으로 쓰고 AGP를 올려도 되는 상태면 23.x로 올릴 수 있다 — 꼭 올릴 필요는 없다(22.3.3으로 필요한 기능은 다 된다).
+올린다면 고칠 곳은 `android/settings.gradle.kts`의 AGP 버전과 `pubspec.yaml` 한 줄이고, Dart 쪽은 `lib/data/notification/local_notification_scheduler.dart`만 보면 된다.
+
 ## 준비
 
 - 오늘 화면의 **날짜 제목을 길게 누르면** 디버그 시트가 열린다. 가운데에 알림 시험 버튼 둘:
