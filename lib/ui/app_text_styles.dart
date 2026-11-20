@@ -131,6 +131,24 @@ abstract final class AppTextStyles {
   static TextStyle get sheetButtonSecondary => _style(15, FontWeight.w600, color: AppColors.subtle);
   static TextStyle get deleteLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
 
+  // 시간 출장 (핸드오프 6)
+  static TextStyle get tripDash => _style(18, FontWeight.w400, color: AppColors.wheelUnselected);
+  static TextStyle get tripResult => _style(14.5, FontWeight.w500);
+  static TextStyle get tripInvalid => _style(13.5, FontWeight.w500, color: AppColors.minus);
+  /// 패널 버튼 제목. 고른 쪽은 브랜드색, 못 고르는 쪽(반차 날의 종일)은 흐리게.
+  static TextStyle tripPanelTitle({required bool selected, required bool enabled}) => _style(
+        15,
+        FontWeight.w600,
+        color: !enabled
+            ? AppColors.dotInactive
+            : selected
+                ? AppColors.brand
+                : AppColors.ink,
+      );
+  static TextStyle get tripPanelSub => _style(12.5, FontWeight.w400, color: AppColors.subtle);
+  /// 미래 시트 출장 행의 범위 "09:00–12:00"
+  static TextStyle get typeRowRange => _style(13, FontWeight.w500, color: AppColors.tripText);
+
   static TextStyle get toast => _style(13.5, FontWeight.w500, color: AppColors.onBrand);
 
 

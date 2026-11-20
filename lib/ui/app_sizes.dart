@@ -177,6 +177,32 @@ abstract final class AppSizes {
   static double get sheetButtonGap => 9.w;
   static double get deleteLinkTop => 16.w;
 
+  // 시간 출장 작은 시트 (핸드오프 6 §3)
+  /// 시트 최대 높이 = 화면 − 이 값. 작은 기기에서 넘치면 시트 안에서 스크롤한다.
+  static double get tripSheetTopMargin => 44.w;
+  static double get tripCellsTop => 12.w;
+  static double get tripDashGap => 12.w;
+  static double get tripCellValueTop => 4.w;
+  static double get tripCellUnderlineTop => 8.w;
+  static double get tripCellUnderlineOn => 2.w;
+  static double get tripCellUnderlineOff => 1.w;
+  static double get tripResultTop => 14.w;
+  static double get tripSheetButtonTop => 12.w;
+
+  // 출장 고르기 패널 — "종일 출장 / 시간 출장" (핸드오프 6 §2)
+  static double get tripPanelTop => 8.w;
+  static double get tripPanelPadding => 12.w;
+  static double get tripPanelRadius => 14.w;
+  static double get tripPanelNoteBottom => 9.w;
+  static double get tripPanelButtonGap => 8.w;
+  static double get tripPanelButtonRadius => 12.w;
+  static double get tripPanelButtonMinHeight => 58.w;
+  static EdgeInsets get tripPanelButtonPadding => EdgeInsets.symmetric(vertical: 10.w, horizontal: 12.w);
+  static double get tripPanelSubTop => 3.w;
+  static double get tripPanelBorder => 1.5.w;
+  /// 미래 시트 출장 행 — 라벨과 범위 사이
+  static double get typeRowRangeGap => 8.w;
+
   // 설정 진입 톱니 (탭 줄 오른쪽) · 설정 화면
   static double get gearRight => 10.w;
   static double get gearSize => 44.w;
