@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 릴리즈 빌드의 리소스 축소(R8)가 알림 아이콘을 지우지 않게 한다. 알림 아이콘은 코드에서 이름 문자열("ic_stat_soi")로만
+     참조돼 "안 쓰는 리소스"로 보인다 — 지워지면 알림이 조용히 실패한다 (flutter_local_notifications README, Release build configuration). -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_soi" />

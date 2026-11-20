@@ -32,7 +32,9 @@ dependencies:
   share_plus: ^13.3.1
   file_picker: ^13.2.0
   path_provider: ^2.1.6
-
+  # 퇴근 알림 (로컬 예약). 23.x는 AGP 9.1.1 · compileSdk 37을 요구한다 — 빌드 도구를 올릴 때 같이 올린다.
+  flutter_local_notifications: ^22.3.3
+  timezone: ^0.11.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

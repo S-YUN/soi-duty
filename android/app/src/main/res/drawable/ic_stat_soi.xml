@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 퇴근 알림의 상태바 아이콘. Android는 알림 작은 아이콘의 알파만 쓴다 — 컬러 런처 아이콘을 넣으면 흰 사각형이 된다.
+     로고의 원형 차트(고리 + 조각)를 딴 단색 글리프. 디자인 쪽 아이콘이 오면 이 파일만 바꾼다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M12,3 A9,9 0 1,1 11.99,3 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,12 L12,6 A6,6 0 0,1 17.2,15 Z" />
+</vector>

@@ -5,10 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/core/providers/clock_provider.dart';
 import 'package:soi_duty/core/providers/database_providers.dart';
+import 'package:soi_duty/core/providers/notification_providers.dart';
 import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/main.dart';
 import 'package:soi_duty/presentation/today/today_screen.dart';
 import 'package:soi_duty/presentation/today/widgets/primary_button.dart';
+
+import 'helpers/fake_notification_scheduler.dart';
 
 void main() {
   setUpAll(() => driftRuntimeOptions.dontWarnAboutMultipleDatabases = true);
@@ -28,6 +31,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           nowProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+          // 알림 플러그인은 테스트 환경에 없다
+          notificationSchedulerProvider.overrideWithValue(FakeNotificationScheduler()),
         ],
         child: const SoiDutyApp(),
       ));
@@ -50,6 +55,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           nowProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+          // 알림 플러그인은 테스트 환경에 없다
+          notificationSchedulerProvider.overrideWithValue(FakeNotificationScheduler()),
         ],
         child: const SoiDutyApp(),
       ));
@@ -69,6 +76,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           nowProvider.overrideWith((ref) => Stream.value(DateTime.now())),
+          // 알림 플러그인은 테스트 환경에 없다
+          notificationSchedulerProvider.overrideWithValue(FakeNotificationScheduler()),
         ],
         child: MediaQuery(
           data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),

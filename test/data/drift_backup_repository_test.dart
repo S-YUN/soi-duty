@@ -131,4 +131,23 @@ void main() {
     expect(all, contains(rec(15, type: WorkType.dayOff)));
     expect((await backup.snapshot(DateTime(2026, 11, 20))).records, contains(trip));
   });
+
+  test('restore — 퇴근 알림 설정과 알림 상태는 기기 값이라 그대로다 (백업에 없다)', () async {
+    await settings.save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
+    await db.into(db.settings).insert(SettingsCompanion.insert(key: 'notification_os_asked', value: '1'));
+    final snapshot = await backup.snapshot(DateTime(2026, 11, 20));
+    expect(encodeBackup(snapshot), isNot(contains('otification')));
+
+    await backup.restore(BackupSnapshot(
+      exportedAt: DateTime(2026, 11, 20),
+      weekStart: WeekStart.sunday,
+      leaveBalanceByYear: const {},
+      hourlyWage: 9000,
+      records: [rec(14, inH: 9, outH: 18)],
+    ));
+    final s = await settings.read();
+    expect((s.clockOutNotificationEnabled, s.notificationPrompted), (true, true));
+    expect((s.weekStart, s.hourlyWage), (WeekStart.sunday, 9000));
+    expect(await settingValue('notification_os_asked'), '1');
+  });
 }

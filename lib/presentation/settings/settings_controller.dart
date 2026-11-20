@@ -24,6 +24,12 @@ class SettingsController extends _$SettingsController {
 
   Future<void> setHourlyWage(int? won) => _update((s) => s.copyWith(hourlyWage: won));
 
+  /// 퇴근 알림 켜기/끄기. 예약은 `ClockOutNotificationSync`가 이 값을 보고 다시 맞춘다.
+  Future<void> setClockOutNotification(bool on) => _update((s) => s.copyWith(clockOutNotificationEnabled: on));
+
+  /// 권한 묻기(P1)를 띄웠다 — 수락·거절·넘김 모두. 다시 묻지 않는다.
+  Future<void> markNotificationPrompted() => _update((s) => s.copyWith(notificationPrompted: true));
+
   /// 기록·설정을 JSON 파일로 만들어 공유 시트를 연다. 사용자가 실제로 어딘가로 보냈으면(닫지 않았으면)
   /// 마지막 내보내기 날짜를 오늘로 적고 true.
   Future<bool> exportBackup(DateTime now) async {

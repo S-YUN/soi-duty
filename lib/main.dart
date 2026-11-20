@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/presentation/size_config.dart';
 import 'core/routing/router.dart';
+import 'presentation/notification/clock_out_notification_host.dart';
 import 'presentation/splash/native_splash_hold.dart';
 import 'ui/app_theme.dart';
 
@@ -32,7 +33,10 @@ class SoiDutyApp extends ConsumerWidget {
         // 대신 기본 크기 자체를 실기기에서 키워 왔다 (app_text_styles.dart). 접근성 요구가 생기면 SizeConfig와 함께 다시 본다.
         return MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.0,
-          child: KeyedSubtree(key: ValueKey(SizeConfig.scale), child: NativeSplashHold(child: child!)),
+          child: KeyedSubtree(
+            key: ValueKey(SizeConfig.scale),
+            child: ClockOutNotificationHost(child: NativeSplashHold(child: child!)),
+          ),
         );
       },
     );
