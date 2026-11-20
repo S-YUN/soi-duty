@@ -250,19 +250,22 @@ final class NotificationPermissionProvider
 String _$notificationPermissionHash() =>
     r'93969a2b15af6f1a1a1199005f3ae959f86c1605';
 
-/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
+/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). false면 알림을 예약하지 않는다.
+/// 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
 /// 앱으로 돌아올 때 invalidate한다.
 
 @ProviderFor(exactAlarmAllowed)
 final exactAlarmAllowedProvider = ExactAlarmAllowedProvider._();
 
-/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
+/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). false면 알림을 예약하지 않는다.
+/// 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
 /// 앱으로 돌아올 때 invalidate한다.
 
 final class ExactAlarmAllowedProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
-  /// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
+  /// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). false면 알림을 예약하지 않는다.
+  /// 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
   /// 앱으로 돌아올 때 invalidate한다.
   ExactAlarmAllowedProvider._()
     : super(

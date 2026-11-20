@@ -13,11 +13,12 @@
 
 작업은 원래 PC가 아닌 Windows PC에서 했다. **iOS는 한 번도 빌드하지 못했다.**
 
-- [ ] `git fetch && git checkout feature/trip-record-notification`
-- [ ] `flutter --version` — 작업한 PC는 3.47.9
-- [ ] `flutter pub get` → `dart run build_runner build --delete-conflicting-outputs` → `flutter test` (640개 통과해야 한다)
-- [ ] `flutter build apk --flavor dev --debug`
-- [ ] `flutter build ios --flavor dev` — `ios/Runner/AppDelegate.swift`에 알림 delegate 한 줄 + 새 패키지(`flutter_local_notifications`)
+- [x] `git fetch && git checkout feature/trip-record-notification`
+- [x] `flutter --version` — 작업한 PC는 3.47.9, 맥은 3.47.4 (문제없음)
+- [x] `flutter pub get` → `dart run build_runner build --delete-conflicting-outputs` → `flutter test` (640개 통과, 11-20 맥)
+- [x] `flutter build apk --flavor dev --debug`
+- [ ] `flutter build ios --flavor dev` — `--no-codesign`으로는 빌드된다(11-20). 서명 빌드는 Apple 개발자 계정의 새 PLA(프로그램 라이선스 계약)
+      동의 대기 — developer.apple.com에서 동의한 뒤 다시. `ios/Runner/AppDelegate.swift`에 알림 delegate 한 줄 + 새 패키지(`flutter_local_notifications`)
 - [ ] 알림 패키지는 `^22.3.3`으로 묶여 있다. 23.x는 AGP 9.1.1 · compileSdk 37이 필요해서 피했다 —
       원래 PC의 Flutter가 다르면 확인표 맨 위 "원래 PC에서 먼저 확인" 절을 본다. 빌드만 되면 그대로 둬도 된다.
 
