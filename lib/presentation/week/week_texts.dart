@@ -1,6 +1,7 @@
 import '../../core/presentation/format/date_format.dart';
 import '../../core/presentation/format/time_format.dart';
 import '../../domain/model/work_type.dart';
+import '../../domain/rules/work_calculator.dart';
 import 'week_state.dart';
 
 /// 주간 화면의 모든 문구. 숫자(WeekState) → 문자열은 여기서만.
@@ -100,15 +101,23 @@ abstract final class WeekTexts {
           none,
       };
 
-  /// 배지. 유형(일반 제외, 미래 포함) + 시간공제.
+  /// 배지. 유형(일반 제외, 미래 포함) → 시간 출장(길이) → 시간공제. 종일 출장은 유형 배지 "출장" 하나 —
+  /// 시간이 붙어 있으면 시간 출장이라 배지만 봐도 구분된다. 범위는 주간에 쓰지 않는다(탭하면 시트에서 보인다).
   static List<WeekBadge> badges(WeekDay day) {
     final r = day.record;
     if (r == null) return const [];
+    final trip = tripMinutes(r);
     return [
-      if (r.type != WorkType.normal) WeekBadge(badgeLabel(r.type), type: r.type),
-      if (r.deductionMinutes > 0) WeekBadge('${formatHm(r.deductionMinutes)} 공제'),
+      if (r.type != WorkType.normal) WeekBadge(badgeLabel(r.type), WeekBadgeKind.type, type: r.type),
+      if (trip != null) WeekBadge('$tripBadgePrefix ${formatHm(trip)}', WeekBadgeKind.trip),
+      if (r.deductionMinutes > 0) WeekBadge('${formatHm(r.deductionMinutes)} 공제', WeekBadgeKind.deduction),
     ];
   }
+
+  static const tripBadgePrefix = '출장';
+
+  /// 첫 줄(값 옆)에 들어가는 배지 수. 셋째부터는 둘째 줄 맨 앞으로 내려간다 — 폭 320에서 셋이 한 줄에 안 들어간다.
+  static const maxBadgesOnMainLine = 2;
 
   static String badgeLabel(WorkType t) => switch (t) {
         WorkType.halfDay => '반차',

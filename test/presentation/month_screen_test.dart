@@ -9,6 +9,7 @@ import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/month/month_screen.dart';
 import 'package:soi_duty/presentation/month/month_state.dart';
 import 'package:soi_duty/presentation/month/month_state_builder.dart';
+import 'package:soi_duty/presentation/month/month_texts.dart';
 import 'package:soi_duty/presentation/month/widgets/calendar_card.dart';
 import 'package:soi_duty/presentation/month/widgets/extra_work_card.dart';
 import 'package:soi_duty/presentation/month/widgets/leave_card.dart';
@@ -368,5 +369,68 @@ void main() {
         expect(tester.takeException(), isNull, reason: 'width $width nudges');
       });
     }
+  });
+
+  testWidgets('시간 출장 날의 원 — 유형이 먼저, 유형이 없으면 출장색. 출장 원 위 숫자는 주말도 출장 글자색', (tester) async {
+    tester.view.physicalSize = const Size(402 * 3, 874 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    final state = buildMonthState(
+      records: [
+        rec(8, inH: 9, outH: 18, tripInH: 9, tripInM: 20, tripOutH: 12, tripOutM: 30), // 평일 근무 + 출장
+        rec(9, inH: 13, outH: 17, type: WorkType.halfDay, tripInH: 13, tripInM: 40, tripOutH: 16), // 반차 + 출장
+        rec(3, inH: 10, outH: 15, type: WorkType.holiday, tripInH: 10, tripOutH: 13), // 공휴일 근무 + 출장
+        rec(5, inH: 10, outH: 14, tripInH: 10, tripOutH: 12), // 토요일 근무 + 출장
+        rec(12, inH: 10, outH: 14), // 토요일 근무, 출장 없음
+        rec(23, tripInH: 9, tripOutH: 12), // 미래, 출장만
+        rec(10, inH: 9, outH: 18), // 평일 근무
+      ],
+      firstRecordDate: DateTime(2026, 8, 20),
+      now: d(16, 12),
+      rules: rules,
+      month: DateTime(2026, 9),
+      settings: const AppSettings(),
+    );
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: MonthView(
+          state: state,
+          canGoPrev: true,
+          canGoNext: true,
+          onCellTap: (_) {},
+          onPrev: () {},
+          onNext: () {},
+          onOpenWage: () {},
+          onOpenAnnual: () {},
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    Finder cellOf(int day) => find.byKey(ValueKey(calendarCellKey(d(day))));
+    Finder numOf(int day) => find.descendant(of: cellOf(day), matching: find.text('$day'));
+    Color? circle(int day) => (tester
+            .widget<Container>(find.ancestor(of: numOf(day), matching: find.byType(Container)).first)
+            .decoration! as BoxDecoration)
+        .color;
+    Color? num(int day) => tester.widget<Text>(numOf(day)).style?.color;
+
+    expect(circle(8), AppColors.tripBackground);
+    expect(num(8), AppColors.tripText);
+    expect(circle(9), AppColors.typeColors(WorkType.halfDay).$1); // 유형이 먼저
+    expect(circle(3), AppColors.typeColors(WorkType.holiday).$1);
+    expect(circle(5), AppColors.tripBackground);
+    expect(num(5), AppColors.tripText, reason: '출장 원 위에서는 주말도 적갈색이 아니다');
+    expect(circle(12), AppColors.calendarWorked);
+    expect(num(12), AppColors.calendarWeekendNum, reason: '출장 없는 주말 근무는 그대로 적갈색');
+    expect(circle(23), AppColors.tripBackground, reason: '미리 넣어둔 미래 출장도 색 원');
+    expect(circle(10), AppColors.calendarWorked);
+    expect(num(10), AppColors.ink);
+    // 범례는 그대로 4개
+    expect(MonthTexts.legend.map((e) => e.$2).toList(), ['반차', '연차', '공휴일', '출장']);
+    // 값은 출장과 무관
+    expect(find.descendant(of: cellOf(8), matching: find.text('0m')), findsOneWidget);
   });
 }

@@ -30,6 +30,8 @@ abstract class MonthCell with _$MonthCell {
     required bool isBeforeFirstWeek,
     /// 배지. normal이면 null
     WorkType? type,
+    /// 시간 출장 범위가 있는 날 — 유형이 없으면 원이 출장색이 된다(유형이 먼저). 값에는 영향이 없다.
+    required bool hasTrip,
     required MonthCellValue value,
   }) = _MonthCell;
 }

@@ -108,4 +108,57 @@ void main() {
       expect(find.text('출장'), findsOneWidget);
     });
   }
+
+  for (final width in [320.0, 360.0, 600.0]) {
+    testWidgets('배지 셋(반차 + 출장 + 공제)이어도 7행 높이가 같고 폭 $width에서 넘치지 않는다 — 셋째는 둘째 줄', (tester) async {
+      SizeConfig.init(width);
+      tester.view.physicalSize = Size(width * 3, 900 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      final state = buildWeekState(
+        records: [
+          rec(14, inH: 13, inM: 5, outH: 21, outM: 1, type: WorkType.halfDay, ded: 150, tripInH: 13, tripInM: 40, tripOutH: 16, tripOutM: 50),
+          rec(15, inH: 10, outH: 15, type: WorkType.holiday, tripInH: 10, tripOutH: 13),
+          rec(16, inH: 9, inM: 12, tripInH: 9, tripInM: 12, tripOutH: 12, tripOutM: 12),
+          rec(17, type: WorkType.businessTrip),
+          rec(19, inH: 10, outH: 14, tripInH: 10, tripOutH: 12),
+        ],
+        firstRecordDate: d(7),
+        now: d(16, 12),
+        rules: rules,
+        monday: d(14),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: WeekView(state: state, rules: rules, onDayTap: (_) {}, onPrev: () {}, onNext: () {}),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(tester.takeException(), isNull);
+      final heights = tester
+          .widgetList(find.byType(WeekDayRow))
+          .map((w) => tester.getSize(find.byWidget(w)).height)
+          .toSet();
+      expect(heights.length, 1, reason: '행 높이: $heights');
+      // 첫 줄: 반차 · 출장 3h 10m, 둘째 줄 맨 앞: 공제
+      final half = tester.getRect(find.text('반차'));
+      final trip = tester.getRect(find.text('출장 3h 10m'));
+      final deduction = tester.getRect(find.text('2h 30m 공제'));
+      expect((trip.center.dy - half.center.dy).abs(), lessThan(1));
+      expect(deduction.top, greaterThan(half.bottom));
+      expect(deduction.left, lessThan(trip.left));
+      // 메모(출퇴근 범위)는 공제 배지 오른쪽에서 한 줄
+      final note = tester.getRect(find.text('13:05 – 21:01'));
+      expect(note.left, greaterThan(deduction.right));
+      expect((note.center.dy - deduction.center.dy).abs(), lessThan(2));
+      // 배지가 값 칸을 침범하지 않는다
+      expect(trip.right, lessThanOrEqualTo(tester.getRect(find.text('+6h 26m')).left));
+      expect(find.text('출장 3h'), findsNWidgets(2)); // 공휴일 근무 + 오늘
+      expect(find.text('출장 2h'), findsOneWidget); // 토요일
+    });
+  }
 }

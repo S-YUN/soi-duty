@@ -107,6 +107,8 @@ abstract final class AppSizes {
   static double get rowDowTop => 1.w;
   static double get rowBadgeGap => 6.w;
   static EdgeInsets get rowBadgePadding => EdgeInsets.symmetric(vertical: 2.w, horizontal: 7.w);
+  /// 둘째 줄(메모 줄, 높이 20)로 내려간 셋째 배지 — 줄 높이 16에 맞춘다.
+  static EdgeInsets get rowBadgePaddingTight => EdgeInsets.symmetric(vertical: 0.5.w, horizontal: 7.w);
   static double get rowBadgeRadius => 5.w;
   static double get rowDivider => 1.w;
 
