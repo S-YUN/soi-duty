@@ -779,4 +779,13 @@ void main() {
       expect(defaultTripRange(d(17), d(16, 8, 5), rules), (d(17, 8, 5), d(17, 11, 5)));
     });
   });
+
+  test('isEmptyRecord — 시각·공제·출장 범위가 없는 일반만 비어 있다', () {
+    expect(isEmptyRecord(rec(16)), isTrue);
+    expect(isEmptyRecord(rec(16, inH: 9)), isFalse);
+    expect(isEmptyRecord(rec(16, ded: 30)), isFalse);
+    expect(isEmptyRecord(rec(16, tripInH: 9, tripOutH: 12)), isFalse);
+    expect(isEmptyRecord(rec(16, type: WorkType.holiday)), isFalse);
+    expect(isEmptyRecord(rec(16, type: WorkType.dayOff)), isFalse);
+  });
 }

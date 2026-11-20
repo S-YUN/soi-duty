@@ -149,6 +149,12 @@ abstract final class AppTextStyles {
   /// 미래 시트 출장 행의 범위 "09:00–12:00"
   static TextStyle get typeRowRange => _style(13, FontWeight.w500, color: AppColors.tripText);
 
+  /// 오늘 화면 출장 칩. 범위가 있으면 출장 글자색, 없으면("+ 출장") subtle.
+  static TextStyle tripChip({required bool filled}) =>
+      _style(12.5, FontWeight.w600, color: filled ? AppColors.tripText : AppColors.subtle);
+  /// "오늘 출장" 시트 — 시간 출장 행 오른쪽 범위
+  static TextStyle get todayTripRange => _style(14.5, FontWeight.w600, color: AppColors.brand);
+
   static TextStyle get toast => _style(13.5, FontWeight.w500, color: AppColors.onBrand);
 
 

@@ -48,7 +48,7 @@ class TodayController extends _$TodayController {
       });
 
   /// 근무 중 → 출근 전. 실수로 찍은 출근을 없던 일로 — 반차 체크도 함께 풀린다.
-  /// 공휴일 표시와 미리 넣은 시간공제는 남기고 시각만 비운다. 남길 게 없으면 기록을 지운다.
+  /// 공휴일 표시와 미리 넣은 시간공제·시간 출장은 남기고 시각만 비운다. 남길 게 없으면 기록을 지운다.
   Future<void> cancelClockIn() async {
     final current = await future;
     final record = current.record;
@@ -56,7 +56,29 @@ class TodayController extends _$TodayController {
     final type = record.type == WorkType.holiday ? WorkType.holiday : WorkType.normal;
     final next = record.copyWith(clockIn: null, clockOut: null, type: type);
     final repo = ref.read(workRecordRepositoryProvider);
-    if (next.type == WorkType.normal && next.deductionMinutes == 0) return repo.delete(record.date);
+    if (isEmptyRecord(next)) return repo.delete(record.date);
+    await repo.save(next);
+  }
+
+  /// 시간 출장 범위를 남긴다 — 계산과 무관한 기록. 시·분만 쓰고 날짜는 오늘.
+  /// 연차·종일 출장인 날이면 유형이 풀린다(일반) — 시간 출장은 근무하는 날의 기록이다.
+  Future<void> setTrip(DateTime start, DateTime end) => _saveToday((r, _) {
+        DateTime onToday(DateTime t) => DateTime(r.date.year, r.date.month, r.date.day, t.hour, t.minute);
+        return r.copyWith(
+          type: canHaveTrip(r.type) ? r.type : WorkType.normal,
+          tripStart: onToday(start),
+          tripEnd: onToday(end),
+        );
+      });
+
+  /// 시간 출장 범위를 지운다. 남길 게 없으면(출근 전에 범위만 넣어둔 날) 기록을 지운다.
+  Future<void> clearTrip() async {
+    final current = await future;
+    final record = current.record;
+    if (record == null) return;
+    final next = record.copyWith(tripStart: null, tripEnd: null);
+    final repo = ref.read(workRecordRepositoryProvider);
+    if (isEmptyRecord(next)) return repo.delete(record.date);
     await repo.save(next);
   }
 

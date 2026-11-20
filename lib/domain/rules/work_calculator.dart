@@ -182,6 +182,16 @@ WorkRecord sanitizeRecord(WorkRecord r, WorkRules rules) {
   );
 }
 
+/// 남길 게 없는 기록 — 시각·공제·출장 범위가 없는 일반. 저장하지 않고 행을 지운다.
+/// 출장 범위만 있는 날(미리 넣어둔 미래 날짜, 출근 전 오늘)은 남긴다.
+bool isEmptyRecord(WorkRecord r) =>
+    r.type == WorkType.normal &&
+    r.clockIn == null &&
+    r.clockOut == null &&
+    r.deductionMinutes == 0 &&
+    r.tripStart == null &&
+    r.tripEnd == null;
+
 /// 오늘 근무 중(출근만 찍힘). 주간·월간에서 탭해도 시트 대신 토스트 — 퇴근은 오늘 화면이 찍는다.
 /// 출근 전 오늘은 미래처럼 유형·시간공제만 고르는 시트가 열리고, 퇴근까지 찍힌 오늘은 다른 날처럼 편집한다.
 bool isTodayWorking(WorkRecord? record, DateTime date, DateTime today) =>

@@ -121,14 +121,7 @@ class RecordDraft {
       );
 
   /// 시각·공제·출장 범위가 없는 normal — 저장 대신 삭제한다. 출장 범위만 있는 날(미리 넣은 미래 날짜)은 남긴다.
-  bool get isEmptyNormal {
-    final r = toRecord();
-    return r.type == WorkType.normal &&
-        r.clockIn == null &&
-        r.clockOut == null &&
-        r.deductionMinutes == 0 &&
-        r.tripStart == null;
-  }
+  bool get isEmptyNormal => calc.isEmptyRecord(toRecord());
 
   /// 유형 변경. 다른 유형에서 공휴일로 오면 근무 입력은 접힌 상태로 시작한다 — 칩은 즉시 저장이라 시각이 지워진다.
   RecordDraft withType(WorkType? next) {

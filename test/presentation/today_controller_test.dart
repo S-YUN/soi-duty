@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -250,5 +250,92 @@ void main() {
     final s = await waitFor((s) => s.phase == TodayPhase.before);
     expect(s.record?.deductionMinutes, 120);
     expect(s.record?.clockIn, isNull);
+  });
+
+  group('시간 출장', () {
+    Future<List<WorkRecord>> waitRecords(bool Function(List<WorkRecord>) test) async {
+      for (var i = 0; i < 50; i++) {
+        final all = await container.read(allRecordsProvider.future);
+        if (test(all)) return all;
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      fail('기록이 기대대로 바뀌지 않음');
+    }
+
+    test('출근 전 setTrip → 범위만 있는 오늘 기록(출근 전 그대로), clearTrip → 기록 삭제', () async {
+      await notifier().setTrip(DateTime(2000, 1, 1, 9), DateTime(2000, 1, 1, 12)); // 날짜는 무시
+      final s = await waitFor((s) => s.record != null);
+      expect(s.phase, TodayPhase.before);
+      expect(s.dayType, isNull);
+      expect((s.record!.tripStart, s.record!.tripEnd), (d(16, 9), d(16, 12)));
+      await notifier().clearTrip();
+      await waitFor((s) => s.record == null);
+      expect(await waitRecords((all) => all.isEmpty), isEmpty);
+    });
+
+    test('근무 중 setTrip → 출근 시각·반차 유지, clearTrip → 기록은 남는다', () async {
+      await notifier().clockIn();
+      await waitFor((s) => s.phase == TodayPhase.working);
+      await notifier().setHalfDay(true);
+      await waitFor((s) => s.isHalfDay);
+      await notifier().setTrip(d(16, 9, 12), d(16, 12, 12));
+      var s = await waitFor((s) => s.record?.tripStart != null);
+      expect(s.clockIn, now);
+      expect(s.isHalfDay, isTrue);
+      expect((s.record!.tripStart, s.record!.tripEnd), (d(16, 9, 12), d(16, 12, 12)));
+      await notifier().clearTrip();
+      s = await waitFor((s) => s.record?.tripStart == null);
+      expect(s.phase, TodayPhase.working);
+      expect(s.clockIn, now);
+    });
+
+    test('시간 출장은 오늘 계산을 바꾸지 않는다 — 잔여·오늘 몫·기준이 같다', () async {
+      await notifier().clockIn();
+      final before = await waitFor((s) => s.phase == TodayPhase.working);
+      await notifier().setTrip(d(16, 9, 12), d(16, 12, 12));
+      final after = await waitFor((s) => s.record?.tripStart != null);
+      expect(after.week.copyWith(businessTripCount: 0), before.week.copyWith(businessTripCount: 0));
+      expect(after.todayShareMinutes, before.todayShareMinutes);
+      expect(after.todayStandardMinutes, before.todayStandardMinutes);
+      expect(after.elapsedMinutes, before.elapsedMinutes);
+      expect(after.expectedClockOut, before.expectedClockOut);
+    });
+
+    test('근무 중 + 출장 → 출근 취소: 기록이 남고 범위는 유지, 시각만 비운다', () async {
+      await notifier().clockIn();
+      await waitFor((s) => s.phase == TodayPhase.working);
+      await notifier().setTrip(d(16, 9, 12), d(16, 12, 12));
+      await waitFor((s) => s.record?.tripStart != null);
+      await notifier().cancelClockIn();
+      final s = await waitFor((s) => s.phase == TodayPhase.before);
+      expect(s.record, isNotNull);
+      expect(s.record!.clockIn, isNull);
+      expect((s.record!.tripStart, s.record!.tripEnd), (d(16, 9, 12), d(16, 12, 12)));
+    });
+
+    test('종일 출장 상태에서 setTrip → 유형이 일반으로 풀리고 범위가 붙는다', () async {
+      await notifier().setDayType(WorkType.businessTrip);
+      await waitFor((s) => s.dayType == WorkType.businessTrip);
+      await notifier().setTrip(d(16, 9), d(16, 12));
+      final s = await waitFor((s) => s.record?.tripStart != null);
+      expect(s.record!.type, WorkType.normal);
+      expect(s.dayType, isNull);
+    });
+
+    test('범위가 있는 날을 종일 출장·연차로 바꾸면 범위가 지워진다', () async {
+      await notifier().setTrip(d(16, 9), d(16, 12));
+      await waitFor((s) => s.record?.tripStart != null);
+      await notifier().setDayType(WorkType.businessTrip);
+      final s = await waitFor((s) => s.dayType == WorkType.businessTrip);
+      expect((s.record!.tripStart, s.record!.tripEnd), (null, null));
+    });
+
+    test('범위가 있는 날 출근 → 범위 유지', () async {
+      await notifier().setTrip(d(16, 9), d(16, 12));
+      await waitFor((s) => s.record?.tripStart != null);
+      await notifier().clockIn();
+      final s = await waitFor((s) => s.phase == TodayPhase.working);
+      expect((s.record!.tripStart, s.record!.tripEnd), (d(16, 9), d(16, 12)));
+    });
   });
 }

@@ -13,6 +13,16 @@ abstract final class TodayTexts {
   static const holiday = '공휴일';
   static const businessTrip = '출장';
   static const deductRemaining = '남은 시간 공제하고 퇴근';
+  // 시간 출장 (핸드오프 6 §4)
+  static const tripAdd = '+ 출장';
+  static String tripChip(DateTime start, DateTime end) => '출장 ${formatClockSpan(start, end)}';
+  static const tripAddSemantics = '출장 시간 남기기';
+  static const tripEditSemantics = '출장 시간 고치기';
+  static const todayTripTitle = '오늘 출장';
+  static const todayTripFullDay = '종일 출장';
+  static const todayTripFullDaySub = '출근 없이 8시간 근무로 인정돼요';
+  static const todayTripTimed = '시간 출장';
+  static const todayTripTimedSub = '출퇴근은 그대로 찍고, 출장 시간만 남겨요';
   static const editTime = '시간 수정';
   static const editClockIn = '출근 변경';
   static const clockInSheetTitle = '출근 시각';

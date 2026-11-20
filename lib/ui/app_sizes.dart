@@ -47,6 +47,22 @@ abstract final class AppSizes {
   static EdgeInsets get badgePadding => EdgeInsets.symmetric(vertical: 7.w, horizontal: 14.w);
   static double get badgeBorder => 1.w;
 
+  // 출장 칩 (핸드오프 6 §4)
+  static EdgeInsets get tripChipPadding => EdgeInsets.symmetric(vertical: 3.w, horizontal: 8.w);
+  static double get tripChipRadius => 6.w;
+  static double get tripChipBorder => 1.w;
+  static double get tripChipDash => 3.w;
+  /// 누르는 자리 — 칩 좌우로 이만큼, 높이는 최소 이만큼. 왼쪽 여백이 곧 앞 글자와의 간격(7)이다.
+  static double get tripChipHitPadding => 7.w;
+  static double get tripChipHitHeight => 28.w;
+  /// 퇴근 완료: 칩과 요약 4칸 사이
+  static double get tripChipSummaryGap => 2.w;
+
+  // "오늘 출장" 시트의 행
+  static double get todayTripRowMinHeight => 64.w;
+  static EdgeInsets get todayTripRowPadding => EdgeInsets.symmetric(vertical: 10.w, horizontal: 16.w);
+  static double get todayTripRowSubTop => 2.w;
+
   // 4칸 요약
   static EdgeInsets get summaryCellPadding => EdgeInsets.symmetric(vertical: 12.w, horizontal: 4.w);
   static double get summaryValueTop => 6.w;

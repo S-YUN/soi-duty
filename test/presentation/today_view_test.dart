@@ -10,6 +10,10 @@ import 'package:soi_duty/presentation/today/today_view.dart';
 import 'package:soi_duty/presentation/today/widgets/first_week_card.dart';
 import 'package:soi_duty/presentation/today/widgets/primary_button.dart';
 import 'package:soi_duty/presentation/today/widgets/soi_checkbox.dart';
+import 'package:soi_duty/presentation/today/widgets/summary_row.dart';
+import 'package:soi_duty/presentation/today/widgets/today_trip_sheet.dart';
+import 'package:soi_duty/presentation/today/widgets/trip_chip.dart';
+import 'package:soi_duty/ui/app_colors.dart';
 import 'package:soi_duty/presentation/today/widgets/unrecorded_card.dart';
 import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
@@ -30,6 +34,8 @@ TodayCallbacks noop() => TodayCallbacks(
   onCancelClockIn: () {},
   onCancelClockOut: () {},
   onUnrecordedTap: (_) {},
+  onTripTap: () {},
+  onTripRadioTap: () {},
   onDateLongPress: null,
 );
 
@@ -129,6 +135,8 @@ void main() {
                 onCancelClockIn: () {},
                 onCancelClockOut: () {},
                 onUnrecordedTap: (_) {},
+                onTripTap: () {},
+                onTripRadioTap: () {},
                 onDateLongPress: null,
               ),
             ),
@@ -165,6 +173,8 @@ void main() {
               onCancelClockIn: () {},
               onCancelClockOut: () {},
               onUnrecordedTap: (_) {},
+              onTripTap: () {},
+              onTripRadioTap: () {},
               onDateLongPress: null,
             ),
           ),
@@ -245,6 +255,8 @@ void main() {
               onCancelClockIn: () {},
               onCancelClockOut: () {},
               onUnrecordedTap: (_) {},
+              onTripTap: () {},
+              onTripRadioTap: () {},
               onDateLongPress: null,
             ),
           ),
@@ -275,6 +287,8 @@ void main() {
               onCancelClockIn: () {},
               onCancelClockOut: () {},
               onUnrecordedTap: (_) {},
+              onTripTap: () {},
+              onTripRadioTap: () {},
               onDateLongPress: null,
             ),
           ),
@@ -315,6 +329,8 @@ void main() {
               onCancelClockIn: () {},
               onCancelClockOut: () {},
               onUnrecordedTap: (_) {},
+              onTripTap: () {},
+              onTripRadioTap: () {},
               onDateLongPress: null,
             ),
           ),
@@ -344,5 +360,189 @@ void main() {
     );
     expect(find.text('0h'), findsOneWidget);
     expect(find.text('이번 주에 8시간 더 일했어요'), findsOneWidget);
+  });
+
+  group('시간 출장 칩 (핸드오프 6 §4)', () {
+    TodayCallbacks callbacks({VoidCallback? onTripTap, VoidCallback? onTripRadioTap, ValueChanged<WorkType?>? onDayType}) =>
+        TodayCallbacks(
+          onClockIn: () {},
+          onClockOut: (_) {},
+          onHalfDayChanged: (_) {},
+          onDayTypeChanged: onDayType ?? (_) {},
+          onRevert: () {},
+          onEditTime: () {},
+          onEditClockIn: () {},
+          onCancelClockIn: () {},
+          onCancelClockOut: () {},
+          onUnrecordedTap: (_) {},
+          onTripTap: onTripTap ?? () {},
+          onTripRadioTap: onTripRadioTap ?? () {},
+          onDateLongPress: null,
+        );
+    Future<void> pump(WidgetTester tester, TodayState state, TodayCallbacks cb) async {
+      await tester.pumpWidget(
+        MaterialApp(theme: AppTheme.light, home: Scaffold(body: TodayView(state: state, rules: rules, callbacks: cb))),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    final working = stateOf([...past, rec(16, inH: 9, inM: 12)]);
+    final workingTrip = stateOf([...past, rec(16, inH: 9, inM: 12, tripInH: 9, tripInM: 12, tripOutH: 12, tripOutM: 12)]);
+    final beforeTrip = stateOf([...past, rec(16, tripInH: 9, tripOutH: 12)]);
+    final doneTrip = stateOf(
+      [...past, rec(16, inH: 9, inM: 12, outH: 18, outM: 5, tripInH: 9, tripInM: 12, tripOutH: 12, tripOutM: 12)],
+      now: d(16, 19),
+    );
+
+    testWidgets('근무 중: "09:12 출근" 옆에 "+ 출장", 탭하면 onTripTap', (tester) async {
+      var taps = 0;
+      await pump(tester, working, callbacks(onTripTap: () => taps++));
+      expect(find.text('+ 출장'), findsOneWidget);
+      final clock = tester.getRect(find.text('09:12 출근'));
+      final chip = tester.getRect(find.text('+ 출장'));
+      expect(chip.left, greaterThan(clock.right));
+      expect((chip.center.dy - clock.center.dy).abs(), lessThan(3));
+      await tester.tap(find.text('+ 출장'));
+      expect(taps, 1);
+      // 누르는 자리는 칩보다 넓다 — 칩 위쪽 가장자리 밖도 탭된다
+      await tester.tapAt(Offset(chip.center.dx, chip.top - 2));
+      expect(taps, 2);
+    });
+
+    testWidgets('근무 중: 범위가 있으면 출장색 칩 "출장 09:12–12:12"', (tester) async {
+      var taps = 0;
+      await pump(tester, workingTrip, callbacks(onTripTap: () => taps++));
+      expect(find.text('+ 출장'), findsNothing);
+      expect(tester.widget<Text>(find.text('출장 09:12–12:12')).style?.color, AppColors.tripText);
+      await tester.tap(find.text('출장 09:12–12:12'));
+      expect(taps, 1);
+    });
+
+    testWidgets('출근 전: 범위가 없으면 칩이 없고, 있으면 "아직 출근 전" 옆에 있다 — 출근 버튼·라디오는 그대로', (tester) async {
+      await pump(tester, stateOf(past), callbacks());
+      expect(find.byType(TripChip), findsNothing);
+      var taps = 0;
+      await pump(tester, beforeTrip, callbacks(onTripTap: () => taps++));
+      expect(find.text('아직 출근 전'), findsOneWidget);
+      expect(find.text('출장 09:00–12:00'), findsOneWidget);
+      expect(find.text('출근하기'), findsOneWidget);
+      expect(find.text('연차'), findsOneWidget);
+      await tester.tap(find.text('출장 09:00–12:00'));
+      expect(taps, 1);
+    });
+
+    testWidgets('출근 전 "출장" 라디오는 유형을 바로 바꾸지 않고 onTripRadioTap을 부른다', (tester) async {
+      var radio = 0;
+      WorkType? changed;
+      var typeChanged = false;
+      await pump(
+        tester,
+        stateOf(past),
+        callbacks(onTripRadioTap: () => radio++, onDayType: (t) {
+          typeChanged = true;
+          changed = t;
+        }),
+      );
+      await tester.tap(find.text('출장'));
+      expect(radio, 1);
+      expect(typeChanged, isFalse);
+      await tester.tap(find.text('연차'));
+      expect(changed, WorkType.dayOff);
+    });
+
+    testWidgets('퇴근 완료: 범위가 있으면 요약 위에 칩(탭 반응 없음), 없으면 없다', (tester) async {
+      var taps = 0;
+      await pump(tester, doneTrip, callbacks(onTripTap: () => taps++));
+      final chip = tester.getRect(find.text('출장 09:12–12:12'));
+      expect(chip.bottom, lessThanOrEqualTo(tester.getRect(find.byType(SummaryRow)).top + 1));
+      await tester.tap(find.text('출장 09:12–12:12'));
+      expect(taps, 0);
+      await pump(tester, fixtures['퇴근 완료']!, callbacks());
+      expect(find.byType(TripChip), findsNothing);
+    });
+
+    for (final width in [320.0, 360.0, 402.0]) {
+      testWidgets('칩이 붙어도 주 버튼 Y가 그대로이고 폭 $width에서 넘치지 않는다', (tester) async {
+        SizeConfig.init(width);
+        tester.view.physicalSize = Size(width * 3, 874 * 3);
+        tester.view.devicePixelRatio = 3;
+        addTearDown(tester.view.reset);
+        Future<double> buttonY(TodayState state) async {
+          await pump(tester, state, callbacks());
+          expect(tester.takeException(), isNull);
+          return tester.getTopLeft(find.byType(PrimaryButton)).dy;
+        }
+
+        // 출근 전·퇴근 완료: 칩 유무와 무관하게 같다
+        expect(await buttonY(beforeTrip), await buttonY(stateOf(past)));
+        expect(await buttonY(doneTrip), await buttonY(fixtures['퇴근 완료']!));
+        // 근무 중: "+ 출장"·범위 칩 모두 칩이 없던 때(출근 전 기준)의 평일 근무 중 높이를 넘기지 않는다
+        final plainWorking = await buttonY(working);
+        expect(await buttonY(workingTrip), plainWorking);
+        // 주말 근무 중(공제 줄 없음)은 다른 상태와 같은 Y
+        final weekendWorking = stateOf([rec(19, inH: 10, tripInH: 10, tripOutH: 12)], now: d(19, 12), first: d(14));
+        expect(await buttonY(weekendWorking), await buttonY(stateOf(past)));
+      });
+    }
+
+    testWidgets('"오늘 출장" 시트: 두 행, 종일·시간을 고르면 그 값으로 닫힌다', (tester) async {
+      Object? result = 'pending';
+      Future<void> open(String? range) async {
+        result = 'pending';
+        await tester.pumpWidget(MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async => result = await showTodayTripSheet(context, tripRange: range),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ));
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+      }
+
+      await open(null);
+      expect(find.text('오늘 출장'), findsOneWidget);
+      expect(find.text('출근 없이 8시간 근무로 인정돼요'), findsOneWidget);
+      expect(find.text('출퇴근은 그대로 찍고, 출장 시간만 남겨요'), findsOneWidget);
+      await tester.tap(find.text('종일 출장'));
+      await tester.pumpAndSettle();
+      expect(result, TodayTripChoice.fullDay);
+
+      await open('09:00–12:00');
+      expect(find.text('09:00–12:00'), findsOneWidget);
+      await tester.tap(find.text('시간 출장'));
+      await tester.pumpAndSettle();
+      expect(result, TodayTripChoice.timed);
+
+      await open(null);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(result, isNull);
+    });
+
+    testWidgets('"오늘 출장" 시트가 폭 320에서 넘치지 않는다', (tester) async {
+      SizeConfig.init(320);
+      tester.view.physicalSize = const Size(320 * 3, 568 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showTodayTripSheet(context, tripRange: '09:00–12:00'),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
   });
 }

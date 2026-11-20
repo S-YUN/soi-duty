@@ -24,6 +24,8 @@ class TodayCallbacks {
     required this.onCancelClockIn,
     required this.onCancelClockOut,
     required this.onUnrecordedTap,
+    required this.onTripTap,
+    required this.onTripRadioTap,
     required this.onDateLongPress,
   });
 
@@ -39,6 +41,10 @@ class TodayCallbacks {
   final VoidCallback onCancelClockIn;
   final VoidCallback onCancelClockOut;
   final ValueChanged<DateTime> onUnrecordedTap;
+  /// 출장 칩 — 시간 출장 작은 시트(넣기·고치기·지우기). 출근 전·근무 중.
+  final VoidCallback onTripTap;
+  /// 출근 전 "출장" 라디오 — "오늘 출장" 시트(종일 / 시간).
+  final VoidCallback onTripRadioTap;
   /// 디버그 시드 트리거. 릴리즈에서는 null.
   final VoidCallback? onDateLongPress;
 }
@@ -85,6 +91,7 @@ class _StatusCardState extends State<StatusCard> {
             rules: widget.rules,
             deductRemaining: _deductRemaining,
             onDeductRemainingChanged: (v) => setState(() => _deductRemaining = v),
+            onTripTap: callbacks.onTripTap,
           ),
           PrimaryButton(
             label: TodayTexts.buttonLabel(state, deductRemaining: _deductRemaining),
@@ -131,7 +138,8 @@ class _StatusCardState extends State<StatusCard> {
             SoiCheckbox(
               label: TodayTexts.businessTrip,
               checked: false,
-              onChanged: (_) => callbacks.onDayTypeChanged(WorkType.businessTrip),
+              // 출장은 바로 바꾸지 않는다 — 종일인지 시간인지 먼저 묻는다.
+              onChanged: (_) => callbacks.onTripRadioTap(),
               shape: SoiCheckShape.round,
             ),
           ],
