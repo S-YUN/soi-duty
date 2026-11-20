@@ -152,6 +152,9 @@ class RecordDraft {
     );
   }
 
+  /// 펼쳐둔 휠을 접는다.
+  RecordDraft collapsed() => _copy(editing: null);
+
   RecordDraft withTime(EditingRow row, int hour, int minute) {
     final t = DateTime(date.year, date.month, date.day, hour, minute);
     return _copy(

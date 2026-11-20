@@ -122,14 +122,21 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
       start: start,
       end: end,
       existing: draft.hasTrip,
-      confirmLabel: draft.isTypeOnly ? RecordEditTexts.save : RecordEditTexts.confirm,
+      // 넣은 뒤의 초안에 저장 버튼이 있으면 "확인"(큰 시트 저장으로 마무리), 없으면 이 버튼이 곧 저장.
+      confirmLabel: draft.withTrip(start, end).showsSaveButton ? RecordEditTexts.confirm : RecordEditTexts.save,
     );
     if (result == null || !mounted) return;
     final next = switch (result) {
       TripSheetSet(:final start, :final end) => _draft!.withTrip(start, end),
       TripSheetCleared() => _draft!.withoutTrip(),
     };
-    if (next.isTypeOnly) return _saveDraft(next);
+    await _applyTrip(next);
+  }
+
+  /// 출장 범위를 바꾼 초안을 반영한다. 큰 시트에 저장 버튼이 없으면(유형 전용 모드, 근무 시간을 펼치지 않은 지난 공휴일)
+  /// 여기서 바로 저장한다 — 초안에만 두면 저장할 길이 없어 닫는 순간 사라진다.
+  Future<void> _applyTrip(RecordDraft next) async {
+    if (!next.showsSaveButton) return _saveDraft(next);
     setState(() {
       _draft = next;
       _tripPanelOpen = false;
@@ -139,12 +146,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   /// 패널 "출장 빼기" — 종일이면 유형을 풀고, 시간이면 범위를 지운다.
   Future<void> _onTripRemove(RecordDraft draft) async {
     if (draft.isFullDayTrip) return _onTypeChanged(draft, null);
-    final next = draft.withoutTrip();
-    if (next.isTypeOnly) return _saveDraft(next);
-    setState(() {
-      _draft = next;
-      _tripPanelOpen = false;
-    });
+    await _applyTrip(draft.withoutTrip());
   }
 
   Widget _tripPanel(RecordDraft draft, WorkRules rules) => TripChoicePanel(
@@ -157,7 +159,17 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
         onRemove: draft.tripSelected ? () => _onTripRemove(draft) : null,
       );
 
-  void _toggleTripPanel() => setState(() => _tripPanelOpen = !_tripPanelOpen);
+  /// 패널을 열면 펼쳐둔 휠을 접는다 — 휠·패널·계산 내역이 같이 펼쳐지면 시트가 화면을 채워 닫히지 않는다.
+  void _toggleTripPanel() => setState(() {
+        _tripPanelOpen = !_tripPanelOpen;
+        if (_tripPanelOpen) _draft = _draft!.collapsed();
+      });
+
+  /// 출퇴근 행 탭 — 휠을 펴면 패널을 닫는다.
+  void _toggleEditing(RecordDraft draft, EditingRow row, WorkRules rules) => setState(() {
+        _draft = draft.toggleEditing(row, rules);
+        if (_draft!.editing != null) _tripPanelOpen = false;
+      });
 
   Future<void> _delete() async {
     final ok = await showConfirmDialog(
@@ -268,7 +280,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                         label: row == EditingRow.clockIn ? RecordEditTexts.clockIn : RecordEditTexts.clockOut,
                         value: RecordEditTexts.time(draft.timeOf(row)),
                         selected: editing == row,
-                        onTap: () => _update(draft.toggleEditing(row, rules)),
+                        onTap: () => _toggleEditing(draft, row, rules),
                       ),
                   ],
                 ),
@@ -289,7 +301,8 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                 ),
             ],
             // 시간 출장 — 출퇴근 행(과 휠) 아래, 시간공제 위. 계산 내역에는 넣지 않는다(계산과 무관한 기록).
-            if (draft.showsTripRow)
+            // 휠을 펴는 동안은 숨긴다(계산 내역처럼) — 작은 기기에서 휠 + 출장 행 + 공제 행이 화면을 넘는다.
+            if (draft.showsTripRow && editing == null)
               _inset(
                 outdent: AppSizes.timeRowOutdent,
                 TimeRow(
@@ -313,7 +326,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                 ),
               ),
             ],
-            if (draft.showsCalcRows || !draft.isValid(rules))
+            if ((draft.showsCalcRows && !_tripPanelOpen) || !draft.isValid(rules))
               _inset(
                 Padding(
                   padding: EdgeInsets.only(top: AppSizes.calcTop),

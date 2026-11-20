@@ -111,7 +111,8 @@ class StatusBlock extends StatelessWidget {
       case TodayScreenState.dayType:
         final type = state.dayType!;
         return [
-          TypeBadge(type: type),
+          // 공휴일에 시간 출장을 넣어뒀으면(공휴일 근무 예정) 배지 옆에 칩 — 연차·종일 출장엔 범위가 없다.
+          _withTrip(TypeBadge(type: type), showEmpty: false),
           gap,
           Text(TodayTexts.dayTypeMessage(type), style: AppTextStyles.bodyParagraph, textAlign: TextAlign.center),
         ];

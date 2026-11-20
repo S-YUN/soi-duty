@@ -545,4 +545,17 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  testWidgets('오늘이 공휴일이고 시간 출장을 넣어둔 날: 배지 옆에 칩이 보이고 주 버튼 Y는 그대로', (tester) async {
+    tester.view.physicalSize = const Size(402 * 3, 874 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await pumpView(tester, stateOf([...past, rec(16, type: WorkType.holiday)]));
+    final plainY = tester.getTopLeft(find.byType(PrimaryButton)).dy;
+    expect(find.byType(TripChip), findsNothing);
+    await pumpView(tester, stateOf([...past, rec(16, type: WorkType.holiday, tripInH: 9, tripOutH: 12)]));
+    expect(tester.takeException(), isNull);
+    expect(find.text('출장 09:00–12:00'), findsOneWidget);
+    expect(tester.getTopLeft(find.byType(PrimaryButton)).dy, plainY);
+  });
 }
