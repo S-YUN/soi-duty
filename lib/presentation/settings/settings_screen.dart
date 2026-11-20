@@ -110,7 +110,7 @@ class SettingsScreen extends ConsumerWidget {
         onNotificationToggle: (on) =>
             on ? enableClockOutNotification(context, ref) : controller.setClockOutNotification(false),
         onOpenNotificationSettings: () => promptOpenNotificationSettings(context, ref),
-        onExactAlarm: () => promptExactAlarm(context, ref),
+        onExactAlarm: () => openExactAlarmSettings(context, ref),
       ),
     );
   }
@@ -271,9 +271,7 @@ class SettingsView extends StatelessWidget {
                         else
                           SettingsRow(
                             label: NotificationTexts.settingsLabel,
-                            sub: settings.clockOutNotificationEnabled
-                                ? NotificationTexts.settingsOnSub
-                                : NotificationTexts.settingsOffSub,
+                            sub: settings.clockOutNotificationEnabled ? null : NotificationTexts.settingsOffSub,
                             trailing: SoiSwitch(value: settings.clockOutNotificationEnabled),
                             // 행 어디를 눌러도 토글된다.
                             onTap: () => callbacks.onNotificationToggle(!settings.clockOutNotificationEnabled),

@@ -30,24 +30,26 @@ abstract final class NotificationTexts {
   // 설정 화면 (P3 · P4)
   static const settingsSection = '알림';
   static const settingsLabel = '퇴근 알림';
-  static const settingsOnSub = '그날 채울 시간을 다 채우면 알려드려요';
-  static const settingsOffSub = '알림을 켜면 퇴근할 시간에 알려드려요';
+  // 켜짐은 보조 설명 없이 한 줄 (핸드오프 6 §9-1, 2026-11-20).
+  static const settingsOffSub = '알림을 켜면 퇴근 시간에 알려드려요';
   static const osOffSub = '기기 설정에서 알림이 꺼져 있어요';
   static const osOffTitle = '알림이 꺼져 있어요';
-  static const osOffMessage = '기기 설정에서 소이듀티 알림을 허용하면 퇴근할 시간에 알려드려요.';
+  static const osOffMessage = '기기 설정에서 소이듀티 알림을 허용하면 퇴근 시간에 알려드려요.';
   static const openSettings = '설정 열기';
   static const openSettingsFailed = '기기 설정을 열 수 없어요';
 
-  // Android "알람 및 리마인더" 권한 (2026-11-20, 핸드오프에 없는 화면이라 문구는 임시).
+  // Android "알람 및 리마인더" 권한 (핸드오프 6 §10 P6~P8, 2026-11-20 확정).
   // 이 권한이 없으면 OS가 알림을 최대 1시간 늦춘다 — 늦게 보내느니 보내지 않기로 해서, 권한이 없으면 알림이 오지 않는다.
+  /// P6 — 알림을 켠 직후, 이 권한이 꺼져 있을 때만
   static const exactTitle = '하나만 더 허용해 주세요';
-  static const exactMessage = "퇴근 시각에 맞춰 알려드리려면 기기 설정에서 '알람 및 리마인더'를 허용해야 해요. 허용하지 않으면 알림이 오지 않아요.";
+  static const exactMessage = "기기 설정에서 '알람 및 리마인더'를 허용해야 퇴근 시각에 맞춰 알림이 와요.";
   static const exactLater = '나중에';
+  /// P8 — 설정 "알림" 섹션 둘째 행
   static const exactRowLabel = '알람 및 리마인더';
   static const exactRowSub = '허용해야 퇴근 알림이 와요';
 
-  /// "나중에"·허용하지 않고 돌아옴 — 알림이 오지 않는다는 걸 한 번 더 알린다.
-  static const exactDeniedToast = "'알람 및 리마인더'를 허용해야 알림이 와요";
+  /// P7 — P6에서 "나중에"·허용하지 않고 돌아옴
+  static const exactDeniedToast = '설정에서 언제든 허용할 수 있어요';
 
   static (String title, String body) notice(ClockOutNoticeKind kind) => switch (kind) {
         ClockOutNoticeKind.daily => (dailyTitle, dailyBody),

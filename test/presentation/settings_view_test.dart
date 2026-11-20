@@ -140,10 +140,10 @@ void main() {
       expect(ys, [...ys]..sort(), reason: '$ys');
     });
 
-    testWidgets('꺼짐: 토글 off + "알림을 켜면 퇴근할 시간에 알려드려요", 행 어디를 눌러도 켜기 요청', (tester) async {
+    testWidgets('꺼짐: 토글 off + "알림을 켜면 퇴근 시간에 알려드려요", 행 어디를 눌러도 켜기 요청', (tester) async {
       await pump(tester, const AppSettings());
       expect(tester.widget<SoiSwitch>(find.byType(SoiSwitch)).value, isFalse);
-      expect(find.text('알림을 켜면 퇴근할 시간에 알려드려요'), findsOneWidget);
+      expect(find.text('알림을 켜면 퇴근 시간에 알려드려요'), findsOneWidget);
       expect(find.text('설정 열기'), findsNothing);
       await tester.tap(find.text('퇴근 알림'));
       expect(taps, ['notify:true']);
@@ -151,10 +151,11 @@ void main() {
       expect(taps, ['notify:true', 'notify:true']);
     });
 
-    testWidgets('켜짐: 토글 on + "그날 채울 시간을 다 채우면 알려드려요", 누르면 끄기 요청', (tester) async {
+    testWidgets('켜짐: 토글 on + 보조 설명 없이 한 줄, 누르면 끄기 요청', (tester) async {
       await pump(tester, const AppSettings(clockOutNotificationEnabled: true), permission: NotificationPermission.granted);
       expect(tester.widget<SoiSwitch>(find.byType(SoiSwitch)).value, isTrue);
-      expect(find.text('그날 채울 시간을 다 채우면 알려드려요'), findsOneWidget);
+      expect(find.text('그날 채울 시간을 다 채우면 알려드려요'), findsNothing);
+      expect(find.text('알림을 켜면 퇴근 시간에 알려드려요'), findsNothing);
       await tester.tap(find.text('퇴근 알림'));
       expect(taps, ['notify:false']);
     });

@@ -227,7 +227,7 @@ void main() {
       expect(os.requestCount, 1);
       expect((await settings()).clockOutNotificationEnabled, isTrue);
       expect(tester.widget<SoiSwitch>(find.byType(SoiSwitch)).value, isTrue);
-      expect(find.text('그날 채울 시간을 다 채우면 알려드려요'), findsOneWidget);
+      expect(find.text('알림을 켜면 퇴근 시간에 알려드려요'), findsNothing, reason: '켜짐은 보조 설명 없이 한 줄');
       await finish(tester);
     });
 
@@ -247,7 +247,7 @@ void main() {
       await pump(tester, settingsScreen);
       await tapRow(tester);
       expect(find.text('알림이 꺼져 있어요'), findsOneWidget);
-      expect(find.text('기기 설정에서 소이듀티 알림을 허용하면 퇴근할 시간에 알려드려요.'), findsOneWidget);
+      expect(find.text('기기 설정에서 소이듀티 알림을 허용하면 퇴근 시간에 알려드려요.'), findsOneWidget);
       await tester.tap(find.text('취소'));
       await tester.pumpAndSettle();
       expect(os.openSettingsCount, 0);
@@ -321,17 +321,17 @@ void main() {
       await tester.tap(find.text('알림 받기'));
       await settle(tester);
       expect(find.text('하나만 더 허용해 주세요'), findsOneWidget);
-      expect(find.textContaining('허용하지 않으면 알림이 오지 않아요'), findsOneWidget);
+      expect(find.text("기기 설정에서 '알람 및 리마인더'를 허용해야 퇴근 시각에 맞춰 알림이 와요."), findsOneWidget);
       expect(os.scheduledAt, isNull, reason: '늦게 오는 방식으로는 걸지 않는다');
       await tester.tap(find.text('설정 열기'));
       await settle(tester);
       expect(os.exactRequestCount, 1);
       expect(os.scheduledAt, d(16, 18, 12));
-      expect(find.text("'알람 및 리마인더'를 허용해야 알림이 와요"), findsNothing);
+      expect(find.text('설정에서 언제든 허용할 수 있어요'), findsNothing);
       await finish(tester);
     });
 
-    testWidgets('"나중에" → 설정을 열지 않고, 알림이 오지 않는다는 토스트. 예약 없음 (켜짐은 남는다)', (tester) async {
+    testWidgets('"나중에" → 설정을 열지 않고, P7 토스트. 예약 없음 (켜짐은 남는다)', (tester) async {
       os.exactAllowed = false;
       await pump(tester, today);
       await tester.tap(find.text('출근하기'));
@@ -342,7 +342,7 @@ void main() {
       await settle(tester);
       expect(os.exactRequestCount, 0);
       expect(os.scheduledAt, isNull);
-      expect(find.text("'알람 및 리마인더'를 허용해야 알림이 와요"), findsOneWidget);
+      expect(find.text('설정에서 언제든 허용할 수 있어요'), findsOneWidget);
       expect((await settings()).clockOutNotificationEnabled, isTrue);
       await finish(tester);
     });
@@ -359,7 +359,7 @@ void main() {
       await settle(tester);
       expect(os.exactRequestCount, 1);
       expect(os.scheduledAt, isNull);
-      expect(find.text("'알람 및 리마인더'를 허용해야 알림이 와요"), findsOneWidget);
+      expect(find.text('설정에서 언제든 허용할 수 있어요'), findsOneWidget);
       await finish(tester);
     });
 
@@ -386,21 +386,35 @@ void main() {
       await finish(tester);
     });
 
-    testWidgets('설정: 켜 뒀는데 이 권한이 없으면 행이 보이고 예약이 없다 → 안내 → 설정 열기 → 허용하면 행이 사라지고 걸린다', (tester) async {
+    testWidgets('설정: 켜 뒀는데 이 권한이 없으면 행이 보이고 예약이 없다 → 누르면 다이얼로그 없이 시스템 화면 → 허용하면 행이 사라지고 걸린다, 토스트 없음', (tester) async {
       await seedWorking();
       os.exactAllowed = false;
       await pump(tester, const SettingsScreen());
       expect(find.text('알람 및 리마인더'), findsOneWidget);
       expect(find.text('허용해야 퇴근 알림이 와요'), findsOneWidget);
       expect(os.scheduledAt, isNull);
-      await tester.tap(find.text('알람 및 리마인더'));
-      await tester.pumpAndSettle();
-      expect(find.text('하나만 더 허용해 주세요'), findsOneWidget);
       os.exactAfterRequest = true;
-      await tester.tap(find.text('설정 열기').last);
+      await tester.tap(find.text('알람 및 리마인더'));
       await settle(tester);
+      expect(find.text('하나만 더 허용해 주세요'), findsNothing);
+      expect(os.exactRequestCount, 1);
       expect(find.text('허용해야 퇴근 알림이 와요'), findsNothing);
+      expect(find.text('설정에서 언제든 허용할 수 있어요'), findsNothing);
       expect(os.scheduledAt, d(16, 18));
+      await finish(tester);
+    });
+
+    testWidgets('설정: 둘째 행 → 허용하지 않고 돌아오면 행이 남고 토스트는 없다', (tester) async {
+      await seedWorking();
+      os.exactAllowed = false;
+      os.exactAfterRequest = false;
+      await pump(tester, const SettingsScreen());
+      await tester.tap(find.text('알람 및 리마인더'));
+      await settle(tester);
+      expect(os.exactRequestCount, 1);
+      expect(find.text('허용해야 퇴근 알림이 와요'), findsOneWidget);
+      expect(find.text('설정에서 언제든 허용할 수 있어요'), findsNothing);
+      expect(os.scheduledAt, isNull);
       await finish(tester);
     });
 

@@ -84,8 +84,8 @@ Future<void> maybePromptExactAlarm(BuildContext context, WidgetRef ref) async {
   await promptExactAlarm(context, ref);
 }
 
-/// 안내 다이얼로그 → OS의 "알람 및 리마인더" 설정. 설정 화면의 행도 이걸 쓴다.
-/// 넘기거나 허용하지 않고 돌아오면 알림이 오지 않는다는 걸 토스트로 알린다.
+/// P6 안내 다이얼로그 → OS의 "알람 및 리마인더" 설정. 알림을 켠 직후에만 뜬다.
+/// 넘기거나 허용하지 않고 돌아오면 P7 토스트. 허용하고 돌아오면 아무것도 띄우지 않는다.
 Future<void> promptExactAlarm(BuildContext context, WidgetRef ref) async {
   final open = await showConfirmDialog(
     context,
@@ -96,18 +96,26 @@ Future<void> promptExactAlarm(BuildContext context, WidgetRef ref) async {
   );
   if (!context.mounted) return;
   if (!open) return showAppToast(context, NotificationTexts.exactDeniedToast);
-  var allowed = false;
+  final allowed = await openExactAlarmSettings(context, ref);
+  if (allowed == false && context.mounted) showAppToast(context, NotificationTexts.exactDeniedToast);
+}
+
+/// OS의 "알람 및 리마인더" 화면을 이 앱으로 바로 연다. 설정 둘째 행(P8)은 다이얼로그 없이 이걸 부른다 —
+/// 행 이름이 시스템 스위치 이름과 같아 설명이 필요 없다. 허용하지 않고 돌아와도 토스트는 없다(행이 남아 있는 걸로 충분).
+/// 돌아오면 허용 여부, 화면을 열지 못했으면 null.
+Future<bool?> openExactAlarmSettings(BuildContext context, WidgetRef ref) async {
+  bool allowed;
   try {
     allowed = await ref.read(notificationSchedulerProvider).requestExactAlarm();
   } catch (_) {
     if (context.mounted) showAppToast(context, NotificationTexts.openSettingsFailed);
-    return;
+    return null;
   }
-  if (!context.mounted) return;
+  if (!context.mounted) return allowed;
   // 돌아왔다 — 허용했으면 이제 예약이 걸린다.
   ref.invalidate(exactAlarmAllowedProvider);
   await ref.read(clockOutNotificationSyncProvider.notifier).resync();
-  if (!allowed && context.mounted) showAppToast(context, NotificationTexts.exactDeniedToast);
+  return allowed;
 }
 
 /// OS 권한이 꺼진 상태에서 설정 행을 눌렀을 때 — 앱에서는 켤 수 없으니 OS 설정으로 보낸다 (P4).

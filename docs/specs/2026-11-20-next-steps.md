@@ -74,7 +74,9 @@ Android(Galaxy A16 · Android 16)에서 이미 확인한 것: 첫 평일 출근 
 > 참고: iOS와 Android 13 이하에서는 이 화면들이 뜨지 않아요.
 
 - [x] 위 메시지 전달 (11-20)
-- [ ] 답이 오면 `lib/presentation/notification/notification_texts.dart`의 `exact*` 문구와 설정 행 구성을 맞춘다
+- [x] 답이 오면 `lib/presentation/notification/notification_texts.dart`의 `exact*` 문구와 설정 행 구성을 맞춘다 — 11-20 반영(P6~P8 문구, 둘째 행은 다이얼로그 없이 바로 시스템 화면,
+      설정 켜짐 보조 설명 제거, 꺼짐·P4 문구 "퇴근 시간에")
+- [ ] 디자인의 최신 핸드오프 6 문서(§7 · §8 · §9-1 · §10 P6~P8)를 `docs/specs/design-handoff-6-partial-trip-notification.md`에 덮어쓴다
 
 같이 물어볼 것 (작다)
 - [ ] Android 상태바 알림 아이콘 — 지금은 로고의 원형 차트를 딴 단색 벡터를 임시로 넣었다(`android/app/src/main/res/drawable/ic_stat_soi.xml`). 디자인 아이콘이 오면 이 파일만 바꾼다. — 디자인에 요청하기로 함(11-20, 투명 배경 단색 실루엣 24dp).
