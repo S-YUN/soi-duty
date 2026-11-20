@@ -6,7 +6,7 @@ import '../../domain/rules/work_rules.dart';
 enum EditingRow { clockIn, clockOut }
 
 /// nullable 필드의 copyWith 센티널.
-enum _Keep { time, editing }
+enum _Keep { time, editing, trip }
 
 /// 시간 수정 시트가 저장 전까지 들고 있는 초안. 불변, 순수 Dart.
 class RecordDraft {
@@ -19,6 +19,8 @@ class RecordDraft {
     this.clockIn,
     this.clockOut,
     this.deductionMinutes = 0,
+    this.tripStart,
+    this.tripEnd,
     this.showsHolidayWork = false,
     this.editing,
   });
@@ -34,6 +36,8 @@ class RecordDraft {
       clockIn: record?.clockIn,
       clockOut: record?.clockOut,
       deductionMinutes: record?.deductionMinutes ?? 0,
+      tripStart: record?.tripStart,
+      tripEnd: record?.tripEnd,
       showsHolidayWork: hasTime,
     );
   }
@@ -52,6 +56,10 @@ class RecordDraft {
 
   /// 시간공제(분). 0이면 없음
   final int deductionMinutes;
+
+  /// 시간 출장 범위 — 기록만. 둘 다 있거나 둘 다 없다
+  final DateTime? tripStart;
+  final DateTime? tripEnd;
 
   /// 공휴일에 "이 날 근무한 시간 입력"을 펼쳤는지. 초안 상태일 뿐 저장값이 아니다.
   final bool showsHolidayWork;
@@ -75,6 +83,17 @@ class RecordDraft {
   bool get showsHolidayWorkButton => !isTypeOnly && type == WorkType.holiday && !showsHolidayWork;
   bool get showsDeductionRow => calc.canDeduct(date, type);
 
+  /// 시간 출장 범위가 있는지 (연차·종일 출장으로 바뀌어 저장에서 빠질 범위는 없는 것으로 본다).
+  bool get hasTrip => tripStart != null && tripEnd != null && calc.canHaveTrip(type);
+  bool get isFullDayTrip => type == WorkType.businessTrip;
+
+  /// 출장 칩·행의 선택 표시 — 종일이든 시간이든.
+  bool get tripSelected => isFullDayTrip || hasTrip;
+
+  /// "출장" 행(값 = 범위). 주말은 칩이 없어 늘 보이고(없으면 "없음"), 평일은 범위가 있을 때만 —
+  /// 유형 전용 모드의 평일은 유형 행이 범위를 보여주므로 따로 두지 않는다.
+  bool get showsTripRow => isWeekend || (!isTypeOnly && hasTrip);
+
   bool isDeductionValid(WorkRules rules) =>
       !showsDeductionRow || calc.isValidDeduction(type, deductionMinutes, rules);
   bool isValid(WorkRules rules) => calc.isValidClockRange(clockIn, clockOut) && isDeductionValid(rules);
@@ -97,12 +116,18 @@ class RecordDraft {
         clockIn: showsTimeRows ? clockIn : null,
         clockOut: showsTimeRows ? clockOut : null,
         deductionMinutes: showsDeductionRow ? deductionMinutes : 0,
+        tripStart: hasTrip ? tripStart : null,
+        tripEnd: hasTrip ? tripEnd : null,
       );
 
-  /// 시각·공제 없는 normal — 저장 대신 삭제한다.
+  /// 시각·공제·출장 범위가 없는 normal — 저장 대신 삭제한다. 출장 범위만 있는 날(미리 넣은 미래 날짜)은 남긴다.
   bool get isEmptyNormal {
     final r = toRecord();
-    return r.type == WorkType.normal && r.clockIn == null && r.clockOut == null && r.deductionMinutes == 0;
+    return r.type == WorkType.normal &&
+        r.clockIn == null &&
+        r.clockOut == null &&
+        r.deductionMinutes == 0 &&
+        r.tripStart == null;
   }
 
   /// 유형 변경. 다른 유형에서 공휴일로 오면 근무 입력은 접힌 상태로 시작한다 — 칩은 즉시 저장이라 시각이 지워진다.
@@ -111,6 +136,15 @@ class RecordDraft {
     return _copy(type: type, showsHolidayWork: type == this.type ? null : false);
   }
   RecordDraft withDeduction(int minutes) => _copy(deductionMinutes: minutes);
+
+  /// 시간 출장을 넣는다. 연차·종일 출장인 날이면 유형이 풀린다(일반) — 시간 출장은 근무한 날의 기록이다. 반차·공휴일은 그대로.
+  RecordDraft withTrip(DateTime start, DateTime end) => _copy(
+        type: calc.canHaveTrip(type) ? type : WorkType.normal,
+        tripStart: start,
+        tripEnd: end,
+      );
+
+  RecordDraft withoutTrip() => _copy(tripStart: null, tripEnd: null);
   RecordDraft expandHolidayWork() => _copy(showsHolidayWork: true);
 
   /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 시각 행을 펼 때 값이 없으면 [WorkRules]의 기본 시각(출근 08:00 · 퇴근 17:00).
@@ -138,6 +172,8 @@ class RecordDraft {
     Object? clockIn = _Keep.time,
     Object? clockOut = _Keep.time,
     int? deductionMinutes,
+    Object? tripStart = _Keep.trip,
+    Object? tripEnd = _Keep.trip,
     bool? showsHolidayWork,
     Object? editing = _Keep.editing,
   }) =>
@@ -150,6 +186,8 @@ class RecordDraft {
         clockIn: identical(clockIn, _Keep.time) ? this.clockIn : clockIn as DateTime?,
         clockOut: identical(clockOut, _Keep.time) ? this.clockOut : clockOut as DateTime?,
         deductionMinutes: deductionMinutes ?? this.deductionMinutes,
+        tripStart: identical(tripStart, _Keep.trip) ? this.tripStart : tripStart as DateTime?,
+        tripEnd: identical(tripEnd, _Keep.trip) ? this.tripEnd : tripEnd as DateTime?,
         showsHolidayWork: showsHolidayWork ?? this.showsHolidayWork,
         editing: identical(editing, _Keep.editing) ? this.editing : editing as EditingRow?,
       );

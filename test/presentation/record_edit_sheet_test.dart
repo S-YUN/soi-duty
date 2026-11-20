@@ -12,6 +12,9 @@ import 'package:soi_duty/presentation/record_edit/record_edit_sheet.dart';
 import 'package:soi_duty/presentation/record_edit/record_edit_texts.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/deduction_sheet.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/time_wheel.dart';
+import 'package:soi_duty/presentation/record_edit/widgets/trip_choice_panel.dart';
+import 'package:soi_duty/presentation/record_edit/widgets/trip_sheet.dart';
+import 'package:soi_duty/presentation/record_edit/widgets/type_chips.dart';
 import 'package:soi_duty/presentation/record_edit/widgets/type_rows.dart';
 import 'package:soi_duty/ui/app_colors.dart';
 import 'package:soi_duty/ui/app_theme.dart';
@@ -92,6 +95,8 @@ void main() {
     await insert(14, inH: 9, outH: 18);
     await pumpSheet(tester, d(14));
     await tester.tap(find.text('출장'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('종일 출장'));
     await tester.pumpAndSettle();
     expect(find.text('출장으로 바꿀까요?'), findsOneWidget);
     await tester.tap(find.text('취소'));
@@ -222,9 +227,13 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('출장 칩은 바로 저장·닫힘', (tester) async {
+    testWidgets('출장 칩 → 패널 "종일 출장"은 바로 저장·닫힘', (tester) async {
       await pumpSheet(tester, d(14));
       await tester.tap(find.text('출장'));
+      await tester.pumpAndSettle();
+      expect(find.byType(RecordEditSheet), findsOneWidget); // 칩만으로는 저장되지 않는다
+      expect(await db.select(db.workRecords).get(), isEmpty);
+      await tester.tap(find.text('종일 출장'));
       await tester.pumpAndSettle();
       expect(find.byType(RecordEditSheet), findsNothing);
       expect((await only()).type, WorkType.businessTrip);
@@ -385,6 +394,276 @@ void main() {
           .map((c) => (c.decoration as BoxDecoration?)?.color)
           .where((c) => c == AppColors.cardInner);
       expect(tinted, isEmpty);
+      await unmount(tester);
+    });
+  });
+
+  group('시간 출장 (핸드오프 6)', () {
+    Future<void> insertTrip(
+      int day, {
+      int? inH,
+      int? outH,
+      WorkType type = WorkType.normal,
+      int ded = 0,
+      int? tripInH,
+      int tripInM = 0,
+      int? tripOutH,
+      int tripOutM = 0,
+    }) =>
+        db.into(db.workRecords).insert(
+          WorkRecordsCompanion.insert(
+            date: '2026-09-${day.toString().padLeft(2, '0')}',
+            clockIn: Value(inH == null ? null : d(day, inH)),
+            clockOut: Value(outH == null ? null : d(day, outH)),
+            type: type,
+            deductionMinutes: Value(ded),
+            tripStart: Value(tripInH == null ? null : d(day, tripInH, tripInM)),
+            tripEnd: Value(tripOutH == null ? null : d(day, tripOutH, tripOutM)),
+          ),
+        );
+    Future<List<WorkRecordRow>> rows() => db.select(db.workRecords).get();
+    Finder chip(String label) => find.descendant(of: find.byType(TypeChips), matching: find.text(label));
+    Finder row(String label) => find.descendant(of: find.byType(TypeRows), matching: find.text(label));
+    Finder inPanel(String label) => find.descendant(of: find.byType(TripChoicePanel), matching: find.text(label));
+    Future<void> tap(WidgetTester tester, Finder finder) async {
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('과거 평일: 출장 칩은 패널을 여닫을 뿐 저장하지 않는다', (tester) async {
+      await insertTrip(14, inH: 9, outH: 18);
+      await pumpSheet(tester, d(14));
+      expect(find.byType(TripChoicePanel), findsNothing);
+      await tap(tester, chip('출장'));
+      expect(find.text('출장을 어떻게 넣을까요?'), findsOneWidget);
+      expect(inPanel('8시간 인정'), findsOneWidget);
+      expect(inPanel('시간 직접 입력'), findsOneWidget);
+      expect(find.text('출장 빼기'), findsNothing); // 출장이 아직 없다
+      expect((await rows()).single.type, WorkType.normal);
+      await tap(tester, chip('출장'));
+      expect(find.byType(TripChoicePanel), findsNothing);
+      await unmount(tester);
+    });
+
+    testWidgets('반차를 켠 날은 종일 출장을 고를 수 없다', (tester) async {
+      await insertTrip(14, inH: 13, outH: 17, type: WorkType.halfDay);
+      await pumpSheet(tester, d(14));
+      await tap(tester, chip('출장'));
+      expect(inPanel('반차인 날은 안 돼요'), findsOneWidget);
+      await tap(tester, inPanel('종일 출장'));
+      expect(find.byType(RecordEditSheet), findsOneWidget);
+      expect(find.text('출장으로 바꿀까요?'), findsNothing);
+      expect((await rows()).single.type, WorkType.halfDay);
+      await unmount(tester);
+    });
+
+    testWidgets('시간 출장 → 확인은 초안에만 반영되고, 저장해야 DB에 들어간다 (출퇴근 유지)', (tester) async {
+      await insertTrip(14, inH: 9, outH: 18);
+      await pumpSheet(tester, d(14));
+      await tap(tester, chip('출장'));
+      await tap(tester, inPanel('시간 출장'));
+      expect(find.byType(TripSheet), findsOneWidget);
+      expect(find.text('확인'), findsOneWidget);
+      // 처음 값 = 그날 출근 시각 + 3시간
+      expect(find.text('09:00–12:00 · 3시간'), findsOneWidget);
+      expect(find.text('출장 지우기'), findsNothing);
+      await tap(tester, find.text('확인'));
+      expect(find.byType(TripSheet), findsNothing);
+      expect(find.byType(TripChoicePanel), findsNothing);
+      expect(find.text('09:00–12:00'), findsOneWidget); // 출장 행
+      expect((await rows()).single.tripStart, isNull);
+      await tap(tester, find.text('저장'));
+      final saved = (await rows()).single;
+      expect((saved.tripStart, saved.tripEnd), (d(14, 9), d(14, 12)));
+      expect((saved.clockIn, saved.clockOut), (d(14, 9), d(14, 18)));
+      expect(saved.type, WorkType.normal);
+      await unmount(tester);
+    });
+
+    testWidgets('출장 행을 누르면 고칠 수 있고, "출장 지우기"로 행이 사라진다', (tester) async {
+      await insertTrip(14, inH: 9, outH: 18, tripInH: 9, tripInM: 20, tripOutH: 12, tripOutM: 30);
+      await pumpSheet(tester, d(14));
+      expect(find.text('09:20–12:30'), findsOneWidget);
+      await tap(tester, find.text('09:20–12:30'));
+      expect(find.text('09:20–12:30 · 3시간 10분'), findsOneWidget);
+      await tap(tester, find.text('출장 지우기'));
+      expect(find.text('09:20–12:30'), findsNothing);
+      await tap(tester, find.text('저장'));
+      final saved = (await rows()).single;
+      expect((saved.tripStart, saved.tripEnd), (null, null));
+      expect(saved.clockIn, d(14, 9));
+      await unmount(tester);
+    });
+
+    testWidgets('패널 "출장 빼기" — 시간 출장이면 범위만 지운다', (tester) async {
+      await insertTrip(14, inH: 9, outH: 18, tripInH: 9, tripOutH: 12);
+      await pumpSheet(tester, d(14));
+      await tap(tester, chip('출장'));
+      expect(inPanel('09:00–12:00'), findsOneWidget); // 시간 버튼 보조가 범위
+      await tap(tester, find.text('출장 빼기'));
+      expect(find.byType(TripChoicePanel), findsNothing);
+      expect(find.text('09:00–12:00'), findsNothing);
+      await tap(tester, find.text('저장'));
+      expect((await rows()).single.tripStart, isNull);
+      await unmount(tester);
+    });
+
+    testWidgets('연차인 날에 시간 출장을 넣으면 유형이 일반으로 풀려 시각 행이 나타난다', (tester) async {
+      await insertTrip(14, type: WorkType.dayOff);
+      await pumpSheet(tester, d(14));
+      expect(find.text('출근'), findsNothing);
+      await tap(tester, chip('출장'));
+      await tap(tester, inPanel('시간 출장'));
+      await tap(tester, find.text('확인'));
+      expect(find.text('출근'), findsOneWidget);
+      expect(find.text('09:00–12:00'), findsOneWidget);
+      await tap(tester, find.text('저장'));
+      final saved = (await rows()).single;
+      expect(saved.type, WorkType.normal);
+      expect((saved.tripStart, saved.tripEnd), (d(14, 9), d(14, 12)));
+      await unmount(tester);
+    });
+
+    testWidgets('공휴일 근무 날에 넣으면 유형은 공휴일 그대로, 범위만 붙는다', (tester) async {
+      await insertTrip(14, inH: 10, outH: 15, type: WorkType.holiday);
+      await pumpSheet(tester, d(14));
+      await tap(tester, chip('출장'));
+      await tap(tester, inPanel('시간 출장'));
+      expect(find.text('10:00–13:00 · 3시간'), findsOneWidget);
+      await tap(tester, find.text('확인'));
+      await tap(tester, find.text('저장'));
+      final saved = (await rows()).single;
+      expect(saved.type, WorkType.holiday);
+      expect((saved.tripStart, saved.tripEnd), (d(14, 10), d(14, 13)));
+      expect((saved.clockIn, saved.clockOut), (d(14, 10), d(14, 15)));
+      await unmount(tester);
+    });
+
+    testWidgets('미래 평일: 시간 출장은 작은 시트의 "저장"이 곧 저장이고 전부 닫힌다 — 범위만 있는 기록', (tester) async {
+      await pumpSheet(tester, d(23));
+      await tap(tester, row('출장'));
+      expect(find.byType(TripChoicePanel), findsOneWidget);
+      expect(await rows(), isEmpty);
+      await tap(tester, inPanel('시간 출장'));
+      expect(find.text('09:00–12:00 · 3시간'), findsOneWidget); // 출근이 없으면 09:00
+      expect(find.text('확인'), findsNothing);
+      await tap(tester, find.text('저장'));
+      expect(find.byType(TripSheet), findsNothing);
+      expect(find.byType(RecordEditSheet), findsNothing);
+      final saved = (await rows()).single;
+      expect(saved.type, WorkType.normal);
+      expect((saved.clockIn, saved.clockOut), (null, null));
+      expect((saved.tripStart, saved.tripEnd), (d(23, 9), d(23, 12)));
+      await unmount(tester);
+    });
+
+    testWidgets('미래 평일: 넣어둔 시간 출장은 출장 행에 범위로 보이고, 빼면 기록이 사라진다', (tester) async {
+      await insertTrip(23, tripInH: 9, tripOutH: 12);
+      await pumpSheet(tester, d(23));
+      expect(row('09:00–12:00'), findsOneWidget);
+      await tap(tester, row('출장'));
+      await tap(tester, find.text('출장 빼기'));
+      expect(find.byType(RecordEditSheet), findsNothing);
+      expect(await rows(), isEmpty);
+      await unmount(tester);
+    });
+
+    testWidgets('미래 평일: 종일 출장은 즉시 저장, 다시 열어 빼면 기록이 사라진다', (tester) async {
+      await pumpSheet(tester, d(23));
+      await tap(tester, row('출장'));
+      await tap(tester, inPanel('종일 출장'));
+      expect(find.byType(RecordEditSheet), findsNothing);
+      expect((await rows()).single.type, WorkType.businessTrip);
+      await unmount(tester);
+
+      await pumpSheet(tester, d(23));
+      await tap(tester, row('출장'));
+      expect(inPanel('종일 출장 ✓'), findsOneWidget);
+      await tap(tester, find.text('출장 빼기'));
+      expect(find.byType(RecordEditSheet), findsNothing);
+      expect(await rows(), isEmpty);
+      await unmount(tester);
+    });
+
+    testWidgets('미래 평일: 시간 출장이 있던 날에 연차를 누르면 범위가 지워진다', (tester) async {
+      await insertTrip(23, tripInH: 9, tripOutH: 12);
+      await pumpSheet(tester, d(23));
+      await tap(tester, row('연차'));
+      final saved = (await rows()).single;
+      expect(saved.type, WorkType.dayOff);
+      expect((saved.tripStart, saved.tripEnd), (null, null));
+      await unmount(tester);
+    });
+
+    testWidgets('주말(과거): 칩 없이 "출장 · 없음" 행이 늘 있고, 넣으면 저장 버튼으로 마무리', (tester) async {
+      await insertTrip(12, inH: 10, outH: 14);
+      await pumpSheet(tester, d(12));
+      expect(find.byType(TypeChips), findsNothing);
+      expect(find.text('출장'), findsOneWidget);
+      expect(find.text('없음'), findsNWidgets(2)); // 출장 행 값 + 계산 내역의 "점심 공제 없음"
+      await tap(tester, find.text('출장'));
+      expect(find.text('10:00–13:00 · 3시간'), findsOneWidget);
+      await tap(tester, find.text('확인'));
+      expect(find.text('10:00–13:00'), findsOneWidget);
+      await tap(tester, find.text('저장'));
+      final saved = (await rows()).single;
+      expect((saved.tripStart, saved.tripEnd), (d(12, 10), d(12, 13)));
+      await unmount(tester);
+    });
+
+    testWidgets('주말(미래): 출장 행의 작은 시트는 "저장"이고 바로 저장된다', (tester) async {
+      await pumpSheet(tester, d(26));
+      await tap(tester, find.text('출장'));
+      await tap(tester, find.text('저장'));
+      expect(find.byType(RecordEditSheet), findsNothing);
+      final saved = (await rows()).single;
+      expect((saved.tripStart, saved.tripEnd), (d(26, 9), d(26, 12)));
+      await unmount(tester);
+    });
+
+    testWidgets('반차 + 시간 출장: 반차 칩과 출장 칩이 함께 칠해진다', (tester) async {
+      await insertTrip(14, inH: 13, outH: 17, type: WorkType.halfDay, ded: 30, tripInH: 13, tripInM: 40, tripOutH: 16);
+      await pumpSheet(tester, d(14));
+      final chips = tester.widget<TypeChips>(find.byType(TypeChips));
+      expect(chips.selected, WorkType.halfDay);
+      expect(chips.tripSelected, isTrue);
+      expect(find.text('13:40–16:00'), findsOneWidget);
+      expect(find.text('30분'), findsOneWidget); // 시간공제 행
+      await unmount(tester);
+    });
+
+    testWidgets('작은 기기(320×568): 반차 + 출장 + 공제 시트와 패널이 넘치지 않는다', (tester) async {
+      await insertTrip(14, inH: 13, outH: 17, type: WorkType.halfDay, ded: 30, tripInH: 13, tripInM: 40, tripOutH: 16);
+      SizeConfig.init(320);
+      tester.view.physicalSize = const Size(320 * 3, 568 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          clockProvider.overrideWithValue(() => now),
+          nowProvider.overrideWith((ref) => Stream.value(now)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) =>
+                  TextButton(onPressed: () => showRecordEditSheet(context, d(14)), child: const Text('open')),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tap(tester, chip('출장'));
+      expect(tester.takeException(), isNull);
+      // 패널 버튼 보조 줄은 한 줄 — 두 버튼 높이가 같다
+      final buttons = tester.getSize(inPanel('종일 출장').first);
+      expect(buttons.height, lessThan(30));
       await unmount(tester);
     });
   });
