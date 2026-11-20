@@ -12,8 +12,9 @@ import '../../domain/repository/notification_scheduler.dart';
 ///   (AppDelegate의 `UNUserNotificationCenter.delegate` 설정이 함께 있어야 한다).
 /// - **워치**: 별도 처리 없음. 폰 알림을 OS가 Apple Watch·Wear OS로 넘긴다 — 넘어가는 걸 막는 옵션(local only)을 쓰지 않고,
 ///   손목이 울리도록 소리·진동이 있는 중요도로 보낸다.
-/// - **정확한 알람 권한을 쓰지 않는다**(`inexactAllowWhileIdle`). Android 14+에서 정확한 알람은 사용자가 따로 허용해야 하고
-///   Play 정책 심사 대상이다. 퇴근 알림은 몇 분 늦어도 된다.
+/// - **Android는 "알람 및 리마인더" 권한이 있으면 정시로, 없으면 늦을 수 있는 방식으로 건다.** 권한 없이 걸면 OS가 알람을
+///   남은 시간의 75%(상한 1시간)까지 늦춘다 — 실기기에서 5분 뒤 예약이 3분 45초, 2시간 뒤 예약은 허용 오차 1시간으로 잡혔다(2026-11-20).
+///   출근 때 8시간 뒤로 거는 퇴근 알림은 늘 1시간 상한에 걸려 쓸 수 없다. 권한 안내는 화면이 한다([requestExactAlarm]).
 /// - **권한은 초기화 때 묻지 않는다.** 묻는 시점은 화면이 정한다([requestPermission]).
 class LocalNotificationScheduler implements NotificationScheduler {
   LocalNotificationScheduler({
@@ -105,6 +106,26 @@ class LocalNotificationScheduler implements NotificationScheduler {
   }
 
   @override
+  Future<bool> canScheduleExact() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return true;
+    await _ensureReady();
+    return await _android?.canScheduleExactNotifications() ?? false;
+  }
+
+  @override
+  Future<bool> requestExactAlarm() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return true;
+    await _ensureReady();
+    // 시스템 설정의 "알람 및 리마인더" 화면이 열리고, 돌아오면 결과가 온다.
+    return await _android?.requestExactAlarmsPermission() ?? false;
+  }
+
+  /// 정시 권한이 있으면 정시(절전 중에도), 없으면 늦을 수 있는 방식. 권한 없이 정시 방식을 부르면 플러그인이 예약을 건너뛴다.
+  @visibleForTesting
+  static AndroidScheduleMode scheduleModeFor({required bool exactAllowed}) =>
+      exactAllowed ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle;
+
+  @override
   Future<void> schedule({required DateTime at, required String title, required String body}) async {
     await _ensureReady();
     // 플러그인은 과거 시각 예약을 거절한다(ArgumentError). 분 경계에서 막 지났으면 지금 띄운다 — 알림이 통째로 사라지는 것보다 낫다.
@@ -122,7 +143,7 @@ class LocalNotificationScheduler implements NotificationScheduler {
         body: body,
         scheduledDate: toScheduledDate(at),
         notificationDetails: _details,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: scheduleModeFor(exactAllowed: await canScheduleExact()),
       );
     } on ArgumentError {
       // 위 확인과 플러그인의 확인 사이에 시각이 지났다.

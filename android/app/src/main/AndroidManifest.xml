@@ -1,9 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <!-- 퇴근 알림 (flutter_local_notifications). Android 13+는 POST_NOTIFICATIONS를 앱이 물어야 하고,
-       RECEIVE_BOOT_COMPLETED는 재부팅 뒤 예약을 다시 걸기 위한 것. 정확한 알람 권한(SCHEDULE_EXACT_ALARM · USE_EXACT_ALARM)은
-       넣지 않는다 — 퇴근 알림은 몇 분 늦어도 되고, 정확한 알람은 사용자 허용·Play 심사가 따로 필요하다. -->
+       RECEIVE_BOOT_COMPLETED는 재부팅 뒤 예약을 다시 걸기 위한 것.
+       SCHEDULE_EXACT_ALARM("알람 및 리마인더"): 이게 없으면 Android가 알람을 최대 1시간 늦춘다(남은 시간의 75%, 상한 1시간 —
+       실기기 측정 2026-11-20, 8시간 뒤로 거는 퇴근 알림은 늘 상한에 걸린다). Android 14+는 사용자가 설정에서 직접 켜야 해서
+       앱이 안내하고, 안 켜면 늦을 수 있는 방식으로 건다. 묻지 않고 허용되는 USE_EXACT_ALARM은 Play 정책이 알람·캘린더 앱으로 제한해 쓰지 않는다. -->
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
   <application android:label="@string/app_name" android:name="${applicationName}" android:icon="@mipmap/ic_launcher">
     <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:taskAffinity="" android:theme="@style/LaunchTheme" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
       <!-- Specifies an Android theme to apply to this Activity as soon as

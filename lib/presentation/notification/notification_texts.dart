@@ -38,6 +38,14 @@ abstract final class NotificationTexts {
   static const openSettings = '설정 열기';
   static const openSettingsFailed = '기기 설정을 열 수 없어요';
 
+  // 정시에 받기 — Android "알람 및 리마인더" 권한 (2026-11-20, 핸드오프에 없는 화면이라 문구는 임시).
+  // 이 권한이 없으면 OS가 알림을 최대 1시간 늦춘다.
+  static const exactTitle = '정시에 알려드리려면';
+  static const exactMessage = "기기 설정에서 '알람 및 리마인더'를 허용해 주세요. 허용하지 않으면 알림이 최대 1시간 늦게 올 수 있어요.";
+  static const exactLater = '나중에';
+  static const exactRowLabel = '정시에 받기';
+  static const exactRowSub = '지금은 최대 1시간 늦게 올 수 있어요';
+
   static (String title, String body) notice(ClockOutNoticeKind kind) => switch (kind) {
         ClockOutNoticeKind.daily => (dailyTitle, dailyBody),
         ClockOutNoticeKind.weekly => (weeklyTitle, weeklyBody),

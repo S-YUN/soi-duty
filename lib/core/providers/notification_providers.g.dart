@@ -110,18 +110,21 @@ final class NotificationStateRepositoryProvider
 String _$notificationStateRepositoryHash() =>
     r'02988e83a6581135315e736a15b2c100d260babf';
 
-/// 오늘 날짜(시분 0). 시계는 매 분 돌지만 알림 계획은 날짜가 바뀔 때만 다시 세면 된다.
+/// 오늘 날짜(시분 0). 시계가 매 분 돌 때마다 다시 계산되지만 값은 날짜가 바뀔 때만 달라진다 —
+/// 동기화는 계획이 실제로 달라졌을 때만 움직인다(`ClockOutNotificationSync.build`의 비교).
 
 @ProviderFor(todayDate)
 final todayDateProvider = TodayDateProvider._();
 
-/// 오늘 날짜(시분 0). 시계는 매 분 돌지만 알림 계획은 날짜가 바뀔 때만 다시 세면 된다.
+/// 오늘 날짜(시분 0). 시계가 매 분 돌 때마다 다시 계산되지만 값은 날짜가 바뀔 때만 달라진다 —
+/// 동기화는 계획이 실제로 달라졌을 때만 움직인다(`ClockOutNotificationSync.build`의 비교).
 
 final class TodayDateProvider
     extends
         $FunctionalProvider<AsyncValue<DateTime>, DateTime, FutureOr<DateTime>>
     with $FutureModifier<DateTime>, $FutureProvider<DateTime> {
-  /// 오늘 날짜(시분 0). 시계는 매 분 돌지만 알림 계획은 날짜가 바뀔 때만 다시 세면 된다.
+  /// 오늘 날짜(시분 0). 시계가 매 분 돌 때마다 다시 계산되지만 값은 날짜가 바뀔 때만 달라진다 —
+  /// 동기화는 계획이 실제로 달라졌을 때만 움직인다(`ClockOutNotificationSync.build`의 비교).
   TodayDateProvider._()
     : super(
         from: null,
@@ -150,12 +153,14 @@ final class TodayDateProvider
 String _$todayDateHash() => r'cc9edafbade8affa0132a8924908498e0acf3fb5';
 
 /// 오늘 보낼 퇴근 알림(무엇을 언제). 근무 중이 아니거나 보낼 게 없으면 null.
+/// 동기화에는 **다시 맞출 때를 알리는 신호**로만 쓰인다 — 실제 예약에 쓰는 계획은 동기화가 그 순간의 시각으로 다시 센다.
 /// 기록·첫 기록일이 아직 안 온 동안은 loading — "없음"과 구분해야 시작할 때 예약을 지우지 않는다.
 
 @ProviderFor(clockOutNoticePlan)
 final clockOutNoticePlanProvider = ClockOutNoticePlanProvider._();
 
 /// 오늘 보낼 퇴근 알림(무엇을 언제). 근무 중이 아니거나 보낼 게 없으면 null.
+/// 동기화에는 **다시 맞출 때를 알리는 신호**로만 쓰인다 — 실제 예약에 쓰는 계획은 동기화가 그 순간의 시각으로 다시 센다.
 /// 기록·첫 기록일이 아직 안 온 동안은 loading — "없음"과 구분해야 시작할 때 예약을 지우지 않는다.
 
 final class ClockOutNoticePlanProvider
@@ -167,6 +172,7 @@ final class ClockOutNoticePlanProvider
         >
     with $FutureModifier<ClockOutNotice?>, $FutureProvider<ClockOutNotice?> {
   /// 오늘 보낼 퇴근 알림(무엇을 언제). 근무 중이 아니거나 보낼 게 없으면 null.
+  /// 동기화에는 **다시 맞출 때를 알리는 신호**로만 쓰인다 — 실제 예약에 쓰는 계획은 동기화가 그 순간의 시각으로 다시 센다.
   /// 기록·첫 기록일이 아직 안 온 동안은 loading — "없음"과 구분해야 시작할 때 예약을 지우지 않는다.
   ClockOutNoticePlanProvider._()
     : super(
@@ -243,3 +249,44 @@ final class NotificationPermissionProvider
 
 String _$notificationPermissionHash() =>
     r'93969a2b15af6f1a1a1199005f3ae959f86c1605';
+
+/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
+/// 앱으로 돌아올 때 invalidate한다.
+
+@ProviderFor(exactAlarmAllowed)
+final exactAlarmAllowedProvider = ExactAlarmAllowedProvider._();
+
+/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
+/// 앱으로 돌아올 때 invalidate한다.
+
+final class ExactAlarmAllowedProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
+  /// 앱으로 돌아올 때 invalidate한다.
+  ExactAlarmAllowedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'exactAlarmAllowedProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$exactAlarmAllowedHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return exactAlarmAllowed(ref);
+  }
+}
+
+String _$exactAlarmAllowedHash() => r'0ef71e6626869be55080381a9fc96a3d592f357e';

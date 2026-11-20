@@ -66,7 +66,44 @@ Future<void> enableClockOutNotification(BuildContext context, WidgetRef ref) asy
   if (!context.mounted) return;
   ref.invalidate(notificationPermissionProvider);
   await ref.read(clockOutNotificationSyncProvider.notifier).sync();
-  if (!granted && context.mounted) showAppToast(context, NotificationTexts.osDeniedToast);
+  if (!context.mounted) return;
+  if (!granted) return showAppToast(context, NotificationTexts.osDeniedToast);
+  await maybePromptExactAlarm(context, ref);
+}
+
+/// 알림은 허용됐는데 "알람 및 리마인더"가 꺼져 있으면(Android 14+의 기본) 정시에 받는 법을 안내한다.
+/// 안 켜도 알림은 간다 — 다만 OS가 최대 1시간 늦춘다.
+Future<void> maybePromptExactAlarm(BuildContext context, WidgetRef ref) async {
+  final scheduler = ref.read(notificationSchedulerProvider);
+  try {
+    if (await scheduler.canScheduleExact()) return;
+  } catch (_) {
+    return;
+  }
+  if (!context.mounted) return;
+  await promptExactAlarm(context, ref);
+}
+
+/// 안내 다이얼로그 → OS의 "알람 및 리마인더" 설정. 설정 화면의 "정시에 받기" 행도 이걸 쓴다.
+Future<void> promptExactAlarm(BuildContext context, WidgetRef ref) async {
+  final open = await showConfirmDialog(
+    context,
+    title: NotificationTexts.exactTitle,
+    message: NotificationTexts.exactMessage,
+    confirmLabel: NotificationTexts.openSettings,
+    cancelLabel: NotificationTexts.exactLater,
+  );
+  if (!open) return;
+  try {
+    await ref.read(notificationSchedulerProvider).requestExactAlarm();
+  } catch (_) {
+    if (context.mounted) showAppToast(context, NotificationTexts.openSettingsFailed);
+    return;
+  }
+  if (!context.mounted) return;
+  // 돌아왔다 — 허용했으면 같은 시각을 정시 방식으로 다시 건다.
+  ref.invalidate(exactAlarmAllowedProvider);
+  await ref.read(clockOutNotificationSyncProvider.notifier).resync();
 }
 
 /// OS 권한이 꺼진 상태에서 설정 행을 눌렀을 때 — 앱에서는 켤 수 없으니 OS 설정으로 보낸다 (P4).

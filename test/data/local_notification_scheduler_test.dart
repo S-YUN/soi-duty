@@ -1,3 +1,4 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/data/notification/local_notification_scheduler.dart';
 
@@ -22,5 +23,10 @@ void main() {
     expect(scheduled.millisecondsSinceEpoch, DateTime(2026, 9, 16, 17, 30, 12).millisecondsSinceEpoch);
     expect(scheduled.microsecond, 0);
     expect(scheduled.toIso8601String(), endsWith('.000Z'));
+  });
+
+  test('"알람 및 리마인더"가 허용되면 정시(절전 중에도), 아니면 늦을 수 있는 방식으로 건다', () {
+    expect(LocalNotificationScheduler.scheduleModeFor(exactAllowed: true), AndroidScheduleMode.exactAllowWhileIdle);
+    expect(LocalNotificationScheduler.scheduleModeFor(exactAllowed: false), AndroidScheduleMode.inexactAllowWhileIdle);
   });
 }

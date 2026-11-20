@@ -30,7 +30,8 @@ class _ClockOutNotificationHostState extends ConsumerState<ClockOutNotificationH
     // 화면(경과 시간·날짜)과 알림 계획이 다음 분을 기다리지 않게 한다.
     ref.invalidate(nowProvider);
     ref.invalidate(notificationPermissionProvider);
-    ref.read(clockOutNotificationSyncProvider.notifier).sync();
+    ref.invalidate(exactAlarmAllowedProvider);
+    ref.read(clockOutNotificationSyncProvider.notifier).resync();
   }
 
   @override

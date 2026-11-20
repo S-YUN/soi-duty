@@ -19,6 +19,14 @@ class FakeNotificationScheduler implements NotificationScheduler {
   String? scheduledBody;
   final shown = <(String title, String body)>[];
   var requestCount = 0;
+
+  /// Android "알람 및 리마인더" 허용 여부 — 테스트가 바꾼다. 설정 화면에 다녀오면 [exactAfterRequest]가 된다.
+  var exactAllowed = true;
+  bool? exactAfterRequest;
+  var exactRequestCount = 0;
+
+  /// 마지막 예약이 정시 방식으로 걸렸는지 (예약 시점의 [exactAllowed]).
+  bool? scheduledExact;
   var openSettingsCount = 0;
 
   /// 다음 schedule 호출을 실패시킨다(플러그인·OS 오류 흉내).
@@ -46,10 +54,21 @@ class FakeNotificationScheduler implements NotificationScheduler {
       throw StateError('schedule failed');
     }
     scheduledAt = at;
+    scheduledExact = exactAllowed;
     scheduledTitle = title;
     scheduledBody = body;
     String two(int v) => v.toString().padLeft(2, '0');
     log.add('schedule ${at.year}-${two(at.month)}-${two(at.day)} ${two(at.hour)}:${two(at.minute)} $title');
+  }
+
+  @override
+  Future<bool> canScheduleExact() async => exactAllowed;
+
+  @override
+  Future<bool> requestExactAlarm() async {
+    exactRequestCount++;
+    if (exactAfterRequest != null) exactAllowed = exactAfterRequest!;
+    return exactAllowed;
   }
 
   @override

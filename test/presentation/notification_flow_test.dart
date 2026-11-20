@@ -302,4 +302,104 @@ void main() {
       await finish(tester);
     });
   });
+
+  group('정시에 받기 — Android "알람 및 리마인더"', () {
+    testWidgets('알림 받기 → OS 허용 → 정시 권한이 없으면 안내 → 설정 열기 → 허용하고 돌아오면 정시 방식으로 다시 건다', (tester) async {
+      os.exactAllowed = false;
+      os.exactAfterRequest = true;
+      await pump(tester, today);
+      await tester.tap(find.text('출근하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('알림 받기'));
+      await settle(tester);
+      expect(find.text('정시에 알려드리려면'), findsOneWidget);
+      expect(os.scheduledAt, d(16, 18, 12));
+      expect(os.scheduledExact, isFalse, reason: '권한이 없는 동안은 늦을 수 있는 방식으로라도 건다');
+      final before = os.count('schedule');
+      await tester.tap(find.text('설정 열기'));
+      await settle(tester);
+      expect(os.exactRequestCount, 1);
+      expect(os.count('schedule'), greaterThan(before), reason: '같은 시각이어도 다시 걸어야 방식이 바뀐다');
+      expect(os.scheduledExact, isTrue);
+      expect(os.scheduledAt, d(16, 18, 12));
+      await finish(tester);
+    });
+
+    testWidgets('"나중에" → 설정을 열지 않고 알림은 그대로 걸려 있다', (tester) async {
+      os.exactAllowed = false;
+      await pump(tester, today);
+      await tester.tap(find.text('출근하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('알림 받기'));
+      await settle(tester);
+      await tester.tap(find.text('나중에'));
+      await settle(tester);
+      expect(os.exactRequestCount, 0);
+      expect(os.scheduledAt, d(16, 18, 12));
+      expect((await settings()).clockOutNotificationEnabled, isTrue);
+      await finish(tester);
+    });
+
+    testWidgets('정시 권한이 이미 있으면(Android 13 이하, iOS) 안내가 없다', (tester) async {
+      await pump(tester, today);
+      await tester.tap(find.text('출근하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('알림 받기'));
+      await settle(tester);
+      expect(find.text('정시에 알려드리려면'), findsNothing);
+      expect(os.scheduledExact, isTrue);
+      await finish(tester);
+    });
+
+    testWidgets('OS 알림 권한을 거절하면 정시 안내는 뜨지 않는다', (tester) async {
+      os.requestResult = false;
+      os.exactAllowed = false;
+      await pump(tester, today);
+      await tester.tap(find.text('출근하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('알림 받기'));
+      await settle(tester);
+      expect(find.text('정시에 알려드리려면'), findsNothing);
+      await finish(tester);
+    });
+
+    testWidgets('설정의 "정시에 받기" 행 → 안내 → 설정 열기. OS 설정에서 켜고 돌아오면 행이 사라지고 정시로 다시 건다', (tester) async {
+      os.osStatus = OsNotificationStatus.granted;
+      os.exactAllowed = false;
+      await DriftAppSettingsRepository(db).save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
+      await db.into(db.workRecords).insert(
+            WorkRecordsCompanion.insert(date: '2026-09-16', clockIn: Value(d(16, 9)), type: WorkType.normal),
+          );
+      await pump(tester, const SettingsScreen());
+      expect(find.text('정시에 받기'), findsOneWidget);
+      expect(os.scheduledExact, isFalse);
+      await tester.tap(find.text('정시에 받기'));
+      await tester.pumpAndSettle();
+      expect(find.text('정시에 알려드리려면'), findsOneWidget);
+      os.exactAfterRequest = true;
+      await tester.tap(find.text('설정 열기').last);
+      await settle(tester);
+      expect(find.text('정시에 받기'), findsNothing);
+      expect(os.scheduledExact, isTrue);
+      await finish(tester);
+    });
+
+    testWidgets('앱 밖(OS 설정)에서 직접 켜고 돌아와도(resume) 행이 사라지고 정시로 다시 건다', (tester) async {
+      os.osStatus = OsNotificationStatus.granted;
+      os.exactAllowed = false;
+      await DriftAppSettingsRepository(db).save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
+      await db.into(db.workRecords).insert(
+            WorkRecordsCompanion.insert(date: '2026-09-16', clockIn: Value(d(16, 9)), type: WorkType.normal),
+          );
+      await pump(tester, const SettingsScreen());
+      expect(find.text('정시에 받기'), findsOneWidget);
+      os.exactAllowed = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await settle(tester);
+      expect(find.text('정시에 받기'), findsNothing);
+      expect(os.scheduledExact, isTrue);
+      await finish(tester);
+    });
+  });
 }

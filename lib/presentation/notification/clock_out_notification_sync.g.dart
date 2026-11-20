@@ -20,7 +20,8 @@ part of 'clock_out_notification_sync.dart';
 /// ```
 ///
 /// "저장된 알림"(`NotificationStateRepository.lastNotice`)의 시각이 지났으면 OS가 이미 띄운 것으로 본다.
-/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나 지난 기록을 고쳐도 같은 알림이 또 울리지 않는다.
+/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나, 지난 기록을 고치거나, 알림을 껐다 켜거나, 퇴근을 취소해도 같은 알림이 또 울리지 않는다
+/// (오늘 전달된 기록은 예약을 치울 때도 지우지 않는다).
 /// 계획이 **미래로 옮겨가면**(반차 해제, 출근 시각을 늦춤) 이미 울렸어도 새로 예약한다 — 앞의 알림이 틀린 데이터로 울린 것이다.
 
 @ProviderFor(ClockOutNotificationSync)
@@ -38,7 +39,8 @@ final clockOutNotificationSyncProvider = ClockOutNotificationSyncProvider._();
 /// ```
 ///
 /// "저장된 알림"(`NotificationStateRepository.lastNotice`)의 시각이 지났으면 OS가 이미 띄운 것으로 본다.
-/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나 지난 기록을 고쳐도 같은 알림이 또 울리지 않는다.
+/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나, 지난 기록을 고치거나, 알림을 껐다 켜거나, 퇴근을 취소해도 같은 알림이 또 울리지 않는다
+/// (오늘 전달된 기록은 예약을 치울 때도 지우지 않는다).
 /// 계획이 **미래로 옮겨가면**(반차 해제, 출근 시각을 늦춤) 이미 울렸어도 새로 예약한다 — 앞의 알림이 틀린 데이터로 울린 것이다.
 final class ClockOutNotificationSyncProvider
     extends $NotifierProvider<ClockOutNotificationSync, void> {
@@ -54,7 +56,8 @@ final class ClockOutNotificationSyncProvider
   /// ```
   ///
   /// "저장된 알림"(`NotificationStateRepository.lastNotice`)의 시각이 지났으면 OS가 이미 띄운 것으로 본다.
-  /// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나 지난 기록을 고쳐도 같은 알림이 또 울리지 않는다.
+  /// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나, 지난 기록을 고치거나, 알림을 껐다 켜거나, 퇴근을 취소해도 같은 알림이 또 울리지 않는다
+  /// (오늘 전달된 기록은 예약을 치울 때도 지우지 않는다).
   /// 계획이 **미래로 옮겨가면**(반차 해제, 출근 시각을 늦춤) 이미 울렸어도 새로 예약한다 — 앞의 알림이 틀린 데이터로 울린 것이다.
   ClockOutNotificationSyncProvider._()
     : super(
@@ -84,7 +87,7 @@ final class ClockOutNotificationSyncProvider
 }
 
 String _$clockOutNotificationSyncHash() =>
-    r'a4857a97d35250eadd4f106d42717831e4c264d1';
+    r'0d3432704129d2b82e9900da11d1099cf25a0c30';
 
 /// OS에 걸어둔 퇴근 알림 예약을 지금 상태에 맞춘다 — **예약을 건드리는 곳은 여기 하나뿐이다.**
 ///
@@ -98,7 +101,8 @@ String _$clockOutNotificationSyncHash() =>
 /// ```
 ///
 /// "저장된 알림"(`NotificationStateRepository.lastNotice`)의 시각이 지났으면 OS가 이미 띄운 것으로 본다.
-/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나 지난 기록을 고쳐도 같은 알림이 또 울리지 않는다.
+/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나, 지난 기록을 고치거나, 알림을 껐다 켜거나, 퇴근을 취소해도 같은 알림이 또 울리지 않는다
+/// (오늘 전달된 기록은 예약을 치울 때도 지우지 않는다).
 /// 계획이 **미래로 옮겨가면**(반차 해제, 출근 시각을 늦춤) 이미 울렸어도 새로 예약한다 — 앞의 알림이 틀린 데이터로 울린 것이다.
 
 abstract class _$ClockOutNotificationSync extends $Notifier<void> {

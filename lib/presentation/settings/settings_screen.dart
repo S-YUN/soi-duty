@@ -37,6 +37,7 @@ class SettingsCallbacks {
     required this.onPrivacy,
     required this.onNotificationToggle,
     required this.onOpenNotificationSettings,
+    required this.onExactAlarm,
   });
 
   final VoidCallback onBack;
@@ -50,6 +51,8 @@ class SettingsCallbacks {
   final ValueChanged<bool> onNotificationToggle;
   /// OS 권한이 꺼져 있을 때의 행 — 안내 다이얼로그 → OS 설정.
   final VoidCallback onOpenNotificationSettings;
+  /// "정시에 받기" 행 — Android "알람 및 리마인더" 안내 → OS 설정.
+  final VoidCallback onExactAlarm;
 }
 
 /// 설정 화면. 값은 스트림으로 읽고, 연차·시급은 숫자 시트로 받는다.
@@ -68,9 +71,11 @@ class SettingsScreen extends ConsumerWidget {
     final controller = ref.read(settingsControllerProvider.notifier);
     // 권한 확인이 끝나기 전·실패했을 때는 토글로 둔다 — 켜는 순간 다시 확인한다.
     final permission = ref.watch(notificationPermissionProvider).value ?? NotificationPermission.notDetermined;
+    final exactAllowed = ref.watch(exactAlarmAllowedProvider).value ?? true;
     return SettingsView(
       settings: settings,
       notificationPermission: permission,
+      exactAlarmAllowed: exactAllowed,
       year: year,
       version: version,
       rules: rules,
@@ -105,6 +110,7 @@ class SettingsScreen extends ConsumerWidget {
         onNotificationToggle: (on) =>
             on ? enableClockOutNotification(context, ref) : controller.setClockOutNotification(false),
         onOpenNotificationSettings: () => promptOpenNotificationSettings(context, ref),
+        onExactAlarm: () => promptExactAlarm(context, ref),
       ),
     );
   }
@@ -183,6 +189,7 @@ class SettingsView extends StatelessWidget {
     required this.version,
     required this.callbacks,
     this.notificationPermission = NotificationPermission.notDetermined,
+    this.exactAlarmAllowed = true,
     this.rules = const WorkRules(),
   });
 
@@ -194,6 +201,9 @@ class SettingsView extends StatelessWidget {
 
   /// OS 알림 권한. `denied`면 토글 대신 "설정 열기" 행 — 앱에서는 켤 수 없다.
   final NotificationPermission notificationPermission;
+
+  /// Android "알람 및 리마인더"가 허용돼 있는지. 알림이 켜져 있는데 이게 꺼져 있으면 "정시에 받기" 행이 보인다.
+  final bool exactAlarmAllowed;
   final WorkRules rules;
 
   @override
@@ -266,6 +276,20 @@ class SettingsView extends StatelessWidget {
                             trailing: SoiSwitch(value: settings.clockOutNotificationEnabled),
                             // 행 어디를 눌러도 토글된다.
                             onTap: () => callbacks.onNotificationToggle(!settings.clockOutNotificationEnabled),
+                          ),
+                        // 알림은 오는데 OS가 최대 1시간 늦출 수 있는 상태 — 정시로 받는 길을 보인다.
+                        if (settings.clockOutNotificationEnabled &&
+                            notificationPermission == NotificationPermission.granted &&
+                            !exactAlarmAllowed)
+                          SettingsRow(
+                            label: NotificationTexts.exactRowLabel,
+                            sub: NotificationTexts.exactRowSub,
+                            subWarning: true,
+                            value: NotificationTexts.openSettings,
+                            valueSet: true,
+                            chevron: true,
+                            chevronColor: AppColors.brand,
+                            onTap: callbacks.onExactAlarm,
                           ),
                       ],
                     ),

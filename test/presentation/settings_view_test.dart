@@ -28,6 +28,7 @@ void main() {
     AppSettings settings, {
     double width = 402,
     NotificationPermission permission = NotificationPermission.notDetermined,
+    bool exactAllowed = true,
   }) async {
     pickedWeekStart = null;
     taps = [];
@@ -40,6 +41,7 @@ void main() {
       home: SettingsView(
         settings: settings,
         notificationPermission: permission,
+        exactAlarmAllowed: exactAllowed,
         year: 2026,
         version: '1.0.1',
         callbacks: SettingsCallbacks(
@@ -52,6 +54,7 @@ void main() {
           onPrivacy: () => taps.add('privacy'),
           onNotificationToggle: (on) => taps.add('notify:$on'),
           onOpenNotificationSettings: () => taps.add('notify-settings'),
+          onExactAlarm: () => taps.add('exact'),
         ),
       ),
     ));
@@ -180,6 +183,50 @@ void main() {
       await pump(tester, const AppSettings(clockOutNotificationEnabled: true), width: 320, permission: NotificationPermission.granted);
       expect(tester.takeException(), isNull);
       await pump(tester, const AppSettings(), width: 320, permission: NotificationPermission.denied);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('정시에 받기 — Android "알람 및 리마인더"', () {
+    testWidgets('알림이 켜져 있고 허용인데 정시 권한이 없으면 행이 보인다 — 누르면 안내 요청', (tester) async {
+      await pump(
+        tester,
+        const AppSettings(clockOutNotificationEnabled: true),
+        permission: NotificationPermission.granted,
+        exactAllowed: false,
+      );
+      expect(find.text('정시에 받기'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.text('지금은 최대 1시간 늦게 올 수 있어요')).style?.color,
+        AppColors.minus,
+      );
+      expect(find.byType(SoiSwitch), findsOneWidget); // 토글은 그대로
+      await tester.tap(find.text('정시에 받기'));
+      expect(taps, ['exact']);
+    });
+
+    testWidgets('정시 권한이 있거나 · 알림이 꺼져 있거나 · OS 알림이 꺼져 있으면 행이 없다', (tester) async {
+      await pump(tester, const AppSettings(clockOutNotificationEnabled: true), permission: NotificationPermission.granted);
+      expect(find.text('정시에 받기'), findsNothing);
+      await pump(tester, const AppSettings(), permission: NotificationPermission.granted, exactAllowed: false);
+      expect(find.text('정시에 받기'), findsNothing);
+      await pump(
+        tester,
+        const AppSettings(clockOutNotificationEnabled: true),
+        permission: NotificationPermission.denied,
+        exactAllowed: false,
+      );
+      expect(find.text('정시에 받기'), findsNothing);
+    });
+
+    testWidgets('폭 320에서 넘치지 않는다', (tester) async {
+      await pump(
+        tester,
+        const AppSettings(clockOutNotificationEnabled: true),
+        width: 320,
+        permission: NotificationPermission.granted,
+        exactAllowed: false,
+      );
       expect(tester.takeException(), isNull);
     });
   });

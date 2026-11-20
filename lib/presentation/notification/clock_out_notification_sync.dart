@@ -72,6 +72,13 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
     return _running ??= _drain().whenComplete(() => _running = null);
   }
 
+  /// 저장된 값과 같아도 OS에 다시 건다 — 앱으로 돌아왔을 때. 그 사이 "알람 및 리마인더" 권한이 바뀌었으면
+  /// 같은 시각이라도 정시/비정시 방식을 바꿔 다시 걸어야 하고, 권한이 회수되면 OS가 걸어둔 알람을 지운다.
+  Future<void> resync() {
+    _verified = false;
+    return sync();
+  }
+
   Future<void> _drain() async {
     while (_dirty) {
       _dirty = false;
