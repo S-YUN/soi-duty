@@ -23,6 +23,8 @@ class FakeNotificationScheduler implements NotificationScheduler {
 
   /// 다음 schedule 호출을 실패시킨다(플러그인·OS 오류 흉내).
   var failNextSchedule = false;
+  var alwaysFailSchedule = false;
+  var scheduleAttempts = 0;
 
   int count(String prefix) => log.where((l) => l.startsWith(prefix)).length;
 
@@ -38,7 +40,8 @@ class FakeNotificationScheduler implements NotificationScheduler {
 
   @override
   Future<void> schedule({required DateTime at, required String title, required String body}) async {
-    if (failNextSchedule) {
+    scheduleAttempts++;
+    if (failNextSchedule || alwaysFailSchedule) {
       failNextSchedule = false;
       throw StateError('schedule failed');
     }

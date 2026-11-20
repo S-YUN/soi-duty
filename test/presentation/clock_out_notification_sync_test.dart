@@ -74,15 +74,21 @@ void main() {
     return c;
   }
 
-  /// 스트림 방출 → 계획 재계산 → 동기화가 가라앉을 때까지 기다렸다가 조건을 본다.
+  /// 스트림 방출 → 계획 재계산 → 동기화가 스스로 가라앉을 때까지 기다린다. **sync()를 직접 부르지 않는다** —
+  /// 기록·설정이 바뀌면 프로바이더의 listen이 알아서 다시 맞추는지를 보는 것이다.
   Future<void> settle(ProviderContainer c, [bool Function()? until]) async {
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 120; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 5));
-      await c.read(clockOutNotificationSyncProvider.notifier).sync();
       if (until != null && until()) return;
-      if (until == null && i >= 6) return;
+      if (until == null && i >= 12) return;
     }
     if (until != null) fail('조건에 도달하지 못함. log: ${os.log}');
+  }
+
+  /// 앱으로 돌아옴(OS 설정에서 권한을 바꾸고 옴 등) — 이때만 직접 맞춘다.
+  Future<void> resume(ProviderContainer c) async {
+    await c.read(clockOutNotificationSyncProvider.notifier).sync();
+    await settle(c);
   }
 
   Future<void> enable(ProviderContainer c) async {
@@ -147,7 +153,7 @@ void main() {
       await settle(c);
       expect(os.count('schedule'), 0);
       os.osStatus = OsNotificationStatus.granted;
-      await settle(c, () => os.scheduledAt != null);
+      await resume(c);
       expect(os.scheduledAt, d(16, 17, 30));
     });
 
@@ -157,7 +163,8 @@ void main() {
       await today(c).clockIn();
       await settle(c, () => os.scheduledAt != null);
       os.osStatus = OsNotificationStatus.notGranted;
-      await settle(c, () => os.scheduledAt == null);
+      await resume(c);
+      expect(os.scheduledAt, isNull);
       expect(await stored(), isNull);
     });
   });
@@ -321,22 +328,50 @@ void main() {
       expect(os.count('schedule'), 1);
     });
 
-    test('울린 뒤 퇴근 → 퇴근 취소: 저장이 지워졌으므로 한 번 더 띄운다 (N3와 같은 동작)', () async {
+    test('울린 뒤 퇴근 → 퇴근 취소: 오늘 전달된 기록이 남아 있어 다시 울리지 않는다', () async {
       final c = launch();
       await enable(c);
       await today(c).clockIn();
       await settle(c, () => os.scheduledAt == d(16, 17, 30));
       now = d(16, 18);
-      os.scheduledAt = null;
+      os.scheduledAt = null; // 17:30에 울렸다
       await today(c).clockOut();
-      await settle(c, () => c.read(todayControllerProvider).value?.clockOut != null);
+      await waitToday(c, (s) => s.clockOut != null);
       await settle(c);
-      expect(await stored(), isNull);
+      expect(await stored(), daily(17, 30), reason: '오늘 전달된 기록은 예약을 치울 때도 남긴다');
       await today(c).cancelClockOut();
-      await settle(c, () => os.shown.isNotEmpty);
-      expect(os.shown, hasLength(1));
+      await waitToday(c, (s) => s.clockOut == null);
       await settle(c);
-      expect(os.shown, hasLength(1));
+      expect(os.shown, isEmpty);
+      expect(os.count('schedule'), 1);
+    });
+
+    test('울린 뒤 알림을 껐다 켜도 다시 울리지 않는다', () async {
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c, () => os.scheduledAt == d(16, 17, 30));
+      now = d(16, 17, 40);
+      os.scheduledAt = null;
+      await c.read(settingsControllerProvider.notifier).setClockOutNotification(false);
+      await settle(c);
+      await c.read(settingsControllerProvider.notifier).setClockOutNotification(true);
+      await settle(c);
+      expect(os.shown, isEmpty);
+    });
+
+    test('울린 뒤 OS 권한을 껐다 켜고 돌아와도 다시 울리지 않는다', () async {
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c, () => os.scheduledAt == d(16, 17, 30));
+      now = d(16, 17, 40);
+      os.scheduledAt = null;
+      os.osStatus = OsNotificationStatus.notGranted;
+      await resume(c);
+      os.osStatus = OsNotificationStatus.granted;
+      await resume(c);
+      expect(os.shown, isEmpty);
     });
 
     test('울린 뒤 계획이 미래로 옮겨가면(반차 해제) 새 시각에 다시 예약한다', () async {
@@ -427,6 +462,34 @@ void main() {
     });
   });
 
+  group('앱이 밤새 멈춰 있다 돌아올 때 — 시계의 분 틱이 아직 안 왔다', () {
+    test('어제 울리고 퇴근을 안 찍은 채 다음 날 돌아와도 엉뚱한 알림을 띄우지 않는다', () async {
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c, () => os.scheduledAt == d(16, 17, 30));
+      os.scheduledAt = null; // 어제 17:30에 울렸다
+      os.log.clear();
+      // 목요일 08:00 — 앱 시계(clock)는 지금을 말하지만, 매 분 스트림(nowProvider)은 아직 어제 값에 머물러 있다.
+      now = d(17, 8);
+      await resume(c);
+      expect(os.shown, isEmpty, reason: '어제의 지난 계획을 "이미 지난 시각"으로 보고 띄우면 안 된다');
+      expect(os.count('schedule'), 0);
+      expect(await stored(), isNull, reason: '어제 기록은 치운다');
+    });
+
+    test('어제 걸어둔 예약이 아직 안 울린 채(폰이 꺼져 있었다) 다음 날 돌아오면 치운다', () async {
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c, () => os.scheduledAt == d(16, 17, 30));
+      now = d(17, 8);
+      await resume(c);
+      expect(os.scheduledAt, isNull);
+      expect(os.shown, isEmpty);
+    });
+  });
+
   group('견고함', () {
     test('디버그 시계를 옮겼으면 OS에는 실제 시각으로 건다 (앱 시각 − 오프셋)', () async {
       final c = launch();
@@ -441,14 +504,34 @@ void main() {
       expect(await stored(), daily(17, 30));
     });
 
-    test('예약이 실패해도 동기화가 죽지 않고, 다음 번에 다시 건다', () async {
+    test('예약이 실패하면 잠시 뒤 스스로 다시 건다', () async {
+      ClockOutNotificationSync.retryDelay = const Duration(milliseconds: 30);
+      addTearDown(() => ClockOutNotificationSync.retryDelay = const Duration(seconds: 20));
       final c = launch();
       await enable(c);
       os.failNextSchedule = true;
       await today(c).clockIn();
-      await settle(c);
       await settle(c, () => os.scheduledAt == d(16, 17, 30));
       expect(await stored(), daily(17, 30));
+    });
+
+    test('계속 실패해도 재시도는 몇 번에서 멈춘다 — 무한히 돌지 않는다', () async {
+      ClockOutNotificationSync.retryDelay = const Duration(milliseconds: 5);
+      addTearDown(() => ClockOutNotificationSync.retryDelay = const Duration(seconds: 20));
+      os.alwaysFailSchedule = true;
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c);
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      final attempts = os.scheduleAttempts;
+      expect(attempts, inInclusiveRange(2, ClockOutNotificationSync.maxRetries + 3));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(os.scheduleAttempts, attempts);
+      // 다시 되기 시작하면 다음 변화에서 걸린다
+      os.alwaysFailSchedule = false;
+      await today(c).setHalfDay(true);
+      await settle(c, () => os.scheduledAt == d(16, 12, 30));
     });
 
     test('주말·공휴일 근무는 예약하지 않는다', () async {

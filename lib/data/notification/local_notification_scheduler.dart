@@ -34,7 +34,11 @@ class LocalNotificationScheduler implements NotificationScheduler {
   final FlutterLocalNotificationsPlugin _plugin;
   Future<void>? _ready;
 
-  Future<void> _ensureReady() => _ready ??= _init();
+  /// 초기화는 한 번. 실패하면 다음 호출이 다시 시도한다 — 실패한 Future를 붙들고 있으면 앱을 다시 켤 때까지 알림이 죽는다.
+  Future<void> _ensureReady() => _ready ??= _init().catchError((Object e) {
+        _ready = null;
+        throw e;
+      });
 
   Future<void> _init() async {
     await _plugin.initialize(
@@ -103,16 +107,27 @@ class LocalNotificationScheduler implements NotificationScheduler {
   @override
   Future<void> schedule({required DateTime at, required String title, required String body}) async {
     await _ensureReady();
-    // 플러그인은 과거 시각 예약을 거절한다. 분 경계에서 막 지났으면 지금 띄운다 — 알림이 통째로 사라지는 것보다 낫다.
-    if (!at.isAfter(DateTime.now())) return showNow(title: title, body: body);
-    await _plugin.zonedSchedule(
-      id: notificationId,
-      title: title,
-      body: body,
-      scheduledDate: toScheduledDate(at),
-      notificationDetails: _details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
+    // 플러그인은 과거 시각 예약을 거절한다(ArgumentError). 분 경계에서 막 지났으면 지금 띄운다 — 알림이 통째로 사라지는 것보다 낫다.
+    // 이때 앞서 걸어둔 예약은 먼저 치운다 — Android는 같은 id의 "표시"가 "예약"을 대체하지 않아 나중에 한 번 더 울린다.
+    Future<void> showInstead() async {
+      await cancel();
+      await showNow(title: title, body: body);
+    }
+
+    if (!at.isAfter(DateTime.now())) return showInstead();
+    try {
+      await _plugin.zonedSchedule(
+        id: notificationId,
+        title: title,
+        body: body,
+        scheduledDate: toScheduledDate(at),
+        notificationDetails: _details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    } on ArgumentError {
+      // 위 확인과 플러그인의 확인 사이에 시각이 지났다.
+      await showInstead();
+    }
   }
 
   @override
@@ -136,6 +151,12 @@ class LocalNotificationScheduler implements NotificationScheduler {
 
   /// 기기 시각 → 플러그인이 받는 절대 시각. UTC로 넘긴다 — 한 번 울리는 알림은 "그 순간"만 맞으면 되고,
   /// 기기의 시간대 이름을 알아낼 필요가 없어 시간대 DB 초기화·조회가 실패할 일이 없다. (매일 반복 알림을 만들게 되면 다시 본다.)
+  ///
+  /// 초 아래는 버린다 — 네이티브로는 ISO 문자열로 넘어가는데 마이크로초 6자리는 iOS의 날짜 파서가 못 읽을 수 있다
+  /// (디버그 시계 오프셋을 빼면 마이크로초가 붙는다).
   @visibleForTesting
-  static tz.TZDateTime toScheduledDate(DateTime at) => tz.TZDateTime.from(at, tz.UTC);
+  static tz.TZDateTime toScheduledDate(DateTime at) => tz.TZDateTime.fromMillisecondsSinceEpoch(
+        tz.UTC,
+        at.millisecondsSinceEpoch - at.millisecondsSinceEpoch % Duration.millisecondsPerSecond,
+      );
 }

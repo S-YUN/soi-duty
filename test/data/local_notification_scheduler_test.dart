@@ -15,4 +15,12 @@ void main() {
     expect(LocalNotificationScheduler.notificationId, 1);
     expect(LocalNotificationScheduler.channelId, 'clock_out');
   });
+
+  test('초 아래(밀리초·마이크로초)는 버린다 — 디버그 시계 오프셋을 뺀 시각도 네이티브 파서가 읽는다', () {
+    final at = DateTime(2026, 9, 16, 17, 30, 12, 345, 678);
+    final scheduled = LocalNotificationScheduler.toScheduledDate(at);
+    expect(scheduled.millisecondsSinceEpoch, DateTime(2026, 9, 16, 17, 30, 12).millisecondsSinceEpoch);
+    expect(scheduled.microsecond, 0);
+    expect(scheduled.toIso8601String(), endsWith('.000Z'));
+  });
 }

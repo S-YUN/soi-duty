@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -23,7 +25,8 @@ part 'clock_out_notification_sync.g.dart';
 /// ```
 ///
 /// "저장된 알림"(`NotificationStateRepository.lastNotice`)의 시각이 지났으면 OS가 이미 띄운 것으로 본다.
-/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나 지난 기록을 고쳐도 같은 알림이 또 울리지 않는다.
+/// 그래서 퇴근 시각이 지난 뒤 앱을 다시 켜거나, 지난 기록을 고치거나, 알림을 껐다 켜거나, 퇴근을 취소해도 같은 알림이 또 울리지 않는다
+/// (오늘 전달된 기록은 예약을 치울 때도 지우지 않는다).
 /// 계획이 **미래로 옮겨가면**(반차 해제, 출근 시각을 늦춤) 이미 울렸어도 새로 예약한다 — 앞의 알림이 틀린 데이터로 울린 것이다.
 @Riverpod(keepAlive: true)
 class ClockOutNotificationSync extends _$ClockOutNotificationSync {
@@ -35,8 +38,17 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
   /// 저장된 값만 믿지 않고 한 번은 다시 건다(강제 종료 등으로 예약이 사라졌을 수 있다).
   var _verified = false;
 
+  /// 맞추다 실패하면(플러그인·OS 오류) 잠시 뒤 스스로 다시 시도한다 — 기록이 다시 바뀌거나 앱으로 돌아올 때까지 기다리면
+  /// 그 사이 퇴근 시각이 지나간다. 연달아 [maxRetries]번까지만.
+  @visibleForTesting
+  static Duration retryDelay = const Duration(seconds: 20);
+  static const maxRetries = 3;
+  var _failures = 0;
+  Timer? _retryTimer;
+
   @override
   void build() {
+    ref.onDispose(() => _retryTimer?.cancel());
     // 계획이 실제로 달라졌을 때만 — 매 분 도는 시계 때문에 같은 값으로 다시 계산되는 것은 건너뛴다.
     ref.listen(clockOutNoticePlanProvider, (previous, next) {
       if (!next.hasValue || next.isLoading) return;
@@ -65,8 +77,17 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
       _dirty = false;
       try {
         await _run();
+        _failures = 0;
+        _retryTimer?.cancel();
+        _retryTimer = null;
       } catch (_) {
         // 알림은 부가 기능이다 — 플러그인·OS 오류가 출퇴근 기록을 막으면 안 된다. 다음 sync가 다시 맞춘다.
+        // 중간에 실패했으면 OS 예약과 저장된 값이 어긋났을 수 있다 — 다음 번엔 저장된 값을 믿지 않고 다시 건다(또는 치운다).
+        _verified = false;
+        if (++_failures <= maxRetries) {
+          _retryTimer?.cancel();
+          _retryTimer = Timer(retryDelay, sync);
+        }
       }
     }
   }
@@ -77,21 +98,36 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
     // 저장소에서 직접 읽는다 — 방금 켠 설정을 스트림이 아직 못 봤을 수 있다.
     final settings = await ref.read(appSettingsRepositoryProvider).read();
     final last = await store.lastNotice();
+    final now = minuteOnly(ref.read(clockProvider)());
+
+    /// 오늘 이미 전달된 알림 — 예약 시각이 지났거나(OS가 띄웠다) 바로 띄웠다. 하루에 "바로 띄우기"는 이것 때문에 한 번뿐이다.
+    final deliveredToday = last != null && dateOnly(last.at) == dateOnly(now) && !last.at.isAfter(now);
 
     Future<void> clear() async {
       // 걸어둔 게 없다는 걸 아는 동안은 OS를 다시 부르지 않는다(알림을 안 쓰는 사람의 기록 변경마다 부르지 않게).
-      if (last == null && _verified) return;
+      if ((last == null || deliveredToday) && _verified) return;
       await scheduler.cancel();
-      await store.saveLastNotice(null);
+      // 오늘 전달된 기록은 남긴다 — 지우면 알림을 껐다 켜거나 퇴근을 취소했을 때 같은 알림이 한 번 더 울린다.
+      if (!deliveredToday) await store.saveLastNotice(null);
       _verified = true;
     }
 
     if (!settings.clockOutNotificationEnabled) return clear();
     if (await scheduler.status() != OsNotificationStatus.granted) return clear();
-    final plan = await ref.read(clockOutNoticePlanProvider.future);
+
+    // 계획은 **지금 시각의 날짜**로 여기서 센다. 프로바이더(`clockOutNoticePlan`)의 값은 다시 맞출 때를 알려주는 신호일 뿐이다 —
+    // 그 값의 "오늘"은 매 분 도는 시계에서 오는데, 앱이 밤새 멈춰 있다 돌아오면 다음 분이 돌 때까지 어제에 머문다.
+    // 그 상태로 맞추면 어제의 지난 계획을 "이미 지난 시각"으로 보고 엉뚱한 알림을 바로 띄운다.
+    final records = await ref.read(allRecordsProvider.future);
+    final firstRecordDate = await ref.read(firstRecordDateProvider.future);
+    final plan = planClockOutNotice(
+      records: records,
+      today: now,
+      rules: ref.read(workRulesProvider),
+      firstRecordDate: effectiveFirstRecordDate(firstRecordDate, now),
+    );
     if (plan == null) return clear();
 
-    final now = minuteOnly(ref.read(clockProvider)());
     final (title, body) = NotificationTexts.notice(plan.kind);
 
     if (plan.at.isAfter(now)) {
@@ -104,12 +140,16 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
     }
 
     // 계획 시각이 이미 지났다 (출근 시각을 앞으로 고쳤다, 퇴근 시각 뒤에 알림을 켰다 …).
-    final deliveredToday = last != null && dateOnly(last.at) == dateOnly(now) && !last.at.isAfter(now);
-    _verified = true;
-    if (deliveredToday) return;
+    if (deliveredToday) {
+      // 미래로 걸어둔 예약은 없다(저장된 값이 과거다). 앱을 막 켰다면 한 번은 치워 둔다.
+      if (!_verified) await scheduler.cancel();
+      _verified = true;
+      return;
+    }
     await scheduler.cancel();
     await scheduler.showNow(title: title, body: body);
     await store.saveLastNotice(ClockOutNotice(plan.kind, now));
+    _verified = true;
   }
 
   Duration get _debugOffset => kDebugMode ? ref.read(debugClockOffsetProvider) : Duration.zero;

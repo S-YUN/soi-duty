@@ -65,6 +65,11 @@ void main() {
       expect(under, daily(16, 18));
     });
 
+    test('알림 시각이 자정을 넘기면 없다 — 16:30 출근은 다음 날 00:30', () {
+      expect(plan([...full([14, 15]), rec(16, inH: 16, inM: 30)], 16), isNull);
+      expect(plan([...full([14, 15]), rec(16, inH: 15, inM: 59)], 16), daily(16, 23, 59));
+    });
+
     test('월요일(첫 근무일)', () {
       expect(plan([rec(14, inH: 9, inM: 12)], 14), daily(14, 18, 12));
     });

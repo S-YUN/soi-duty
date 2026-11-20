@@ -23,11 +23,13 @@ NotificationScheduler notificationScheduler(Ref ref) => LocalNotificationSchedul
 NotificationStateRepository notificationStateRepository(Ref ref) =>
     DriftNotificationStateRepository(ref.watch(appDatabaseProvider));
 
-/// 오늘 날짜(시분 0). 시계는 매 분 돌지만 알림 계획은 날짜가 바뀔 때만 다시 세면 된다.
+/// 오늘 날짜(시분 0). 시계가 매 분 돌 때마다 다시 계산되지만 값은 날짜가 바뀔 때만 달라진다 —
+/// 동기화는 계획이 실제로 달라졌을 때만 움직인다(`ClockOutNotificationSync.build`의 비교).
 @Riverpod(keepAlive: true)
 Future<DateTime> todayDate(Ref ref) async => dateOnly(await ref.watch(nowProvider.future));
 
 /// 오늘 보낼 퇴근 알림(무엇을 언제). 근무 중이 아니거나 보낼 게 없으면 null.
+/// 동기화에는 **다시 맞출 때를 알리는 신호**로만 쓰인다 — 실제 예약에 쓰는 계획은 동기화가 그 순간의 시각으로 다시 센다.
 /// 기록·첫 기록일이 아직 안 온 동안은 loading — "없음"과 구분해야 시작할 때 예약을 지우지 않는다.
 @Riverpod(keepAlive: true)
 Future<ClockOutNotice?> clockOutNoticePlan(Ref ref) async {

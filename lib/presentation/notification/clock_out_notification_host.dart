@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/providers/clock_provider.dart';
 import '../../core/providers/notification_providers.dart';
 import 'clock_out_notification_sync.dart';
 
@@ -25,6 +26,9 @@ class _ClockOutNotificationHostState extends ConsumerState<ClockOutNotificationH
   }
 
   void _onResume() {
+    // 매 분 도는 시계는 앱이 멈춰 있던 동안 같이 멈춘다 — 돌아오면 바로 지금 시각을 다시 흘려
+    // 화면(경과 시간·날짜)과 알림 계획이 다음 분을 기다리지 않게 한다.
+    ref.invalidate(nowProvider);
     ref.invalidate(notificationPermissionProvider);
     ref.read(clockOutNotificationSyncProvider.notifier).sync();
   }

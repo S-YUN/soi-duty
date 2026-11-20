@@ -48,6 +48,7 @@ class ClockOutNotice {
 /// ```
 ///
 /// 그날 기준시간이 0(시간공제로 다 빠진 날)이면 daily는 없다 — 채울 게 없는 날 출근하자마자 울리지 않게.
+/// 알림 시각이 오늘을 넘기면(자정 뒤) 일일·주간 모두 없다.
 /// 시간 출장 범위는 보지 않는다(기록일 뿐이다). 오늘 몫(균등 배분)도 쓰지 않는다 — 알림 시각이 매일 달라져 헷갈린다.
 /// [firstRecordDate]는 호출부가 `effectiveFirstRecordDate`를 먼저 적용해 넘긴다.
 ClockOutNotice? planClockOutNotice({
@@ -63,7 +64,8 @@ ClockOutNotice? planClockOutNotice({
 
   final standard = dayStandardMinutes(record, rules);
   final dailyAt = minuteOnly(expectedClockOut(record, standard, rules)!);
-  final daily = standard > 0 ? ClockOutNotice(ClockOutNoticeKind.daily, dailyAt) : null;
+  // 자정을 넘기는 시각(16:30 출근 → 다음 날 00:30)은 보내지 않는다 — 날이 바뀌면 앱은 그날을 더는 "근무 중"으로 보지 않는다.
+  final daily = standard > 0 && dateOnly(dailyAt) == day ? ClockOutNotice(ClockOutNoticeKind.daily, dailyAt) : null;
 
   final remaining = weekRemainingBeforeToday(
     records: records,
