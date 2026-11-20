@@ -7,6 +7,7 @@ import '../../core/providers/database_providers.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_text_styles.dart';
 import '../debug/seed_picker_sheet.dart';
+import '../notification/notification_prompt.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
 import '../../domain/rules/work_rules.dart';
@@ -37,7 +38,14 @@ class TodayScreen extends ConsumerWidget {
         state: state,
         rules: rules,
         callbacks: TodayCallbacks(
-          onClockIn: controller.clockIn,
+          onClockIn: () async {
+            // 주말·공휴일 근무는 그날 알림이 없다 — 권한은 다음 평일 출근 때 묻는다.
+            final countsAsWorkday = !state.isWeekend && !state.isHoliday;
+            await controller.clockIn();
+            if (context.mounted) {
+              await maybePromptClockOutNotification(context, ref, countsAsWorkday: countsAsWorkday);
+            }
+          },
           onClockOut: (deduct) => controller.clockOut(deductRemaining: deduct),
           onHalfDayChanged: controller.setHalfDay,
           onDayTypeChanged: controller.setDayType,

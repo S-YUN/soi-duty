@@ -14,6 +14,30 @@ abstract final class NotificationTexts {
   static const weeklyBody = '이제 퇴근하셔도 돼요. 즐거운 휴일 보내세요!';
   static const weeklyEarlyBody = '이제 퇴근하셔도 돼요. 남은 날은 더 채우지 않아도 돼요!';
 
+  // 권한 묻기 (P1) — 첫 평일 출근 직후
+  static const appName = '소이듀티';
+  static const promptTitle = '퇴근할 때 알려드릴까요?';
+  static const promptMessage = '오늘 채울 시간을 다 채우면 퇴근 알림을 보내드려요.';
+  static const promptAccept = '알림 받기';
+  static const promptDecline = '안 받을래요';
+
+  /// P2 — 거절 직후
+  static const declinedToast = '알림은 설정에서 언제든 켤 수 있어요';
+
+  /// P5 — OS 권한 창에서 거절한 직후 (P1 수락 뒤, 또는 설정 토글을 켠 뒤)
+  static const osDeniedToast = '기기 설정에서 알림을 허용해야 받을 수 있어요';
+
+  // 설정 화면 (P3 · P4)
+  static const settingsSection = '알림';
+  static const settingsLabel = '퇴근 알림';
+  static const settingsOnSub = '그날 채울 시간을 다 채우면 알려드려요';
+  static const settingsOffSub = '알림을 켜면 퇴근할 시간에 알려드려요';
+  static const osOffSub = '기기 설정에서 알림이 꺼져 있어요';
+  static const osOffTitle = '알림이 꺼져 있어요';
+  static const osOffMessage = '기기 설정에서 소이듀티 알림을 허용하면 퇴근할 시간에 알려드려요.';
+  static const openSettings = '설정 열기';
+  static const openSettingsFailed = '기기 설정을 열 수 없어요';
+
   static (String title, String body) notice(ClockOutNoticeKind kind) => switch (kind) {
         ClockOutNoticeKind.daily => (dailyTitle, dailyBody),
         ClockOutNoticeKind.weekly => (weeklyTitle, weeklyBody),

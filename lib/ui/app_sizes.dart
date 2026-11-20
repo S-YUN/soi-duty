@@ -284,7 +284,24 @@ abstract final class AppSizes {
   static double get plannedLineTop => 3.w;
   static EdgeInsets get leaveDividerMargin => EdgeInsets.fromLTRB(0, 14.w, 0, 6.w);
 
+  // 알림 미리보기 카드 (권한 묻기 다이얼로그 안, 핸드오프 6 §8)
+  static EdgeInsets get notifyPreviewPadding => EdgeInsets.symmetric(vertical: 11.w, horizontal: 12.w);
+  static double get notifyPreviewRadius => 14.w;
+  static double get notifyPreviewIcon => 30.w;
+  static double get notifyPreviewIconRadius => 8.w;
+  static double get notifyPreviewGap => 10.w;
+  static double get notifyPreviewTitleTop => 2.w;
+
+  // 설정 토글 (핸드오프 6 §9)
+  static double get switchWidth => 51.w;
+  static double get switchHeight => 31.w;
+  static double get switchKnob => 27.w;
+  static double get switchPadding => 2.w;
+  static Offset get switchKnobShadowOffset => Offset(0, 1.w);
+  static double get switchKnobShadowBlur => 3.w;
+
   // 확인 다이얼로그
+  static double get dialogBodyTop => 14.w;
   static EdgeInsets get dialogPadding => EdgeInsets.all(20.w);
   static double get dialogMessageTop => 8.w;
   static double get dialogButtonsTop => 18.w;
@@ -312,6 +329,7 @@ abstract final class AppDurations {
   static const wheelItem = Duration(milliseconds: 120);
   static const pressedOpacity = Duration(milliseconds: 100);
   static const tabSwipe = Duration(milliseconds: 220);
+  static const switchSlide = Duration(milliseconds: 180);
 }
 
 abstract final class AppScales {
@@ -319,6 +337,8 @@ abstract final class AppScales {
   static const rowPressed = 0.99;
   /// 토스트가 떠오르는 거리 — 자기 높이 대비.
   static const toastSlide = 0.35;
+  /// 알림 미리보기의 앱 아이콘 — 로고 둘레 안쪽 여백(한 변 대비).
+  static const notifyPreviewIconInset = 0.11;
 }
 
 abstract final class AppCurves {

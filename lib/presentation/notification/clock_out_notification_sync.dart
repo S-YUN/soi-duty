@@ -74,7 +74,8 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
   Future<void> _run() async {
     final scheduler = ref.read(notificationSchedulerProvider);
     final store = ref.read(notificationStateRepositoryProvider);
-    final settings = await ref.read(appSettingsProvider.future);
+    // 저장소에서 직접 읽는다 — 방금 켠 설정을 스트림이 아직 못 봤을 수 있다.
+    final settings = await ref.read(appSettingsRepositoryProvider).read();
     final last = await store.lastNotice();
 
     Future<void> clear() async {

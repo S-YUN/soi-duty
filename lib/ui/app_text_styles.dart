@@ -196,6 +196,12 @@ abstract final class AppTextStyles {
   /// 연차 카드 제목 아래 "10월 26일 기준"
   static TextStyle get leaveBaseLine => _style(13, FontWeight.w400, height: 1.45, color: AppColors.subtle);
 
+  // 알림 미리보기 카드
+  static TextStyle get notifyPreviewMeta => _style(12, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get notifyPreviewTitle => _style(14, FontWeight.w600);
+  /// 설정 행 보조 설명 — OS 권한이 꺼져 있다는 경고
+  static TextStyle get settingsRowSubWarning => _style(13, FontWeight.w400, height: 1.45, color: AppColors.minus);
+
   // 확인 다이얼로그
   static TextStyle get dialogTitle => _style(16, FontWeight.w600);
   static TextStyle get dialogMessage => _style(14, FontWeight.w400, height: 1.5, color: AppColors.subtle);

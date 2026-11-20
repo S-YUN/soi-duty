@@ -11,21 +11,26 @@ class SettingsRow extends StatefulWidget {
     super.key,
     required this.label,
     this.sub,
+    this.subWarning = false,
     this.value,
     this.valueSet = false,
     this.trailing,
     this.chevron = false,
+    this.chevronColor,
     this.onTap,
     this.padding,
   });
 
   final String label;
   final String? sub;
+  /// 보조 설명을 경고색으로 — OS 권한이 꺼져 있을 때.
+  final bool subWarning;
   final String? value;
   /// 값이 설정된 상태(브랜드색 굵게)인지, "사용 안 함"(회색)인지.
   final bool valueSet;
   final Widget? trailing;
   final bool chevron;
+  final Color? chevronColor;
   final VoidCallback? onTap;
   final EdgeInsets? padding;
 
@@ -61,7 +66,10 @@ class _SettingsRowState extends State<SettingsRow> {
                       Text(widget.label, style: AppTextStyles.settingsRowLabel),
                       if (widget.sub != null) ...[
                         SizedBox(height: AppSizes.settingsSubTop),
-                        Text(widget.sub!, style: AppTextStyles.settingsRowSub),
+                        Text(
+                          widget.sub!,
+                          style: widget.subWarning ? AppTextStyles.settingsRowSubWarning : AppTextStyles.settingsRowSub,
+                        ),
                       ],
                     ],
                   ),
@@ -76,7 +84,7 @@ class _SettingsRowState extends State<SettingsRow> {
                 if (widget.trailing != null) widget.trailing!,
                 if (widget.chevron) ...[
                   SizedBox(width: AppSizes.settingsRowGap),
-                  ChevronIcon(size: AppSizes.chevron, color: AppColors.wheelUnselected, stroke: AppSizes.chevronStroke),
+                  ChevronIcon(size: AppSizes.chevron, color: widget.chevronColor ?? AppColors.wheelUnselected, stroke: AppSizes.chevronStroke),
                 ],
               ],
             ),

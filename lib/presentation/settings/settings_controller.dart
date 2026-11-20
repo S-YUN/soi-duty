@@ -57,8 +57,10 @@ class SettingsController extends _$SettingsController {
   Future<void> restoreBackup(BackupSnapshot snapshot) => ref.read(backupRepositoryProvider).restore(snapshot);
 
   Future<void> _update(AppSettings Function(AppSettings) change) async {
-    final current = await ref.read(appSettingsProvider.future);
-    await ref.read(appSettingsRepositoryProvider).save(change(current));
+    // 저장소에서 직접 읽는다 — 스트림(appSettingsProvider)의 값은 방금 한 저장을 아직 못 봤을 수 있어,
+    // "물어봤다" 표시 → 알림 켜기처럼 연달아 저장하면 앞의 저장을 덮어쓴다.
+    final repo = ref.read(appSettingsRepositoryProvider);
+    await repo.save(change(await repo.read()));
   }
 }
 

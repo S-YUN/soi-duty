@@ -6,11 +6,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/providers/app_info_provider.dart';
 import '../../core/providers/clock_provider.dart';
 import '../../core/providers/database_providers.dart';
+import '../../core/providers/notification_providers.dart';
 import '../../domain/model/app_settings.dart';
 import '../../domain/rules/work_rules.dart';
 import '../../ui/app_colors.dart';
 import '../../ui/app_sizes.dart';
 import '../../ui/app_text_styles.dart';
+import '../notification/notification_prompt.dart';
+import '../notification/notification_texts.dart';
 import '../shared/app_toast.dart';
 import '../shared/confirm_dialog.dart';
 import '../shared/number_input_sheet.dart';
@@ -21,6 +24,7 @@ import 'settings_texts.dart';
 import 'widgets/segment_toggle.dart';
 import 'widgets/settings_row.dart';
 import 'widgets/settings_section.dart';
+import 'widgets/soi_switch.dart';
 
 class SettingsCallbacks {
   const SettingsCallbacks({
@@ -31,6 +35,8 @@ class SettingsCallbacks {
     required this.onExport,
     required this.onImport,
     required this.onPrivacy,
+    required this.onNotificationToggle,
+    required this.onOpenNotificationSettings,
   });
 
   final VoidCallback onBack;
@@ -40,6 +46,10 @@ class SettingsCallbacks {
   final VoidCallback onExport;
   final VoidCallback onImport;
   final VoidCallback onPrivacy;
+  /// 퇴근 알림 켜기/끄기 — 인자는 바꿀 값.
+  final ValueChanged<bool> onNotificationToggle;
+  /// OS 권한이 꺼져 있을 때의 행 — 안내 다이얼로그 → OS 설정.
+  final VoidCallback onOpenNotificationSettings;
 }
 
 /// 설정 화면. 값은 스트림으로 읽고, 연차·시급은 숫자 시트로 받는다.
@@ -56,8 +66,11 @@ class SettingsScreen extends ConsumerWidget {
     final year = ref.watch(clockProvider)().year;
     final rules = ref.watch(workRulesProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
+    // 권한 확인이 끝나기 전·실패했을 때는 토글로 둔다 — 켜는 순간 다시 확인한다.
+    final permission = ref.watch(notificationPermissionProvider).value ?? NotificationPermission.notDetermined;
     return SettingsView(
       settings: settings,
+      notificationPermission: permission,
       year: year,
       version: version,
       rules: rules,
@@ -89,6 +102,9 @@ class SettingsScreen extends ConsumerWidget {
         onExport: () => _export(context, ref),
         onImport: () => _import(context, ref),
         onPrivacy: () => _openPrivacy(context),
+        onNotificationToggle: (on) =>
+            on ? enableClockOutNotification(context, ref) : controller.setClockOutNotification(false),
+        onOpenNotificationSettings: () => promptOpenNotificationSettings(context, ref),
       ),
     );
   }
@@ -157,7 +173,8 @@ Future<void> _openPrivacy(BuildContext context) async {
   if (!opened && context.mounted) showAppToast(context, SettingsTexts.linkFailed);
 }
 
-/// 설정 화면의 순수 UI. 헤더(뒤로 · 제목) → 섹션 다섯 개.
+/// 설정 화면의 순수 UI. 헤더(뒤로 · 제목) → 섹션 여섯 개 (캘린더 · 알림 · 연차 · 수당 · 데이터 · 앱 정보 —
+/// 앱 동작 설정 → 값 입력 → 데이터·정보 순, 핸드오프 6 §9).
 class SettingsView extends StatelessWidget {
   const SettingsView({
     super.key,
@@ -165,6 +182,7 @@ class SettingsView extends StatelessWidget {
     required this.year,
     required this.version,
     required this.callbacks,
+    this.notificationPermission = NotificationPermission.notDetermined,
     this.rules = const WorkRules(),
   });
 
@@ -173,6 +191,9 @@ class SettingsView extends StatelessWidget {
   final int year;
   final String version;
   final SettingsCallbacks callbacks;
+
+  /// OS 알림 권한. `denied`면 토글 대신 "설정 열기" 행 — 앱에서는 켤 수 없다.
+  final NotificationPermission notificationPermission;
   final WorkRules rules;
 
   @override
@@ -219,6 +240,33 @@ class SettingsView extends StatelessWidget {
                             onChanged: callbacks.onWeekStart,
                           ),
                         ),
+                      ],
+                    ),
+                    SizedBox(height: AppSizes.settingsSectionGap),
+                    SettingsSection(
+                      label: NotificationTexts.settingsSection,
+                      rows: [
+                        if (notificationPermission == NotificationPermission.denied)
+                          SettingsRow(
+                            label: NotificationTexts.settingsLabel,
+                            sub: NotificationTexts.osOffSub,
+                            subWarning: true,
+                            value: NotificationTexts.openSettings,
+                            valueSet: true,
+                            chevron: true,
+                            chevronColor: AppColors.brand,
+                            onTap: callbacks.onOpenNotificationSettings,
+                          )
+                        else
+                          SettingsRow(
+                            label: NotificationTexts.settingsLabel,
+                            sub: settings.clockOutNotificationEnabled
+                                ? NotificationTexts.settingsOnSub
+                                : NotificationTexts.settingsOffSub,
+                            trailing: SoiSwitch(value: settings.clockOutNotificationEnabled),
+                            // 행 어디를 눌러도 토글된다.
+                            onTap: () => callbacks.onNotificationToggle(!settings.clockOutNotificationEnabled),
+                          ),
                       ],
                     ),
                     SizedBox(height: AppSizes.settingsSectionGap),

@@ -32,6 +32,7 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
   Stream<AppSettings> watch() => _db.select(_db.settings).watch().map(fromRows);
 
   /// 일회성 읽기. 스트림의 `.first`는 위젯 테스트의 가짜 시간에서 값을 내지 않아 쓰지 않는다.
+  @override
   Future<AppSettings> read() async => fromRows(await _db.select(_db.settings).get());
 
   @override
