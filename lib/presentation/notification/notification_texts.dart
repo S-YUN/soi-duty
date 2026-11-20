@@ -38,13 +38,16 @@ abstract final class NotificationTexts {
   static const openSettings = '설정 열기';
   static const openSettingsFailed = '기기 설정을 열 수 없어요';
 
-  // 정시에 받기 — Android "알람 및 리마인더" 권한 (2026-11-20, 핸드오프에 없는 화면이라 문구는 임시).
-  // 이 권한이 없으면 OS가 알림을 최대 1시간 늦춘다.
-  static const exactTitle = '정시에 알려드리려면';
-  static const exactMessage = "기기 설정에서 '알람 및 리마인더'를 허용해 주세요. 허용하지 않으면 알림이 최대 1시간 늦게 올 수 있어요.";
+  // Android "알람 및 리마인더" 권한 (2026-11-20, 핸드오프에 없는 화면이라 문구는 임시).
+  // 이 권한이 없으면 OS가 알림을 최대 1시간 늦춘다 — 늦게 보내느니 보내지 않기로 해서, 권한이 없으면 알림이 오지 않는다.
+  static const exactTitle = '하나만 더 허용해 주세요';
+  static const exactMessage = "퇴근 시각에 맞춰 알려드리려면 기기 설정에서 '알람 및 리마인더'를 허용해야 해요. 허용하지 않으면 알림이 오지 않아요.";
   static const exactLater = '나중에';
-  static const exactRowLabel = '정시에 받기';
-  static const exactRowSub = '지금은 최대 1시간 늦게 올 수 있어요';
+  static const exactRowLabel = '알람 및 리마인더';
+  static const exactRowSub = '허용해야 퇴근 알림이 와요';
+
+  /// "나중에"·허용하지 않고 돌아옴 — 알림이 오지 않는다는 걸 한 번 더 알린다.
+  static const exactDeniedToast = "'알람 및 리마인더'를 허용해야 알림이 와요";
 
   static (String title, String body) notice(ClockOutNoticeKind kind) => switch (kind) {
         ClockOutNoticeKind.daily => (dailyTitle, dailyBody),

@@ -127,6 +127,10 @@ Future<void> _testNotification(BuildContext context, WidgetRef ref, {required Du
       await scheduler.showNow(title: title, body: body);
       result = '보냈어요';
     } else {
+      // 정시 방식으로만 건다 — "알람 및 리마인더"가 꺼져 있으면 OS 설정을 먼저 연다.
+      if (!await scheduler.canScheduleExact() && !await scheduler.requestExactAlarm()) {
+        throw StateError("'알람 및 리마인더' 권한이 없어요");
+      }
       final at = DateTime.now().add(delay);
       await scheduler.schedule(at: at, title: title, body: body);
       result = '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}:${at.second.toString().padLeft(2, '0')}쯤 울려요';

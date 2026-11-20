@@ -303,8 +303,16 @@ void main() {
     });
   });
 
-  group('정시에 받기 — Android "알람 및 리마인더"', () {
-    testWidgets('알림 받기 → OS 허용 → 정시 권한이 없으면 안내 → 설정 열기 → 허용하고 돌아오면 정시 방식으로 다시 건다', (tester) async {
+  group('Android "알람 및 리마인더" — 정시에 못 울리면 보내지 않는다', () {
+    Future<void> seedWorking() async {
+      os.osStatus = OsNotificationStatus.granted;
+      await DriftAppSettingsRepository(db).save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
+      await db.into(db.workRecords).insert(
+            WorkRecordsCompanion.insert(date: '2026-09-16', clockIn: Value(d(16, 9)), type: WorkType.normal),
+          );
+    }
+
+    testWidgets('알림 받기 → OS 허용 → 이 권한이 없으면 안내가 뜨고, 그동안은 예약하지 않는다. 허용하고 돌아오면 그때 건다', (tester) async {
       os.exactAllowed = false;
       os.exactAfterRequest = true;
       await pump(tester, today);
@@ -312,20 +320,18 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('알림 받기'));
       await settle(tester);
-      expect(find.text('정시에 알려드리려면'), findsOneWidget);
-      expect(os.scheduledAt, d(16, 18, 12));
-      expect(os.scheduledExact, isFalse, reason: '권한이 없는 동안은 늦을 수 있는 방식으로라도 건다');
-      final before = os.count('schedule');
+      expect(find.text('하나만 더 허용해 주세요'), findsOneWidget);
+      expect(find.textContaining('허용하지 않으면 알림이 오지 않아요'), findsOneWidget);
+      expect(os.scheduledAt, isNull, reason: '늦게 오는 방식으로는 걸지 않는다');
       await tester.tap(find.text('설정 열기'));
       await settle(tester);
       expect(os.exactRequestCount, 1);
-      expect(os.count('schedule'), greaterThan(before), reason: '같은 시각이어도 다시 걸어야 방식이 바뀐다');
-      expect(os.scheduledExact, isTrue);
       expect(os.scheduledAt, d(16, 18, 12));
+      expect(find.text("'알람 및 리마인더'를 허용해야 알림이 와요"), findsNothing);
       await finish(tester);
     });
 
-    testWidgets('"나중에" → 설정을 열지 않고 알림은 그대로 걸려 있다', (tester) async {
+    testWidgets('"나중에" → 설정을 열지 않고, 알림이 오지 않는다는 토스트. 예약 없음 (켜짐은 남는다)', (tester) async {
       os.exactAllowed = false;
       await pump(tester, today);
       await tester.tap(find.text('출근하기'));
@@ -335,23 +341,40 @@ void main() {
       await tester.tap(find.text('나중에'));
       await settle(tester);
       expect(os.exactRequestCount, 0);
-      expect(os.scheduledAt, d(16, 18, 12));
+      expect(os.scheduledAt, isNull);
+      expect(find.text("'알람 및 리마인더'를 허용해야 알림이 와요"), findsOneWidget);
       expect((await settings()).clockOutNotificationEnabled, isTrue);
       await finish(tester);
     });
 
-    testWidgets('정시 권한이 이미 있으면(Android 13 이하, iOS) 안내가 없다', (tester) async {
+    testWidgets('설정을 열었지만 허용하지 않고 돌아오면 토스트, 예약 없음', (tester) async {
+      os.exactAllowed = false;
+      os.exactAfterRequest = false;
       await pump(tester, today);
       await tester.tap(find.text('출근하기'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('알림 받기'));
       await settle(tester);
-      expect(find.text('정시에 알려드리려면'), findsNothing);
-      expect(os.scheduledExact, isTrue);
+      await tester.tap(find.text('설정 열기'));
+      await settle(tester);
+      expect(os.exactRequestCount, 1);
+      expect(os.scheduledAt, isNull);
+      expect(find.text("'알람 및 리마인더'를 허용해야 알림이 와요"), findsOneWidget);
       await finish(tester);
     });
 
-    testWidgets('OS 알림 권한을 거절하면 정시 안내는 뜨지 않는다', (tester) async {
+    testWidgets('이 권한이 이미 있으면(Android 13 이하, iOS) 안내 없이 바로 걸린다', (tester) async {
+      await pump(tester, today);
+      await tester.tap(find.text('출근하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('알림 받기'));
+      await settle(tester);
+      expect(find.text('하나만 더 허용해 주세요'), findsNothing);
+      expect(os.scheduledAt, d(16, 18, 12));
+      await finish(tester);
+    });
+
+    testWidgets('OS 알림 권한을 거절하면 이 안내는 뜨지 않는다', (tester) async {
       os.requestResult = false;
       os.exactAllowed = false;
       await pump(tester, today);
@@ -359,46 +382,52 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('알림 받기'));
       await settle(tester);
-      expect(find.text('정시에 알려드리려면'), findsNothing);
+      expect(find.text('하나만 더 허용해 주세요'), findsNothing);
       await finish(tester);
     });
 
-    testWidgets('설정의 "정시에 받기" 행 → 안내 → 설정 열기. OS 설정에서 켜고 돌아오면 행이 사라지고 정시로 다시 건다', (tester) async {
-      os.osStatus = OsNotificationStatus.granted;
+    testWidgets('설정: 켜 뒀는데 이 권한이 없으면 행이 보이고 예약이 없다 → 안내 → 설정 열기 → 허용하면 행이 사라지고 걸린다', (tester) async {
+      await seedWorking();
       os.exactAllowed = false;
-      await DriftAppSettingsRepository(db).save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
-      await db.into(db.workRecords).insert(
-            WorkRecordsCompanion.insert(date: '2026-09-16', clockIn: Value(d(16, 9)), type: WorkType.normal),
-          );
       await pump(tester, const SettingsScreen());
-      expect(find.text('정시에 받기'), findsOneWidget);
-      expect(os.scheduledExact, isFalse);
-      await tester.tap(find.text('정시에 받기'));
+      expect(find.text('알람 및 리마인더'), findsOneWidget);
+      expect(find.text('허용해야 퇴근 알림이 와요'), findsOneWidget);
+      expect(os.scheduledAt, isNull);
+      await tester.tap(find.text('알람 및 리마인더'));
       await tester.pumpAndSettle();
-      expect(find.text('정시에 알려드리려면'), findsOneWidget);
+      expect(find.text('하나만 더 허용해 주세요'), findsOneWidget);
       os.exactAfterRequest = true;
       await tester.tap(find.text('설정 열기').last);
       await settle(tester);
-      expect(find.text('정시에 받기'), findsNothing);
-      expect(os.scheduledExact, isTrue);
+      expect(find.text('허용해야 퇴근 알림이 와요'), findsNothing);
+      expect(os.scheduledAt, d(16, 18));
       await finish(tester);
     });
 
-    testWidgets('앱 밖(OS 설정)에서 직접 켜고 돌아와도(resume) 행이 사라지고 정시로 다시 건다', (tester) async {
-      os.osStatus = OsNotificationStatus.granted;
+    testWidgets('앱 밖(OS 설정)에서 직접 켜고 돌아와도(resume) 행이 사라지고 걸린다', (tester) async {
+      await seedWorking();
       os.exactAllowed = false;
-      await DriftAppSettingsRepository(db).save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
-      await db.into(db.workRecords).insert(
-            WorkRecordsCompanion.insert(date: '2026-09-16', clockIn: Value(d(16, 9)), type: WorkType.normal),
-          );
       await pump(tester, const SettingsScreen());
-      expect(find.text('정시에 받기'), findsOneWidget);
+      expect(os.scheduledAt, isNull);
       os.exactAllowed = true;
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await settle(tester);
-      expect(find.text('정시에 받기'), findsNothing);
-      expect(os.scheduledExact, isTrue);
+      expect(find.text('허용해야 퇴근 알림이 와요'), findsNothing);
+      expect(os.scheduledAt, d(16, 18));
+      await finish(tester);
+    });
+
+    testWidgets('걸어둔 뒤 OS에서 이 권한을 끄고 돌아오면 예약을 치우고 행이 다시 보인다', (tester) async {
+      await seedWorking();
+      await pump(tester, const SettingsScreen());
+      expect(os.scheduledAt, d(16, 18));
+      os.exactAllowed = false;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await settle(tester);
+      expect(os.scheduledAt, isNull);
+      expect(find.text('허용해야 퇴근 알림이 와요'), findsOneWidget);
       await finish(tester);
     });
   });

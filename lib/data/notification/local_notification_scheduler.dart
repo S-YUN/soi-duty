@@ -12,9 +12,9 @@ import '../../domain/repository/notification_scheduler.dart';
 ///   (AppDelegate의 `UNUserNotificationCenter.delegate` 설정이 함께 있어야 한다).
 /// - **워치**: 별도 처리 없음. 폰 알림을 OS가 Apple Watch·Wear OS로 넘긴다 — 넘어가는 걸 막는 옵션(local only)을 쓰지 않고,
 ///   손목이 울리도록 소리·진동이 있는 중요도로 보낸다.
-/// - **Android는 "알람 및 리마인더" 권한이 있으면 정시로, 없으면 늦을 수 있는 방식으로 건다.** 권한 없이 걸면 OS가 알람을
-///   남은 시간의 75%(상한 1시간)까지 늦춘다 — 실기기에서 5분 뒤 예약이 3분 45초, 2시간 뒤 예약은 허용 오차 1시간으로 잡혔다(2026-11-20).
-///   출근 때 8시간 뒤로 거는 퇴근 알림은 늘 1시간 상한에 걸려 쓸 수 없다. 권한 안내는 화면이 한다([requestExactAlarm]).
+/// - **Android는 늘 정시 방식(`exactAllowWhileIdle`)으로만 건다.** "알람 및 리마인더" 권한이 필요하다 — 권한 없이 걸 수 있는
+///   방식은 OS가 알람을 남은 시간의 75%(상한 1시간)까지 늦춘다(실기기 2026-11-20: 5분 뒤 예약이 3분 45초 늦음, 2시간 뒤 예약은 허용 오차 1시간).
+///   늦게 오는 퇴근 알림은 없느니만 못해서 **정시에 못 보내면 아예 보내지 않는다** — 권한이 없으면 부르는 쪽이 예약하지 않는다([canScheduleExact]).
 /// - **권한은 초기화 때 묻지 않는다.** 묻는 시점은 화면이 정한다([requestPermission]).
 class LocalNotificationScheduler implements NotificationScheduler {
   LocalNotificationScheduler({
@@ -120,11 +120,6 @@ class LocalNotificationScheduler implements NotificationScheduler {
     return await _android?.requestExactAlarmsPermission() ?? false;
   }
 
-  /// 정시 권한이 있으면 정시(절전 중에도), 없으면 늦을 수 있는 방식. 권한 없이 정시 방식을 부르면 플러그인이 예약을 건너뛴다.
-  @visibleForTesting
-  static AndroidScheduleMode scheduleModeFor({required bool exactAllowed}) =>
-      exactAllowed ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle;
-
   @override
   Future<void> schedule({required DateTime at, required String title, required String body}) async {
     await _ensureReady();
@@ -143,7 +138,8 @@ class LocalNotificationScheduler implements NotificationScheduler {
         body: body,
         scheduledDate: toScheduledDate(at),
         notificationDetails: _details,
-        androidScheduleMode: scheduleModeFor(exactAllowed: await canScheduleExact()),
+        // 절전(Doze) 중에도 정시에. 권한이 없으면 플러그인이 예약을 건너뛴다 — 부르는 쪽이 먼저 확인한다.
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     } on ArgumentError {
       // 위 확인과 플러그인의 확인 사이에 시각이 지났다.

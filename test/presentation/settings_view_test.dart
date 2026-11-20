@@ -187,7 +187,7 @@ void main() {
     });
   });
 
-  group('정시에 받기 — Android "알람 및 리마인더"', () {
+  group('Android "알람 및 리마인더" 행', () {
     testWidgets('알림이 켜져 있고 허용인데 정시 권한이 없으면 행이 보인다 — 누르면 안내 요청', (tester) async {
       await pump(
         tester,
@@ -195,28 +195,28 @@ void main() {
         permission: NotificationPermission.granted,
         exactAllowed: false,
       );
-      expect(find.text('정시에 받기'), findsOneWidget);
+      expect(find.text('알람 및 리마인더'), findsOneWidget);
       expect(
-        tester.widget<Text>(find.text('지금은 최대 1시간 늦게 올 수 있어요')).style?.color,
+        tester.widget<Text>(find.text('허용해야 퇴근 알림이 와요')).style?.color,
         AppColors.minus,
       );
       expect(find.byType(SoiSwitch), findsOneWidget); // 토글은 그대로
-      await tester.tap(find.text('정시에 받기'));
+      await tester.tap(find.text('알람 및 리마인더'));
       expect(taps, ['exact']);
     });
 
     testWidgets('정시 권한이 있거나 · 알림이 꺼져 있거나 · OS 알림이 꺼져 있으면 행이 없다', (tester) async {
       await pump(tester, const AppSettings(clockOutNotificationEnabled: true), permission: NotificationPermission.granted);
-      expect(find.text('정시에 받기'), findsNothing);
+      expect(find.text('알람 및 리마인더'), findsNothing);
       await pump(tester, const AppSettings(), permission: NotificationPermission.granted, exactAllowed: false);
-      expect(find.text('정시에 받기'), findsNothing);
+      expect(find.text('알람 및 리마인더'), findsNothing);
       await pump(
         tester,
         const AppSettings(clockOutNotificationEnabled: true),
         permission: NotificationPermission.denied,
         exactAllowed: false,
       );
-      expect(find.text('정시에 받기'), findsNothing);
+      expect(find.text('알람 및 리마인더'), findsNothing);
     });
 
     testWidgets('폭 320에서 넘치지 않는다', (tester) async {

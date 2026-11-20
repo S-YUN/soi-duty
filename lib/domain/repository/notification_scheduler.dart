@@ -10,15 +10,15 @@ abstract interface class NotificationScheduler {
   /// OS 권한 창을 띄운다. 허용되면 true. 이미 거부한 기기(iOS는 한 번뿐)에서는 창 없이 false.
   Future<bool> requestPermission();
 
-  /// 예약한 시각에 **정시로** 울릴 수 있는지. Android는 "알람 및 리마인더" 권한이 없으면 OS가 알람을 최대 1시간 늦춘다
-  /// (Android 14+는 사용자가 설정에서 직접 켜야 한다). iOS는 늘 true.
+  /// 예약한 시각에 **정시로** 울릴 수 있는지. Android는 "알람 및 리마인더" 권한이 있어야 한다
+  /// (Android 14+는 사용자가 설정에서 직접 켠다). 없으면 예약하지 않는다 — 늦게 오는 알림은 보내지 않는다. iOS는 늘 true.
   Future<bool> canScheduleExact();
 
   /// OS의 "알람 및 리마인더" 설정 화면을 연다(Android). 사용자가 돌아오면 허용 여부를 돌려준다.
   Future<bool> requestExactAlarm();
 
   /// 퇴근 알림을 [at](실제 기기 시각)에 예약한다. 이전 예약을 대체한다 — 예약은 늘 하나뿐이다.
-  /// 정시 권한이 있으면 정시로, 없으면 늦을 수 있는 방식으로 건다.
+  /// [canScheduleExact]가 true일 때만 부른다.
   Future<void> schedule({required DateTime at, required String title, required String body});
 
   /// 지금 바로 띄운다.

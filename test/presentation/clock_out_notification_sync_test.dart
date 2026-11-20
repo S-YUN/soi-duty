@@ -87,7 +87,7 @@ void main() {
 
   /// 앱으로 돌아옴(OS 설정에서 권한을 바꾸고 옴 등) — 이때만 직접 맞춘다.
   Future<void> resume(ProviderContainer c) async {
-    await c.read(clockOutNotificationSyncProvider.notifier).sync();
+    await c.read(clockOutNotificationSyncProvider.notifier).resync();
     await settle(c);
   }
 
@@ -166,6 +166,48 @@ void main() {
       await resume(c);
       expect(os.scheduledAt, isNull);
       expect(await stored(), isNull);
+    });
+  });
+
+  group('Android "알람 및 리마인더" — 정시에 못 울리면 보내지 않는다', () {
+    test('켜짐 + 알림 허용이어도 정시 권한이 없으면 예약하지 않는다(늦게 오는 방식으로도 걸지 않는다)', () async {
+      os.exactAllowed = false;
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c);
+      expect(os.scheduledAt, isNull);
+      expect(os.scheduleAttempts, 0);
+      expect(await stored(), isNull);
+    });
+
+    test('정시 권한을 켜고 돌아오면 예약하고, 끄고 돌아오면 치운다', () async {
+      os.exactAllowed = false;
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c);
+      os.exactAllowed = true;
+      await resume(c);
+      expect(os.scheduledAt, d(16, 17, 30));
+      os.exactAllowed = false;
+      await resume(c);
+      expect(os.scheduledAt, isNull);
+      expect(await stored(), isNull);
+    });
+
+    test('정시 권한이 없는 동안 퇴근 시각이 지나고, 그 뒤에 권한을 켜면 지금 한 번 띄운다', () async {
+      os.exactAllowed = false;
+      final c = launch();
+      await enable(c);
+      await today(c).clockIn();
+      await settle(c);
+      now = d(16, 18);
+      os.exactAllowed = true;
+      await resume(c);
+      expect(os.shown, hasLength(1));
+      await resume(c);
+      expect(os.shown, hasLength(1));
     });
   });
 

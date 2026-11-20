@@ -51,7 +51,7 @@ class SettingsCallbacks {
   final ValueChanged<bool> onNotificationToggle;
   /// OS 권한이 꺼져 있을 때의 행 — 안내 다이얼로그 → OS 설정.
   final VoidCallback onOpenNotificationSettings;
-  /// "정시에 받기" 행 — Android "알람 및 리마인더" 안내 → OS 설정.
+  /// "알람 및 리마인더" 행(Android) — 안내 → OS 설정.
   final VoidCallback onExactAlarm;
 }
 
@@ -202,7 +202,8 @@ class SettingsView extends StatelessWidget {
   /// OS 알림 권한. `denied`면 토글 대신 "설정 열기" 행 — 앱에서는 켤 수 없다.
   final NotificationPermission notificationPermission;
 
-  /// Android "알람 및 리마인더"가 허용돼 있는지. 알림이 켜져 있는데 이게 꺼져 있으면 "정시에 받기" 행이 보인다.
+  /// Android "알람 및 리마인더"가 허용돼 있는지. 알림이 켜져 있는데 이게 꺼져 있으면 알림이 오지 않는다 —
+  /// 토글 아래에 "허용해야 퇴근 알림이 와요 · 설정 열기" 행이 보인다.
   final bool exactAlarmAllowed;
   final WorkRules rules;
 
@@ -277,7 +278,7 @@ class SettingsView extends StatelessWidget {
                             // 행 어디를 눌러도 토글된다.
                             onTap: () => callbacks.onNotificationToggle(!settings.clockOutNotificationEnabled),
                           ),
-                        // 알림은 오는데 OS가 최대 1시간 늦출 수 있는 상태 — 정시로 받는 길을 보인다.
+                        // 켜 뒀지만 알림이 오지 않는 상태 — 정시에 울릴 권한이 없어 예약하지 않는다. 켜는 길을 보인다.
                         if (settings.clockOutNotificationEnabled &&
                             notificationPermission == NotificationPermission.granted &&
                             !exactAlarmAllowed)

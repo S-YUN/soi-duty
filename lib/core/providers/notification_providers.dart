@@ -65,7 +65,8 @@ Future<NotificationPermission> notificationPermission(Ref ref) async {
   return asked ? NotificationPermission.denied : NotificationPermission.notDetermined;
 }
 
-/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
+/// 예약한 시각에 정시로 울릴 수 있는지 (Android "알람 및 리마인더"). false면 알림을 예약하지 않는다.
+/// 확인에 실패하면 true로 본다 — 없는 문제를 경고하지 않는다.
 /// 앱으로 돌아올 때 invalidate한다.
 @riverpod
 Future<bool> exactAlarmAllowed(Ref ref) async {

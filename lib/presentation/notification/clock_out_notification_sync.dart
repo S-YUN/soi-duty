@@ -19,7 +19,7 @@ part 'clock_out_notification_sync.g.dart';
 /// 알림 설정이 바뀔 때마다, 그리고 앱으로 돌아올 때마다 [sync]가 계획과 OS 예약을 다시 맞춘다.
 ///
 /// ```
-/// 알림 꺼짐 · OS 권한 없음 · 계획 없음   → 예약 취소, 저장된 알림 지움
+/// 알림 꺼짐 · OS 권한 없음 · 정시 권한 없음(Android) · 계획 없음   → 예약 취소, 저장된 알림 지움
 /// 계획 시각이 아직 안 옴                 → 같은 알림이 이미 예약돼 있으면 그대로, 아니면 예약(대체) + 저장
 /// 계획 시각이 이미 지남 (N3)             → 오늘 이미 전달됐으면 아무것도 안 함, 아니면 지금 띄우고 저장
 /// ```
@@ -72,8 +72,8 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
     return _running ??= _drain().whenComplete(() => _running = null);
   }
 
-  /// 저장된 값과 같아도 OS에 다시 건다 — 앱으로 돌아왔을 때. 그 사이 "알람 및 리마인더" 권한이 바뀌었으면
-  /// 같은 시각이라도 정시/비정시 방식을 바꿔 다시 걸어야 하고, 권한이 회수되면 OS가 걸어둔 알람을 지운다.
+  /// 저장된 값과 같아도 OS에 다시 건다 — 앱으로 돌아왔을 때. 그 사이 "알람 및 리마인더" 권한이 회수됐다 다시 켜졌으면
+  /// OS가 걸어둔 알람을 지웠을 수 있다.
   Future<void> resync() {
     _verified = false;
     return sync();
@@ -121,6 +121,8 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
 
     if (!settings.clockOutNotificationEnabled) return clear();
     if (await scheduler.status() != OsNotificationStatus.granted) return clear();
+    // 정시에 못 울리면 아예 보내지 않는다 — Android는 "알람 및 리마인더" 권한이 없으면 OS가 최대 1시간 늦춘다.
+    if (!await scheduler.canScheduleExact()) return clear();
 
     // 계획은 **지금 시각의 날짜**로 여기서 센다. 프로바이더(`clockOutNoticePlan`)의 값은 다시 맞출 때를 알려주는 신호일 뿐이다 —
     // 그 값의 "오늘"은 매 분 도는 시계에서 오는데, 앱이 밤새 멈춰 있다 돌아오면 다음 분이 돌 때까지 어제에 머문다.
