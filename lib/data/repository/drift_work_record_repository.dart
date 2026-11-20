@@ -59,6 +59,8 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
         clockOut: row.clockOut,
         type: row.type,
         deductionMinutes: row.deductionMinutes,
+        tripStart: row.tripStart,
+        tripEnd: row.tripEnd,
       );
 
   static WorkRecordsCompanion toCompanion(WorkRecord r) => WorkRecordsCompanion.insert(
@@ -67,5 +69,7 @@ class DriftWorkRecordRepository implements WorkRecordRepository {
         clockOut: Value(r.clockOut),
         type: r.type,
         deductionMinutes: Value(r.deductionMinutes),
+        tripStart: Value(r.tripStart),
+        tripEnd: Value(r.tripEnd),
       );
 }

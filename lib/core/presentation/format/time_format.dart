@@ -32,6 +32,9 @@ String formatClock(DateTime t) =>
 /// "09:05 – 18:36" (en dash)
 String formatClockRange(DateTime clockIn, DateTime clockOut) => '${formatClock(clockIn)} – ${formatClock(clockOut)}';
 
+/// "09:20–12:30" (en dash, 공백 없음) — 시간 출장 범위. 칩·행처럼 좁은 자리에 쓴다.
+String formatClockSpan(DateTime start, DateTime end) => '${formatClock(start)}–${formatClock(end)}';
+
 /// 435 → "7시간 15분", 420 → "7시간", 15 → "15분", 0 → "0분"
 String formatKoreanDuration(int minutes) {
   final abs = minutes.abs();

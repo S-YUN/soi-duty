@@ -15,6 +15,9 @@ abstract class WorkRecord with _$WorkRecord {
     @Default(WorkType.normal) WorkType type,
     /// 시간공제(분). 그날 기준시간에서 뺀다. 평일 일반·반차에만 의미가 있다 — sanitizeRecord.
     @Default(0) int deductionMinutes,
+    /// 시간 출장 범위 — 기록만 하고 계산에는 쓰지 않는다. 둘 다 있거나 둘 다 없다 — sanitizeRecord.
+    DateTime? tripStart,
+    DateTime? tripEnd,
   }) = _WorkRecord;
 
   factory WorkRecord.fromJson(Map<String, Object?> json) => _$WorkRecordFromJson(json);

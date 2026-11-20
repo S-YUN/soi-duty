@@ -13,6 +13,7 @@ abstract class WeekSummary with _$WeekSummary {
     required int halfDayCount,
     required int dayOffCount,
     required int holidayCount,
+    /// 종일 출장(평일) + 시간 출장이 있는 날(월~일)
     required int businessTripCount,
     /// 그 주 평일 시간공제 합
     required int deductionMinutes,

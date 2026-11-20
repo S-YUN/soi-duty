@@ -18,7 +18,8 @@ mixin _$WorkRecord {
 
 /// 날짜만. 시분초 0, local.
  DateTime get date; DateTime? get clockIn; DateTime? get clockOut; WorkType get type;/// 시간공제(분). 그날 기준시간에서 뺀다. 평일 일반·반차에만 의미가 있다 — sanitizeRecord.
- int get deductionMinutes;
+ int get deductionMinutes;/// 시간 출장 범위 — 기록만 하고 계산에는 쓰지 않는다. 둘 다 있거나 둘 다 없다 — sanitizeRecord.
+ DateTime? get tripStart; DateTime? get tripEnd;
 /// Create a copy of WorkRecord
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,20 +33,20 @@ $WorkRecordCopyWith<WorkRecord> get copyWith => _$WorkRecordCopyWithImpl<WorkRec
 @override
 bool operator ==(Object other) {
   final _this = this as WorkRecord;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkRecord&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.clockIn, _this.clockIn) || other.clockIn == _this.clockIn)&&(identical(other.clockOut, _this.clockOut) || other.clockOut == _this.clockOut)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.deductionMinutes, _this.deductionMinutes) || other.deductionMinutes == _this.deductionMinutes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkRecord&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.clockIn, _this.clockIn) || other.clockIn == _this.clockIn)&&(identical(other.clockOut, _this.clockOut) || other.clockOut == _this.clockOut)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.deductionMinutes, _this.deductionMinutes) || other.deductionMinutes == _this.deductionMinutes)&&(identical(other.tripStart, _this.tripStart) || other.tripStart == _this.tripStart)&&(identical(other.tripEnd, _this.tripEnd) || other.tripEnd == _this.tripEnd));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as WorkRecord;
-  return Object.hash(runtimeType,_this.date,_this.clockIn,_this.clockOut,_this.type,_this.deductionMinutes);
+  return Object.hash(runtimeType,_this.date,_this.clockIn,_this.clockOut,_this.type,_this.deductionMinutes,_this.tripStart,_this.tripEnd);
 }
 
 @override
 String toString() {
   final _this = this as WorkRecord;
-  return 'WorkRecord(date: ${_this.date}, clockIn: ${_this.clockIn}, clockOut: ${_this.clockOut}, type: ${_this.type}, deductionMinutes: ${_this.deductionMinutes})';
+  return 'WorkRecord(date: ${_this.date}, clockIn: ${_this.clockIn}, clockOut: ${_this.clockOut}, type: ${_this.type}, deductionMinutes: ${_this.deductionMinutes}, tripStart: ${_this.tripStart}, tripEnd: ${_this.tripEnd})';
 }
 
 
@@ -56,7 +57,7 @@ abstract mixin class $WorkRecordCopyWith<$Res>  {
   factory $WorkRecordCopyWith(WorkRecord value, $Res Function(WorkRecord) _then) = _$WorkRecordCopyWithImpl;
 @useResult
 $Res call({
- DateTime date, DateTime? clockIn, DateTime? clockOut, WorkType type, int deductionMinutes
+ DateTime date, DateTime? clockIn, DateTime? clockOut, WorkType type, int deductionMinutes, DateTime? tripStart, DateTime? tripEnd
 });
 
 
@@ -73,14 +74,16 @@ class _$WorkRecordCopyWithImpl<$Res>
 
 /// Create a copy of WorkRecord
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? type = null,Object? deductionMinutes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? type = null,Object? deductionMinutes = null,Object? tripStart = freezed,Object? tripEnd = freezed,}) {
   return _then(WorkRecord(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,clockIn: freezed == clockIn ? _self.clockIn : clockIn // ignore: cast_nullable_to_non_nullable
 as DateTime?,clockOut: freezed == clockOut ? _self.clockOut : clockOut // ignore: cast_nullable_to_non_nullable
 as DateTime?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as WorkType,deductionMinutes: null == deductionMinutes ? _self.deductionMinutes : deductionMinutes // ignore: cast_nullable_to_non_nullable
-as int,
+as int,tripStart: freezed == tripStart ? _self.tripStart : tripStart // ignore: cast_nullable_to_non_nullable
+as DateTime?,tripEnd: freezed == tripEnd ? _self.tripEnd : tripEnd // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -165,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  DateTime? clockIn,  DateTime? clockOut,  WorkType type,  int deductionMinutes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  DateTime? clockIn,  DateTime? clockOut,  WorkType type,  int deductionMinutes,  DateTime? tripStart,  DateTime? tripEnd)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkRecord() when $default != null:
-return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deductionMinutes);case _:
+return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deductionMinutes,_that.tripStart,_that.tripEnd);case _:
   return orElse();
 
 }
@@ -186,10 +189,10 @@ return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deducti
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  DateTime? clockIn,  DateTime? clockOut,  WorkType type,  int deductionMinutes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  DateTime? clockIn,  DateTime? clockOut,  WorkType type,  int deductionMinutes,  DateTime? tripStart,  DateTime? tripEnd)  $default,) {final _that = this;
 switch (_that) {
 case _WorkRecord():
-return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deductionMinutes);case _:
+return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deductionMinutes,_that.tripStart,_that.tripEnd);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +209,10 @@ return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deducti
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  DateTime? clockIn,  DateTime? clockOut,  WorkType type,  int deductionMinutes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  DateTime? clockIn,  DateTime? clockOut,  WorkType type,  int deductionMinutes,  DateTime? tripStart,  DateTime? tripEnd)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkRecord() when $default != null:
-return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deductionMinutes);case _:
+return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deductionMinutes,_that.tripStart,_that.tripEnd);case _:
   return null;
 
 }
@@ -221,7 +224,7 @@ return $default(_that.date,_that.clockIn,_that.clockOut,_that.type,_that.deducti
 @JsonSerializable()
 
 class _WorkRecord implements WorkRecord {
-  const _WorkRecord({required this.date, this.clockIn, this.clockOut, this.type = WorkType.normal, this.deductionMinutes = 0});
+  const _WorkRecord({required this.date, this.clockIn, this.clockOut, this.type = WorkType.normal, this.deductionMinutes = 0, this.tripStart, this.tripEnd});
   factory _WorkRecord.fromJson(Map<String, dynamic> json) => _$WorkRecordFromJson(json);
 
 /// 날짜만. 시분초 0, local.
@@ -231,6 +234,9 @@ class _WorkRecord implements WorkRecord {
 @override@JsonKey() final  WorkType type;
 /// 시간공제(분). 그날 기준시간에서 뺀다. 평일 일반·반차에만 의미가 있다 — sanitizeRecord.
 @override@JsonKey() final  int deductionMinutes;
+/// 시간 출장 범위 — 기록만 하고 계산에는 쓰지 않는다. 둘 다 있거나 둘 다 없다 — sanitizeRecord.
+@override final  DateTime? tripStart;
+@override final  DateTime? tripEnd;
 
 /// Create a copy of WorkRecord
 /// with the given fields replaced by the non-null parameter values.
@@ -245,18 +251,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkRecord&&(identical(other.date, date) || other.date == date)&&(identical(other.clockIn, clockIn) || other.clockIn == clockIn)&&(identical(other.clockOut, clockOut) || other.clockOut == clockOut)&&(identical(other.type, type) || other.type == type)&&(identical(other.deductionMinutes, deductionMinutes) || other.deductionMinutes == deductionMinutes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkRecord&&(identical(other.date, date) || other.date == date)&&(identical(other.clockIn, clockIn) || other.clockIn == clockIn)&&(identical(other.clockOut, clockOut) || other.clockOut == clockOut)&&(identical(other.type, type) || other.type == type)&&(identical(other.deductionMinutes, deductionMinutes) || other.deductionMinutes == deductionMinutes)&&(identical(other.tripStart, tripStart) || other.tripStart == tripStart)&&(identical(other.tripEnd, tripEnd) || other.tripEnd == tripEnd));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,date,clockIn,clockOut,type,deductionMinutes);
+    return Object.hash(runtimeType,date,clockIn,clockOut,type,deductionMinutes,tripStart,tripEnd);
 }
 
 @override
 String toString() {
-    return 'WorkRecord(date: $date, clockIn: $clockIn, clockOut: $clockOut, type: $type, deductionMinutes: $deductionMinutes)';
+    return 'WorkRecord(date: $date, clockIn: $clockIn, clockOut: $clockOut, type: $type, deductionMinutes: $deductionMinutes, tripStart: $tripStart, tripEnd: $tripEnd)';
 }
 
 
@@ -267,7 +273,7 @@ abstract mixin class _$WorkRecordCopyWith<$Res> implements $WorkRecordCopyWith<$
   factory _$WorkRecordCopyWith(_WorkRecord value, $Res Function(_WorkRecord) _then) = __$WorkRecordCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime date, DateTime? clockIn, DateTime? clockOut, WorkType type, int deductionMinutes
+ DateTime date, DateTime? clockIn, DateTime? clockOut, WorkType type, int deductionMinutes, DateTime? tripStart, DateTime? tripEnd
 });
 
 
@@ -284,14 +290,16 @@ class __$WorkRecordCopyWithImpl<$Res>
 
 /// Create a copy of WorkRecord
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? type = null,Object? deductionMinutes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? clockIn = freezed,Object? clockOut = freezed,Object? type = null,Object? deductionMinutes = null,Object? tripStart = freezed,Object? tripEnd = freezed,}) {
   return _then(_WorkRecord(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,clockIn: freezed == clockIn ? _self.clockIn : clockIn // ignore: cast_nullable_to_non_nullable
 as DateTime?,clockOut: freezed == clockOut ? _self.clockOut : clockOut // ignore: cast_nullable_to_non_nullable
 as DateTime?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as WorkType,deductionMinutes: null == deductionMinutes ? _self.deductionMinutes : deductionMinutes // ignore: cast_nullable_to_non_nullable
-as int,
+as int,tripStart: freezed == tripStart ? _self.tripStart : tripStart // ignore: cast_nullable_to_non_nullable
+as DateTime?,tripEnd: freezed == tripEnd ? _self.tripEnd : tripEnd // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

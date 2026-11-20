@@ -117,4 +117,18 @@ void main() {
     final b = DriftBackupRepository(db, rules: const WorkRules(dayOffCreditMinutes: 600));
     expect((await b.snapshot(DateTime(2026, 10, 25))).leaveBalanceByYear[2026]!.remainingMinutes, 15 * 600);
   });
+
+  test('restore — 시간 출장 범위가 유지되고, 연차 날의 범위는 sanitize로 지워진다', () async {
+    final trip = rec(14, inH: 9, outH: 18, tripInH: 9, tripOutH: 12);
+    await backup.restore(BackupSnapshot(
+      exportedAt: DateTime(2026, 11, 20),
+      weekStart: WeekStart.monday,
+      leaveBalanceByYear: const {},
+      records: [trip, rec(15, type: WorkType.dayOff, tripInH: 9, tripOutH: 12)],
+    ));
+    final all = await records.watchAll().first;
+    expect(all, contains(trip));
+    expect(all, contains(rec(15, type: WorkType.dayOff)));
+    expect((await backup.snapshot(DateTime(2026, 11, 20))).records, contains(trip));
+  });
 }

@@ -134,15 +134,51 @@ int closingDeduction(WorkRecord r, DateTime clockOut, WorkRules rules) {
 bool isValidDeduction(WorkType type, int minutes, WorkRules rules) =>
     minutes >= 0 && minutes <= standardMinutes(type, rules);
 
-/// 저장 직전 불변식. 쉬는 날·주말은 공제 없음, 공제는 그날 기본 기준(반차 4h)까지, 연차·출장은 시각 없음. 저장소가 모든 저장에서 부른다 — 반차 전환·유형 자동 저장 같은 경로도 한도를 넘지 못한다.
+// ---- 시간 출장 (기록만 — 계산 함수는 이 값을 읽지 않는다) ----
+
+/// 시간 출장 범위가 있는지 (둘 다 있음).
+bool hasTrip(WorkRecord? r) => r?.tripStart != null && r?.tripEnd != null;
+
+/// 시간 출장을 가질 수 있는 유형. 연차·종일 출장만 안 된다 — 근무가 없는 날이다.
+bool canHaveTrip(WorkType t) => t != WorkType.dayOff && t != WorkType.businessTrip;
+
+/// 둘 다 없으면 유효, 둘 다 있으면 끝이 시작보다 늦어야 한다. 하나만 있으면 무효.
+bool isValidTripRange(DateTime? start, DateTime? end) {
+  if (start == null && end == null) return true;
+  if (start == null || end == null) return false;
+  return minuteOnly(end).isAfter(minuteOnly(start));
+}
+
+/// 시간 출장 길이(분) — 표시용. 범위가 없으면 null.
+int? tripMinutes(WorkRecord r) => hasTrip(r) ? minutesBetween(r.tripStart!, r.tripEnd!) : null;
+
+/// 시간 출장 작은 시트의 처음 값. 시작 = 그날 출근 시각(없으면 기본 시작), 끝 = 시작 + 기본 길이 — 23:59에서 멈춘다.
+(DateTime, DateTime) defaultTripRange(DateTime date, DateTime? clockIn, WorkRules rules) {
+  final day = dateOnly(date);
+  final start = clockIn == null
+      ? day.add(Duration(minutes: rules.defaultTripStartMinutes))
+      : DateTime(day.year, day.month, day.day, clockIn.hour, clockIn.minute);
+  final lastMinute = DateTime(day.year, day.month, day.day, 23, 59);
+  final end = start.add(Duration(minutes: rules.defaultTripMinutes));
+  return (start, end.isAfter(lastMinute) ? lastMinute : end);
+}
+
+/// 저장 직전 불변식. 시간 출장 범위는 연차·종일 출장이면 비우고, 하나만 있거나 뒤집혔으면 둘 다 비운다. 쉬는 날·주말은 공제 없음, 공제는 그날 기본 기준(반차 4h)까지, 연차·출장은 시각 없음. 저장소가 모든 저장에서 부른다 — 반차 전환·유형 자동 저장 같은 경로도 한도를 넘지 못한다.
 WorkRecord sanitizeRecord(WorkRecord r, WorkRules rules) {
   final deduction =
       canDeduct(r.date, r.type) ? r.deductionMinutes.clamp(0, standardMinutes(r.type, rules)) : 0;
   final dropTimes = r.type == WorkType.dayOff || r.type == WorkType.businessTrip;
+  // 출장 시각은 그 기록 날짜의 시·분으로 맞춘다 — 다른 날짜가 섞여 들어와도 그날 안에서 끝난다.
+  DateTime? onDay(DateTime? t) => t == null ? null : DateTime(r.date.year, r.date.month, r.date.day, t.hour, t.minute);
+  final tripStart = onDay(r.tripStart);
+  final tripEnd = onDay(r.tripEnd);
+  final keepTrip = canHaveTrip(r.type) && tripStart != null && tripEnd != null && isValidTripRange(tripStart, tripEnd);
   return r.copyWith(
     clockIn: dropTimes ? null : r.clockIn,
     clockOut: dropTimes ? null : r.clockOut,
     deductionMinutes: deduction,
+    tripStart: keepTrip ? tripStart : null,
+    tripEnd: keepTrip ? tripEnd : null,
   );
 }
 
@@ -219,6 +255,13 @@ WeekSummary weekSummary({
     if (r != null && countsTowardWeek(r)) {
       worked += actualMinutes(r, rules) ?? ongoingMinutes(r, now, rules) ?? 0;
     }
+  }
+
+  // 시간 출장 날도 "출장 n"에 1로 센다 — 계산과 무관한 개수라 주말까지 월~일을 본다. 종일 출장 날은 위에서 이미 셌다.
+  final start = dateOnly(monday);
+  for (var i = 0; i < 7; i++) {
+    final r = byDate[addDays(start, i)];
+    if (r != null && r.type != WorkType.businessTrip && hasTrip(r)) trips++;
   }
 
   final target = rules.weeklyTargetMinutes - reduction;

@@ -12,6 +12,10 @@ WorkRecord rec(
   int? outM,
   WorkType type = WorkType.normal,
   int ded = 0,
+  int? tripInH,
+  int? tripInM,
+  int? tripOutH,
+  int? tripOutM,
 }) =>
     WorkRecord(
       date: d(day),
@@ -19,4 +23,6 @@ WorkRecord rec(
       clockOut: outH == null ? null : d(day, outH, outM ?? 0),
       type: type,
       deductionMinutes: ded,
+      tripStart: tripInH == null ? null : d(day, tripInH, tripInM ?? 0),
+      tripEnd: tripOutH == null ? null : d(day, tripOutH, tripOutM ?? 0),
     );

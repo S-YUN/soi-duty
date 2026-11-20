@@ -100,4 +100,19 @@ void main() {
     await repo.save(rec(14, type: WorkType.halfDay, ded: 300));
     expect((await repo.watchAll().first).single.deductionMinutes, 240);
   });
+
+  test('시간 출장 범위가 왕복되고, 연차로 저장하면 범위가 지워진다', () async {
+    final r = rec(14, inH: 9, outH: 18, tripInH: 9, tripInM: 20, tripOutH: 12, tripOutM: 30);
+    await repo.save(r);
+    expect((await repo.watchAll().first).single, r);
+    await repo.save(r.copyWith(type: WorkType.dayOff));
+    final saved = (await repo.watchAll().first).single;
+    expect((saved.tripStart, saved.tripEnd), (null, null));
+  });
+
+  test('출장 범위만 있는 기록(시각 없음)도 저장된다', () async {
+    final r = rec(21, tripInH: 9, tripOutH: 12);
+    await repo.save(r);
+    expect((await repo.watchAll().first).single, r);
+  });
 }

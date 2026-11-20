@@ -16,6 +16,12 @@ _WorkRecord _$WorkRecordFromJson(Map<String, dynamic> json) => _WorkRecord(
       : DateTime.parse(json['clockOut'] as String),
   type: $enumDecodeNullable(_$WorkTypeEnumMap, json['type']) ?? WorkType.normal,
   deductionMinutes: (json['deductionMinutes'] as num?)?.toInt() ?? 0,
+  tripStart: json['tripStart'] == null
+      ? null
+      : DateTime.parse(json['tripStart'] as String),
+  tripEnd: json['tripEnd'] == null
+      ? null
+      : DateTime.parse(json['tripEnd'] as String),
 );
 
 Map<String, dynamic> _$WorkRecordToJson(_WorkRecord instance) =>
@@ -25,6 +31,8 @@ Map<String, dynamic> _$WorkRecordToJson(_WorkRecord instance) =>
       'clockOut': instance.clockOut?.toIso8601String(),
       'type': _$WorkTypeEnumMap[instance.type]!,
       'deductionMinutes': instance.deductionMinutes,
+      'tripStart': instance.tripStart?.toIso8601String(),
+      'tripEnd': instance.tripEnd?.toIso8601String(),
     };
 
 const _$WorkTypeEnumMap = {

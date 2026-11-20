@@ -8,8 +8,9 @@ import '../rules/work_calculator.dart';
 import '../rules/work_rules.dart';
 
 /// 백업 파일 형식 버전. 읽을 수 있는 최대 버전이기도 하다 — 더 큰 값은 새 앱이 쓴 파일이라 거부한다.
-/// 1: `settings.annualLeaveDaysByYear`(총 연차, 정수 일) · 2: `settings.leaveBalanceByYear`(남은 연차 분 + 기준일, 2026-10-27).
-const backupFormatVersion = 2;
+/// 1: `settings.annualLeaveDaysByYear`(총 연차, 정수 일) · 2: `settings.leaveBalanceByYear`(남은 연차 분 + 기준일, 2026-10-27) ·
+/// 3: 기록에 `tripStart`·`tripEnd`(시간 출장 범위, 2026-11-20) — 1·2 파일은 범위 없음으로 읽힌다.
+const backupFormatVersion = 3;
 const _appId = 'soi_duty';
 
 class BackupFormatException implements Exception {
@@ -107,8 +108,11 @@ Map<int, LeaveBalance> _legacyLeave(Object? byYear, WorkRules rules) {
 }
 
 /// 자정 넘김 미지원 — 퇴근 < 출근이면 시각 둘 다 버린다(기록 안 된 날로).
-WorkRecord _dropInvalidRange(WorkRecord r) =>
-    isValidClockRange(r.clockIn, r.clockOut) ? r : r.copyWith(clockIn: null, clockOut: null);
+/// 시간 출장 범위도 하나만 있거나 끝 ≤ 시작이면 둘 다 버린다(출퇴근은 그대로).
+WorkRecord _dropInvalidRange(WorkRecord r) {
+  final clocks = isValidClockRange(r.clockIn, r.clockOut) ? r : r.copyWith(clockIn: null, clockOut: null);
+  return isValidTripRange(clocks.tripStart, clocks.tripEnd) ? clocks : clocks.copyWith(tripStart: null, tripEnd: null);
+}
 
 String _dateKey(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

@@ -20,6 +20,18 @@ void main() {
     expect(WorkRecord.fromJson(r.toJson()), r);
   });
 
+  test('json 왕복 — 시간 출장 범위, 필드가 없는 옛 JSON은 null', () {
+    final r = WorkRecord(
+      date: DateTime(2026, 9, 14),
+      clockIn: DateTime(2026, 9, 14, 9),
+      tripStart: DateTime(2026, 9, 14, 9, 20),
+      tripEnd: DateTime(2026, 9, 14, 12, 30),
+    );
+    expect(WorkRecord.fromJson(r.toJson()), r);
+    final old = WorkRecord.fromJson({'date': '2026-09-14T00:00:00.000', 'type': 'normal', 'deductionMinutes': 0});
+    expect((old.tripStart, old.tripEnd), (null, null));
+  });
+
   test('WorkRules 기본값', () {
     const rules = WorkRules();
     expect(rules.weeklyTargetMinutes, 2400);
