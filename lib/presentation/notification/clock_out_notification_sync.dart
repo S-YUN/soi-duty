@@ -100,7 +100,13 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
     }
   }
 
+  /// 디버그 시트의 "1분 뒤 알림 예약"이 걸어둔 시험 알림이 울릴 시각(실제 시각). 그때까지는 예약을 건드리지 않는다 —
+  /// 계획이 없는 날(주말)에 앱으로 돌아오면 [resync]가 시험 예약까지 치운다. iOS는 화면을 잠글 때도 "돌아옴"이 한 번 와서
+  /// 앱을 띄운 채 잠그면 시험 알림이 오지 않았다(2026-11-21, iPhone 11). 실제 알림은 계획이 있어 다시 걸리니 해당 없다.
+  static DateTime? debugTestUntil;
+
   Future<void> _run() async {
+    if (kDebugTools && (debugTestUntil?.isAfter(DateTime.now()) ?? false)) return;
     final scheduler = ref.read(notificationSchedulerProvider);
     final store = ref.read(notificationStateRepositoryProvider);
     // 저장소에서 직접 읽는다 — 방금 켠 설정을 스트림이 아직 못 봤을 수 있다.

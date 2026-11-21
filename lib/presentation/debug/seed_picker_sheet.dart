@@ -8,6 +8,7 @@ import '../../data/seed/debug_seed.dart';
 import '../../domain/notification/clock_out_notice.dart';
 import '../../domain/repository/notification_scheduler.dart';
 import '../../domain/rules/work_calculator.dart';
+import '../notification/clock_out_notification_sync.dart';
 import '../notification/notification_texts.dart';
 
 /// 디버그 전용. 날짜 헤더 길게 누르면 열린다. 스타일은 기본 Material — 릴리즈에 안 들어간다.
@@ -133,6 +134,8 @@ Future<void> _testNotification(BuildContext context, WidgetRef ref, {required Du
       }
       final at = DateTime.now().add(delay);
       await scheduler.schedule(at: at, title: title, body: body);
+      // 울릴 때까지 예약 맞추기를 쉬게 한다 — 안 그러면 앱으로 돌아오는 순간 이 예약이 지워진다.
+      ClockOutNotificationSync.debugTestUntil = at;
       result = '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}:${at.second.toString().padLeft(2, '0')}쯤 울려요';
     }
   } catch (e) {
