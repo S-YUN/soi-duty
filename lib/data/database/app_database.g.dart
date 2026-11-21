@@ -61,6 +61,28 @@ class $WorkRecordsTable extends WorkRecords
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _tripStartMeta = const VerificationMeta(
+    'tripStart',
+  );
+  @override
+  late final GeneratedColumn<DateTime> tripStart = GeneratedColumn<DateTime>(
+    'trip_start',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tripEndMeta = const VerificationMeta(
+    'tripEnd',
+  );
+  @override
+  late final GeneratedColumn<DateTime> tripEnd = GeneratedColumn<DateTime>(
+    'trip_end',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     date,
@@ -68,6 +90,8 @@ class $WorkRecordsTable extends WorkRecords
     clockOut,
     type,
     deductionMinutes,
+    tripStart,
+    tripEnd,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -110,6 +134,18 @@ class $WorkRecordsTable extends WorkRecords
         ),
       );
     }
+    if (data.containsKey('trip_start')) {
+      context.handle(
+        _tripStartMeta,
+        tripStart.isAcceptableOrUnknown(data['trip_start']!, _tripStartMeta),
+      );
+    }
+    if (data.containsKey('trip_end')) {
+      context.handle(
+        _tripEndMeta,
+        tripEnd.isAcceptableOrUnknown(data['trip_end']!, _tripEndMeta),
+      );
+    }
     return context;
   }
 
@@ -141,6 +177,14 @@ class $WorkRecordsTable extends WorkRecords
         DriftSqlType.int,
         data['${effectivePrefix}deduction_minutes'],
       )!,
+      tripStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}trip_start'],
+      ),
+      tripEnd: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}trip_end'],
+      ),
     );
   }
 
@@ -160,12 +204,18 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
   final DateTime? clockOut;
   final WorkType type;
   final int deductionMinutes;
+
+  /// 시간 출장 범위 (v3). 기록만 — 계산에 쓰지 않는다.
+  final DateTime? tripStart;
+  final DateTime? tripEnd;
   const WorkRecordRow({
     required this.date,
     this.clockIn,
     this.clockOut,
     required this.type,
     required this.deductionMinutes,
+    this.tripStart,
+    this.tripEnd,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -183,6 +233,12 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
       );
     }
     map['deduction_minutes'] = Variable<int>(deductionMinutes);
+    if (!nullToAbsent || tripStart != null) {
+      map['trip_start'] = Variable<DateTime>(tripStart);
+    }
+    if (!nullToAbsent || tripEnd != null) {
+      map['trip_end'] = Variable<DateTime>(tripEnd);
+    }
     return map;
   }
 
@@ -197,6 +253,12 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
           : Value(clockOut),
       type: Value(type),
       deductionMinutes: Value(deductionMinutes),
+      tripStart: tripStart == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tripStart),
+      tripEnd: tripEnd == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tripEnd),
     );
   }
 
@@ -213,6 +275,8 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
         serializer.fromJson<String>(json['type']),
       ),
       deductionMinutes: serializer.fromJson<int>(json['deductionMinutes']),
+      tripStart: serializer.fromJson<DateTime?>(json['tripStart']),
+      tripEnd: serializer.fromJson<DateTime?>(json['tripEnd']),
     );
   }
   @override
@@ -226,6 +290,8 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
         $WorkRecordsTable.$convertertype.toJson(type),
       ),
       'deductionMinutes': serializer.toJson<int>(deductionMinutes),
+      'tripStart': serializer.toJson<DateTime?>(tripStart),
+      'tripEnd': serializer.toJson<DateTime?>(tripEnd),
     };
   }
 
@@ -235,12 +301,16 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
     Value<DateTime?> clockOut = const Value.absent(),
     WorkType? type,
     int? deductionMinutes,
+    Value<DateTime?> tripStart = const Value.absent(),
+    Value<DateTime?> tripEnd = const Value.absent(),
   }) => WorkRecordRow(
     date: date ?? this.date,
     clockIn: clockIn.present ? clockIn.value : this.clockIn,
     clockOut: clockOut.present ? clockOut.value : this.clockOut,
     type: type ?? this.type,
     deductionMinutes: deductionMinutes ?? this.deductionMinutes,
+    tripStart: tripStart.present ? tripStart.value : this.tripStart,
+    tripEnd: tripEnd.present ? tripEnd.value : this.tripEnd,
   );
   WorkRecordRow copyWithCompanion(WorkRecordsCompanion data) {
     return WorkRecordRow(
@@ -251,6 +321,8 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
       deductionMinutes: data.deductionMinutes.present
           ? data.deductionMinutes.value
           : this.deductionMinutes,
+      tripStart: data.tripStart.present ? data.tripStart.value : this.tripStart,
+      tripEnd: data.tripEnd.present ? data.tripEnd.value : this.tripEnd,
     );
   }
 
@@ -261,14 +333,23 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
           ..write('clockIn: $clockIn, ')
           ..write('clockOut: $clockOut, ')
           ..write('type: $type, ')
-          ..write('deductionMinutes: $deductionMinutes')
+          ..write('deductionMinutes: $deductionMinutes, ')
+          ..write('tripStart: $tripStart, ')
+          ..write('tripEnd: $tripEnd')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(date, clockIn, clockOut, type, deductionMinutes);
+  int get hashCode => Object.hash(
+    date,
+    clockIn,
+    clockOut,
+    type,
+    deductionMinutes,
+    tripStart,
+    tripEnd,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -277,7 +358,9 @@ class WorkRecordRow extends DataClass implements Insertable<WorkRecordRow> {
           other.clockIn == this.clockIn &&
           other.clockOut == this.clockOut &&
           other.type == this.type &&
-          other.deductionMinutes == this.deductionMinutes);
+          other.deductionMinutes == this.deductionMinutes &&
+          other.tripStart == this.tripStart &&
+          other.tripEnd == this.tripEnd);
 }
 
 class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
@@ -286,6 +369,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
   final Value<DateTime?> clockOut;
   final Value<WorkType> type;
   final Value<int> deductionMinutes;
+  final Value<DateTime?> tripStart;
+  final Value<DateTime?> tripEnd;
   final Value<int> rowid;
   const WorkRecordsCompanion({
     this.date = const Value.absent(),
@@ -293,6 +378,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     this.clockOut = const Value.absent(),
     this.type = const Value.absent(),
     this.deductionMinutes = const Value.absent(),
+    this.tripStart = const Value.absent(),
+    this.tripEnd = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WorkRecordsCompanion.insert({
@@ -301,6 +388,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     this.clockOut = const Value.absent(),
     required WorkType type,
     this.deductionMinutes = const Value.absent(),
+    this.tripStart = const Value.absent(),
+    this.tripEnd = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : date = Value(date),
        type = Value(type);
@@ -310,6 +399,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     Expression<DateTime>? clockOut,
     Expression<String>? type,
     Expression<int>? deductionMinutes,
+    Expression<DateTime>? tripStart,
+    Expression<DateTime>? tripEnd,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -318,6 +409,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
       if (clockOut != null) 'clock_out': clockOut,
       if (type != null) 'type': type,
       if (deductionMinutes != null) 'deduction_minutes': deductionMinutes,
+      if (tripStart != null) 'trip_start': tripStart,
+      if (tripEnd != null) 'trip_end': tripEnd,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -328,6 +421,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     Value<DateTime?>? clockOut,
     Value<WorkType>? type,
     Value<int>? deductionMinutes,
+    Value<DateTime?>? tripStart,
+    Value<DateTime?>? tripEnd,
     Value<int>? rowid,
   }) {
     return WorkRecordsCompanion(
@@ -336,6 +431,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
       clockOut: clockOut ?? this.clockOut,
       type: type ?? this.type,
       deductionMinutes: deductionMinutes ?? this.deductionMinutes,
+      tripStart: tripStart ?? this.tripStart,
+      tripEnd: tripEnd ?? this.tripEnd,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -360,6 +457,12 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
     if (deductionMinutes.present) {
       map['deduction_minutes'] = Variable<int>(deductionMinutes.value);
     }
+    if (tripStart.present) {
+      map['trip_start'] = Variable<DateTime>(tripStart.value);
+    }
+    if (tripEnd.present) {
+      map['trip_end'] = Variable<DateTime>(tripEnd.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -374,6 +477,8 @@ class WorkRecordsCompanion extends UpdateCompanion<WorkRecordRow> {
           ..write('clockOut: $clockOut, ')
           ..write('type: $type, ')
           ..write('deductionMinutes: $deductionMinutes, ')
+          ..write('tripStart: $tripStart, ')
+          ..write('tripEnd: $tripEnd, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -607,6 +712,8 @@ typedef $$WorkRecordsTableCreateCompanionBuilder =
       Value<DateTime?> clockOut,
       required WorkType type,
       Value<int> deductionMinutes,
+      Value<DateTime?> tripStart,
+      Value<DateTime?> tripEnd,
       Value<int> rowid,
     });
 typedef $$WorkRecordsTableUpdateCompanionBuilder =
@@ -616,6 +723,8 @@ typedef $$WorkRecordsTableUpdateCompanionBuilder =
       Value<DateTime?> clockOut,
       Value<WorkType> type,
       Value<int> deductionMinutes,
+      Value<DateTime?> tripStart,
+      Value<DateTime?> tripEnd,
       Value<int> rowid,
     });
 
@@ -653,6 +762,16 @@ class $$WorkRecordsTableFilterComposer
     column: $table.deductionMinutes,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get tripStart => $composableBuilder(
+    column: $table.tripStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get tripEnd => $composableBuilder(
+    column: $table.tripEnd,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$WorkRecordsTableOrderingComposer
@@ -688,6 +807,16 @@ class $$WorkRecordsTableOrderingComposer
     column: $table.deductionMinutes,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get tripStart => $composableBuilder(
+    column: $table.tripStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get tripEnd => $composableBuilder(
+    column: $table.tripEnd,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WorkRecordsTableAnnotationComposer
@@ -715,6 +844,12 @@ class $$WorkRecordsTableAnnotationComposer
     column: $table.deductionMinutes,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get tripStart =>
+      $composableBuilder(column: $table.tripStart, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get tripEnd =>
+      $composableBuilder(column: $table.tripEnd, builder: (column) => column);
 }
 
 class $$WorkRecordsTableTableManager
@@ -753,6 +888,8 @@ class $$WorkRecordsTableTableManager
                 Value<DateTime?> clockOut = const Value.absent(),
                 Value<WorkType> type = const Value.absent(),
                 Value<int> deductionMinutes = const Value.absent(),
+                Value<DateTime?> tripStart = const Value.absent(),
+                Value<DateTime?> tripEnd = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkRecordsCompanion(
                 date: date,
@@ -760,6 +897,8 @@ class $$WorkRecordsTableTableManager
                 clockOut: clockOut,
                 type: type,
                 deductionMinutes: deductionMinutes,
+                tripStart: tripStart,
+                tripEnd: tripEnd,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -769,6 +908,8 @@ class $$WorkRecordsTableTableManager
                 Value<DateTime?> clockOut = const Value.absent(),
                 required WorkType type,
                 Value<int> deductionMinutes = const Value.absent(),
+                Value<DateTime?> tripStart = const Value.absent(),
+                Value<DateTime?> tripEnd = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkRecordsCompanion.insert(
                 date: date,
@@ -776,6 +917,8 @@ class $$WorkRecordsTableTableManager
                 clockOut: clockOut,
                 type: type,
                 deductionMinutes: deductionMinutes,
+                tripStart: tripStart,
+                tripEnd: tripEnd,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

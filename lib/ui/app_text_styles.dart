@@ -131,6 +131,30 @@ abstract final class AppTextStyles {
   static TextStyle get sheetButtonSecondary => _style(15, FontWeight.w600, color: AppColors.subtle);
   static TextStyle get deleteLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
 
+  // 시간 출장 (핸드오프 6)
+  static TextStyle get tripDash => _style(18, FontWeight.w400, color: AppColors.wheelUnselected);
+  static TextStyle get tripResult => _style(14.5, FontWeight.w500);
+  static TextStyle get tripInvalid => _style(13.5, FontWeight.w500, color: AppColors.minus);
+  /// 패널 버튼 제목. 고른 쪽은 브랜드색, 못 고르는 쪽(반차 날의 종일)은 흐리게.
+  static TextStyle tripPanelTitle({required bool selected, required bool enabled}) => _style(
+        15,
+        FontWeight.w600,
+        color: !enabled
+            ? AppColors.dotInactive
+            : selected
+                ? AppColors.brand
+                : AppColors.ink,
+      );
+  static TextStyle get tripPanelSub => _style(12.5, FontWeight.w400, color: AppColors.subtle);
+  /// 미래 시트 출장 행의 범위 "09:00–12:00"
+  static TextStyle get typeRowRange => _style(13, FontWeight.w500, color: AppColors.tripText);
+
+  /// 오늘 화면 출장 칩. 범위가 있으면 출장 글자색, 없으면("+ 출장") subtle.
+  static TextStyle tripChip({required bool filled}) =>
+      _style(12.5, FontWeight.w600, color: filled ? AppColors.tripText : AppColors.subtle);
+  /// "오늘 출장" 시트 — 시간 출장 행 오른쪽 범위
+  static TextStyle get todayTripRange => _style(14.5, FontWeight.w600, color: AppColors.brand);
+
   static TextStyle get toast => _style(13.5, FontWeight.w500, color: AppColors.onBrand);
 
 
@@ -171,6 +195,12 @@ abstract final class AppTextStyles {
   static TextStyle get plannedLine => _style(12, FontWeight.w400, color: AppColors.subtle);
   /// 연차 카드 제목 아래 "10월 26일 기준"
   static TextStyle get leaveBaseLine => _style(13, FontWeight.w400, height: 1.45, color: AppColors.subtle);
+
+  // 알림 미리보기 카드
+  static TextStyle get notifyPreviewMeta => _style(12, FontWeight.w400, color: AppColors.subtle);
+  static TextStyle get notifyPreviewTitle => _style(14, FontWeight.w600);
+  /// 설정 행 보조 설명 — OS 권한이 꺼져 있다는 경고
+  static TextStyle get settingsRowSubWarning => _style(13, FontWeight.w400, height: 1.45, color: AppColors.minus);
 
   // 확인 다이얼로그
   static TextStyle get dialogTitle => _style(16, FontWeight.w600);

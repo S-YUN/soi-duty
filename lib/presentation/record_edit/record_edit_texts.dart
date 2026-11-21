@@ -46,6 +46,33 @@ abstract final class RecordEditTexts {
   static const halfDayDeductionTooLong = '반차인 날은 4시간까지 뺄 수 있어요';
   static const holidayWorkButton = '+ 이 날 근무한 시간 입력';
   static const holidayNote = '공휴일 근무는 주 40시간에 포함되지 않아요';
+  // 시간 출장 (핸드오프 6)
+  static const tripSheetTitle = '시간 출장';
+  static const tripSheetHelp = '몇 시부터 몇 시까지 출장이었는지 기록으로 남겨요.';
+  static const tripStart = '시작';
+  static const tripEnd = '끝';
+  static const tripDash = '–';
+  static const tripInvalid = '끝이 시작보다 늦어야 해요';
+  static const tripClear = '출장 지우기';
+  static const tripPanelNote = '출장을 어떻게 넣을까요?';
+  static const tripFullDay = '종일 출장';
+  static const tripFullDaySub = '8시간 인정';
+  static const tripFullDayHalfDay = '반차인 날은 안 돼요';
+  static const tripTimed = '시간 출장';
+  static const tripTimedSub = '시간 직접 입력';
+  static const tripSelectedMark = ' ✓';
+  static const tripRemove = '출장 빼기';
+  static const tripRowLabel = '출장';
+  static const tripNone = '없음';
+
+  /// "09:00–12:00 · 3시간"
+  static String tripResult(DateTime start, DateTime end) =>
+      '${formatClockSpan(start, end)} · ${formatKoreanDuration(minutesBetween(start, end))}';
+
+  /// 행·버튼 보조에 쓰는 범위. 없으면 [none].
+  static String tripRange(DateTime? start, DateTime? end, {String none = tripNone}) =>
+      start == null || end == null ? none : formatClockSpan(start, end);
+
   static const hourUnit = '시간';
   static const minuteUnit = '분';
 

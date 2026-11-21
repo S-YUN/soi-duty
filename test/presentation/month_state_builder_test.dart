@@ -176,4 +176,32 @@ void main() {
       expect(build([], month: DateTime(2027, 1), settings: AppSettings(leaveBalanceByYear: {2026: b})).leave.balance, isNull);
     });
   });
+
+  test('시간 출장 — hasTrip만 켜지고 값은 그대로', () {
+    MonthState of(List<WorkRecord> records) => buildMonthState(
+          records: records,
+          firstRecordDate: DateTime(2026, 8, 20),
+          now: d(16, 12),
+          rules: const WorkRules(),
+          month: DateTime(2026, 9),
+          settings: const AppSettings(),
+        );
+    MonthCell cell(MonthState s, int day) => s.weeks.expand((w) => w).firstWhere((c) => c.date == d(day));
+    final plain = of([rec(14, inH: 9, outH: 18), rec(12, inH: 10, outH: 14)]);
+    final trip = of([
+      rec(14, inH: 9, outH: 18, tripInH: 9, tripOutH: 12),
+      rec(12, inH: 10, outH: 14, tripInH: 10, tripOutH: 12),
+      rec(23, tripInH: 9, tripOutH: 12),
+      rec(15, type: WorkType.businessTrip),
+    ]);
+    expect(cell(trip, 14).hasTrip, isTrue);
+    expect(cell(trip, 12).hasTrip, isTrue);
+    expect(cell(trip, 23).hasTrip, isTrue); // 미리 넣어둔 미래
+    expect(cell(trip, 15).hasTrip, isFalse); // 종일 출장은 유형
+    expect(cell(trip, 16).hasTrip, isFalse);
+    expect(cell(plain, 14).hasTrip, isFalse);
+    expect(cell(trip, 14).value, cell(plain, 14).value);
+    expect(cell(trip, 12).value, cell(plain, 12).value);
+    expect(cell(trip, 23).value, const MonthCellValue.none());
+  });
 }

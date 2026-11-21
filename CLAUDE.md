@@ -20,7 +20,7 @@
 | 반차 (halfDay) | 없음 | 4h | 필요 |
 | 연차 (dayOff) | — | 0h | 불필요 |
 | 공휴일 (holiday) | 없음 | 0h | 불필요 (일했으면 입력 가능) |
-| 출장 (businessTrip) | — | 0h (8h 인정) | 불필요 |
+| 출장 (businessTrip) — 종일 출장 | — | 0h (8h 인정) | 불필요 |
 
 `normal`이 기본값이다. UI에 "일반"이라는 선택지를 두지 않는다.
 반차·연차·공휴일·출장 중 아무것도 켜지 않은 상태가 곧 일반이다.
@@ -38,6 +38,24 @@
 - 입력 경로: 미리 알면 주간·월간 시트(미래·출근 전 오늘 포함). 당일 공문이면 오늘 화면 근무 중
   **"남은 시간 공제하고 퇴근"** 체크 → 퇴근 순간 `max(0, 기본 기준 − 실근무)`를 공제로 저장(기존 공제를 덮는다,
   분 단위 그대로). 이 값은 입력값이다 — 나중에 출근 시각을 고쳐도 따라 바뀌지 않는다.
+
+### 시간 출장 (2026-11-20)
+
+"오늘 09:20–12:30 출장이었다"를 **기록으로만** 남긴다. 계산에는 전혀 쓰지 않는다.
+
+- 그날에 붙는 **시작·끝 시각 범위**(`tripStart`·`tripEnd`), 하루에 하나. 시간 출장 날은 일반 근무일(반차면 반차)이고
+  잔여·기준 대비·점심·누락·안내 문구·알림은 출퇴근으로만 계산한다 — 출장 출발 때 출근, 일이 끝날 때 퇴근을 찍는다.
+  `work_calculator.dart`의 계산 함수는 이 두 값을 읽지 않는다(`sanitizeRecord`와 주간 요약의 개수만 예외).
+- **왜 계산에 안 쓰나.** 처음엔 범위를 그날 기준에서 빼는 설계였는데 겹침·기준 초과 검증, 점심 해석, 근무 중 "출장 처리하고 퇴근",
+  종일 전환 다이얼로그까지 끌고 와서 접었다. 요청의 핵심은 계산이 아니라 "출장이었다는 기록"이다.
+- **종일 출장**은 그대로 유형(`businessTrip`, 쉬는 날, 시각 없음, 8h 인정). 둘은 한 날에 같이 있을 수 없다.
+- 붙을 수 있는 날: 일반·반차·공휴일(근무)·주말·미래. **연차·종일 출장으로 바꾸면 비운다**(`canHaveTrip`, `sanitizeRecord`).
+- 유효성은 `끝 > 시작` 하나(`isValidTripRange`). 출퇴근과 겹쳐도 되고 근무 중에 아직 안 온 끝 시각도 된다. 그날 안에서 끝난다.
+  하나만 있거나 뒤집힌 범위는 저장 직전·백업 가져오기에서 둘 다 버린다.
+- **빈 기록 판정에 포함**: 시각·공제·출장 범위가 다 없는 일반만 행을 지운다(`isEmptyRecord`). 범위만 있는 날(미리 넣은 미래, 출근 전 오늘)은 남는다.
+- 주간 요약 "출장 n" = 종일 출장(평일) + 시간 출장이 있는 날(**월~일**)을 각각 1.
+- 처음 값: 시작 = 그날 출근 시각(없으면 `defaultTripStartMinutes` 09:00), 끝 = 시작 + `defaultTripMinutes`(3h), 23:59에서 멈춤 (`defaultTripRange`).
+- 스펙: `docs/specs/2026-11-10-partial-business-trip.md`, 화면·문구·치수는 `docs/specs/design-handoff-6-partial-trip-notification.md`.
 
 ### 하루 실근무 시간
 
@@ -150,6 +168,46 @@
 읽힌다는 피드백 때문. 위 카드의 잔여와 아래 줄이 같은 기준이어야 한다. 예전 방식(출근 직후 60분을 미리 빼고 0에서 막음)은
 첫 한 시간 동안 잔여가 안 줄었다. 점심 시작 시각은 지금 기본값만 쓰고, 테스터가 12시가 아니라고 할 때 설정(기본값 있는 행)으로 뺀다.
 
+### 퇴근 알림 (2026-11-20)
+
+그날/이번 주 채울 시간을 다 채운 시각에 OS 로컬 알림을 **하루 최대 하나** 보낸다. 정시만, 버튼 없음, 예고 알림 없음.
+**알림 하나 = "이제 가도 돼요".** "아직 남았어요" 알림은 없다 — 알림이 안 온 것 자체가 "아직"이다(워치에선 문구를 안 읽고 진동만 본다).
+
+```
+근무 중이 아니거나 주말·공휴일 근무               → 없음
+T기준 = 출근 + 그날 기준시간, T주간 = 출근 + 이번 주 남은 시간   (둘 다 점심 창에 걸리면 창 뒤로)
+첫 주 예외                                        → 일일(N1) @ T기준
+출근 전에 이미 이번 주를 채움                      → 없음
+마지막 근무일                                     → 주간(N2) @ T주간      — T기준에 "남았어요"를 보내지 않는다
+T주간 ≤ T기준                                     → 주간(N2′) @ T주간
+그 외                                             → 일일(N1) @ T기준
+```
+
+- 그날 기준시간이 0이면 일일 알림 없음. 알림 시각이 자정을 넘기면 없음. 오늘 몫(균등 배분)·시간 출장은 보지 않는다 (`planClockOutNotice`).
+- **OS 예약을 건드리는 곳은 `ClockOutNotificationSync` 하나.** 출근·퇴근·반차 버튼이 각자 예약을 고치면 빠지는 경우가 생긴다.
+  기록·첫 기록일·날짜·알림 설정이 바뀌거나 앱으로 돌아올 때마다 "지금 계획"과 OS 예약을 다시 맞춘다(직렬, 실패하면 20초 뒤 재시도 3번까지).
+- **같은 알림이 두 번 울리지 않게 마지막 알림을 기기에 저장한다**(`clock_out_notice`). 시각이 지났으면 OS가 띄운 것으로 본다 —
+  퇴근 시각 뒤에 앱을 다시 켜거나, 지난 기록을 고치거나, 알림을 껐다 켜거나, 퇴근을 취소해도 다시 울리지 않는다.
+  이미 지난 시각으로 계획이 바뀌면(출근 시각을 앞당김) 바로 한 번 띄운다. 계획이 미래로 옮겨가면(반차 해제) 새 시각에 다시 예약한다.
+- 계획은 맞추는 순간의 시각으로 센다 — 매 분 도는 시계(`nowProvider`)는 앱이 밤새 멈춰 있다 돌아오면 어제에 머물 수 있다. 돌아올 때 시계도 새로 흘린다.
+- **권한은 첫 평일 출근 직후 한 번 묻는다**(P1, 주말·공휴일 근무 출근은 건너뜀). 설치 직후에 묻지 않는다 — iOS는 한 번 거절하면 다시 못 묻는다.
+  수락 → OS 창. 거절·넘김 → 토스트, 다시 묻지 않음. OS 창에서 거절해도 "켜짐"은 남아 OS에서 허용하고 돌아오면 바로 예약된다.
+- OS는 "아직 안 물어봄"과 "거부함"을 구분해 주지 않아 **우리가 OS 창을 띄운 적이 있는지**(`notification_os_asked`)로 가른다.
+- 워치는 별도 처리 없음 — OS가 넘긴다.
+- **정시에 못 울리면 아예 보내지 않는다** (2026-11-20 사용자 결정 — "늦게라도 보낸다"는 선택지는 없다).
+  Android는 "알람 및 리마인더"(`SCHEDULE_EXACT_ALARM`) 권한이 있어야 정시에 울린다. 권한 없이 걸 수 있는 방식은 OS가 알람을
+  남은 시간의 75%, 상한 1시간까지 늦춘다 — 실기기(Galaxy A16 · Android 16)에서 5분 뒤 예약이 3분 45초 늦었고 2시간 뒤 예약은 허용 오차가 1시간으로 잡혔다.
+  권한을 켜면 앱 프로세스가 죽은 상태에서도 0.5초 안에 울렸다. 그래서 **늘 정시 방식(`exactAllowWhileIdle`)으로만 걸고, 권한이 없으면 예약하지 않는다.**
+  Android 14+는 이 권한이 기본 꺼짐이고 **시스템 설정에서 사용자가 직접 켠다**(12~13은 기본 허용, iOS는 해당 없음) —
+  알림을 켠 직후 안내 다이얼로그("하나만 더 허용해 주세요" → 설정 열기 / 나중에)를 띄우고, 안 켠 동안은 설정 토글 아래에
+  **"알람 및 리마인더 · 허용해야 퇴근 알림이 와요 · 설정 열기"** 행이 보인다. 넘기거나 허용하지 않고 돌아오면 토스트로 "허용해야 알림이 와요".
+  권한이 회수되면 OS가 걸어둔 알람을 지울 수 있어 앱으로 돌아올 때 `resync()`로 강제로 다시 맞춘다.
+  묻지 않고 허용되는 `USE_EXACT_ALARM`은 Play 정책이 알람·캘린더 앱으로 제한해 쓰지 않는다.
+  이 화면·문구는 핸드오프 6에 없어 임시다 — 디자인 확인이 필요하다.
+- 디버그 시계를 옮겨도 실제 시각에 울린다(계획 − 오프셋). 디버그 시트에 "알림 지금 보내기 · 1분 뒤 알림 예약".
+- 스펙: `docs/specs/2026-11-10-clock-out-notification.md` §8, 문구·화면 `design-handoff-6-partial-trip-notification.md` §7~§10,
+  **기기에서 확인할 것** `docs/specs/2026-11-20-notification-device-checklist.md`(자동 테스트는 "무엇을 언제 예약하는지"까지만 본다).
+
 ### 연차 (2026-10-27 — "남은 연차 + 기준일")
 
 ```
@@ -208,11 +266,22 @@
   "☐ 오늘 반차 · 출근 변경 · 출근 취소" 셋 (2026-09-18). 공휴일 근무 중엔 반차 없이 "출근 변경 · 출근 취소".
 - **공휴일에도 출근할 수 있다.** 오늘 화면 공휴일 상태에서 "출근하기"가 눌리고, 유형은 공휴일 그대로 시각만 찍는다.
   연차·출장은 되돌리기 후 출근.
-- **출근 취소는 시각만 비운다.** 반차 체크는 풀리지만 공휴일 표시와 미리 넣은 시간공제는 남는다.
-  남길 게 없으면(공제 없는 일반) 기록을 지운다.
+- **출근 취소는 시각만 비운다.** 반차 체크는 풀리지만 공휴일 표시와 미리 넣은 시간공제·시간 출장은 남는다.
+  남길 게 없으면(공제·출장 범위 없는 일반) 기록을 지운다.
 - **연차·공휴일·출장은 칩을 누르는 순간 저장하고 닫는다.** 시각 입력이 없으니 저장 버튼을 거칠 이유가 없다.
   이미 출퇴근 시각이 있던 날이면 시각이 지워진다고 한 번 확인한다. 반차 선택과 유형 해제는 시각 입력이
   이어지므로 초안만 바꾸고 저장 버튼으로 마무리한다. 미래 날짜는 저장 버튼이 없으니 어느 유형이든 즉시 저장.
+- **출장 칩(행)은 바로 저장하지 않는다** (2026-11-20). 누르면 아래에 "종일 출장 / 시간 출장" 패널이 열리고 다시 누르면 닫힌다.
+  종일 = 예전 출장 칩 그대로(즉시 저장·닫힘, 시각이 있으면 확인). 반차를 켠 날은 종일이 비활성("반차인 날은 안 돼요").
+  시간 = 작은 시트(시작·끝 칸 + 휠 하나, 결과 줄 "09:00–12:00 · 3시간")가 겹쳐 뜬다 — 시간공제와 같은 흐름:
+  과거·퇴근한 오늘은 "확인" → 초안 반영 → 저장 버튼, 유형 전용 모드는 "저장" → 바로 저장하고 다 닫힘.
+  출장(종일이든 시간이든)이 있으면 패널에 "출장 빼기". 연차·종일 출장 날에 시간 출장을 넣으면 유형이 일반으로 풀리고 공휴일·반차는 그대로.
+- **출장 행**: 시간 출장이 있으면 출퇴근 행(과 휠) 아래·시간공제 위에 "출장 · 09:20–12:30" — 누르면 작은 시트(고치기 · "출장 지우기").
+  주말 시트는 칩이 없어 이 행이 늘 보인다(없으면 "없음"). 미래 평일은 유형 행의 "출장" 옆에 범위. **계산 내역에는 줄을 넣지 않는다.**
+  칩은 시간 출장도 출장색으로 칠한다 — 반차·공휴일 칩과 함께 칠해질 수 있다.
+  큰 시트에 저장 버튼이 없는 경우(유형 전용 모드, 근무 시간을 펼치지 않은 지난 공휴일)는 작은 시트의 버튼이 "저장"이고 바로 저장한다 — 초안에만 두면 저장할 길이 없다.
+- **패널·휠·계산 내역은 같이 펼치지 않는다.** 패널을 열면 휠이 접히고 계산 내역이 숨고, 휠을 펴면 패널이 닫히고 출장 행이 숨는다 —
+  반차 + 출장 + 공제인 날도 320×568에서 시트가 화면을 다 채우지 않게(다 채우면 닫을 수 없다).
 - **하단은 저장(전체 너비) + "이 날 기록 지우기"만.** 취소 버튼은 없다 — 아래로 내리거나 바깥을 탭하면 닫힌다.
 - **휠은 오전/오후 · 시(1–12) · 분.** 입력만 12시간제이고 저장·표시는 24시간(`13:30`) 그대로.
   빈 행을 열면 출근 08:00, 퇴근 17:00에서 시작한다 — 시트 안의 시작점일 뿐 행 표시(`--:--`)나 저장값과 무관.
@@ -259,6 +328,8 @@ class WorkRules {
     this.defaultClockInMinutes  = 8 * 60,   // 시트에서 빈 행을 열 때 휠의 시작 시각
     this.defaultClockOutMinutes = 17 * 60,
     this.extraWorkPayMultiplier = 1.5,     // 주말·공휴일 수당 배율 (테스트 회사 규정, 사용자 설정 아님)
+    this.defaultTripStartMinutes = 9 * 60, // 시간 출장 시트의 처음 값 — 출근 시각이 없을 때의 시작
+    this.defaultTripMinutes     = 180,      // 시간 출장 시트의 처음 길이
   });
 }
 ```
@@ -284,18 +355,21 @@ class WorkRecord with _$WorkRecord {
     DateTime? clockOut,
     @Default(WorkType.normal) WorkType type,
     @Default(0) int deductionMinutes,  // 시간공제 (입력값)
+    DateTime? tripStart,               // 시간 출장 범위 (기록만) — 둘 다 있거나 둘 다 없다
+    DateTime? tripEnd,
   }) = _WorkRecord;
 }
 ```
 
-- **Drift 스키마 v2** (2026-09-27, 시간공제 컬럼 2개). v1은 친구들 폰에 깔린 기준점이다. 컬럼을 바꿀 때는
+- **Drift 스키마 v3** (2026-11-20, 시간 출장 컬럼 2개 — v2는 2026-09-27 시간공제). v1은 친구들 폰에 깔린 기준점이다. 컬럼을 바꿀 때는
   `schemaVersion`을 올리고 `onUpgrade`에 단계를 추가한 뒤 `dart run drift_dev schema dump ... drift_schemas/drift_schema_vN.json`,
   `dart run drift_dev schema generate drift_schemas/ test/generated_migrations/`로 덤프·검증 코드를 만들고
   `test/data/migration_test.dart`에 이전 버전 데이터 보존 테스트를 추가한다.
 
-- **사용자 설정 `AppSettings`**(2026-10-25)는 기존 `Settings`(key/value) 테이블에 키로 저장한다 — 스키마 변경 없음(v2 유지).
-  키: `week_start`(`monday`|`sunday`) · `leave_remaining_minutes_<year>` + `leave_base_date_<year>`(`yyyy-MM-dd`, 2026-10-27 — 옛 `annual_leave_days_<year>`는 읽기 변환만) · `hourly_wage` · `last_export_date`(`yyyy-MM-dd`). null은 행 삭제.
-  `first_record_date`도 같은 테이블이지만 소유자는 `WorkRecordRepository`. 저장소는 `AppSettingsRepository`(포트) / `DriftAppSettingsRepository`.
+- **사용자 설정 `AppSettings`**(2026-10-25)는 기존 `Settings`(key/value) 테이블에 키로 저장한다 — 스키마 변경 없음.
+  키: `clock_out_notification`(`on`) · `notification_prompted` — 퇴근 알림, 기기 값이라 백업에 넣지 않는다(2026-11-20) · `week_start`(`monday`|`sunday`) · `leave_remaining_minutes_<year>` + `leave_base_date_<year>`(`yyyy-MM-dd`, 2026-10-27 — 옛 `annual_leave_days_<year>`는 읽기 변환만) · `hourly_wage` · `last_export_date`(`yyyy-MM-dd`). null은 행 삭제.
+  `first_record_date`도 같은 테이블이지만 소유자는 `WorkRecordRepository`, `clock_out_notice`·`notification_os_asked`는 `NotificationStateRepository`(알림 동작 기록, 백업 제외).
+  **설정을 고쳐 저장할 때는 스트림의 마지막 값이 아니라 `read()`로 읽는다** — 스트림은 방금 한 저장을 아직 못 봤을 수 있어 연달아 저장하면 앞의 저장을 덮어쓴다(2026-11-20). 저장소는 `AppSettingsRepository`(포트) / `DriftAppSettingsRepository`.
   **저장소 코드에서 Drift `watch().first`를 쓰지 않는다** — 위젯 테스트의 가짜 시간에서 첫 값이 나오지 않고 `db.close`까지 멈춘다. 일회성은 `get()`.
 - **주말 근무도 `normal`로 저장한다.** 주말 여부는 `date.weekday`로 판단하고
   집계에서 필터링한다. `enum`에 주말을 넣지 않는다 — 날짜만 보면 알 수 있는 정보다.
@@ -314,22 +388,23 @@ class WorkRecord with _$WorkRecord {
 - **로컬 저장: Drift** — 쿼리 결과를 스트림으로 흘려주므로 `StreamProvider`와 맞물린다.
   한 화면에서 기록을 고치면 다른 화면의 집계가 자동 갱신되는 게 이 앱의 핵심 요구사항이다.
 - **반응형 사이즈: 커스텀 SizeConfig** (비율 기반)
-- **플랫폼 패키지**: `share_plus`(내보내기 공유 시트) · `file_picker`(가져오기) · `path_provider`(임시 파일) · `package_info_plus`(버전) · `url_launcher`(처리방침; Android `<queries>` https)
+- **플랫폼 패키지**: `flutter_local_notifications` ^22.3.3 + `timezone`(퇴근 알림 — 23.x는 AGP 9.1.1·compileSdk 37 필요, Android는 desugaring·리시버 둘·`ic_stat_soiduty`·`keep.xml`, iOS는 AppDelegate의 알림 delegate) · `share_plus`(내보내기 공유 시트) · `file_picker`(가져오기) · `path_provider`(임시 파일) · `package_info_plus`(버전) · `url_launcher`(처리방침; Android `<queries>` https)
 - **아키텍처: Clean Architecture** (presentation / domain / data)
   UseCase 레이어는 두지 않아도 되지만 필요하다면 사용해도 괜찮다. 
 
 ### Repository
 
-Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettingsRepository` · `BackupRepository` 셋, 구현은 전부 Drift.
+Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettingsRepository` · `BackupRepository` · `NotificationStateRepository` 넷, 구현은 전부 Drift.
+ OS로 나가는 길은 따로 포트 — `BackupFiles`(파일)와 `NotificationScheduler`(로컬 알림, 구현 `data/notification/local_notification_scheduler.dart`). 이 둘은 테스트에서 Fake로 바꾼다.
 
-**백업 = JSON 파일 내보내기/가져오기** (2026-10-25). 서버·계정 없음. `domain/backup/backup_codec.dart`가 파일 형식(`app: "soi_duty"`, `format: 2`,
+**백업 = JSON 파일 내보내기/가져오기** (2026-10-25). 서버·계정 없음. `domain/backup/backup_codec.dart`가 파일 형식(`app: "soi_duty"`, `format: 3`,
 `firstRecordDate`, `settings{weekStart, leaveBalanceByYear{year: {remainingMinutes, baseDate}}, hourlyWage}`, `records[WorkRecord.toJson]`)을 맡고
-(format 1의 `annualLeaveDaysByYear`는 "일 × 480, 기준일 1/1"로 읽는다, 2026-10-27), `DriftBackupRepository.restore`가
+(format 1의 `annualLeaveDaysByYear`는 "일 × 480, 기준일 1/1"로 읽는다, 2026-10-27 · format 3은 기록에 `tripStart`·`tripEnd`가 붙은 것뿐이라 1·2 파일은 범위 없음으로 읽힌다, 2026-11-20), `DriftBackupRepository.restore`가
 한 트랜잭션에서 기록 전부 교체 · 첫 기록일(파일 값 ?? 최소 날짜 ?? 삭제) · 설정 세 값 덮어쓰기(`last_export_date`는 기기 값이라 유지)를 한다.
 내보내기는 임시 파일 `soi_duty_backup_yyyy-MM-dd.json` → OS 공유 시트(`share_plus`), 닫지 않았으면 마지막 내보내기 날짜를 오늘로.
 가져오기는 OS 파일 선택(`file_picker`) → 디코드 실패 토스트 / 확인 다이얼로그("지금 기록 n건이 …") → 복원 → 토스트. 파일 I/O는
 `domain/repository/backup_files.dart`의 `BackupFiles` 포트 뒤에 있고(구현 `data/backup/platform_backup_files.dart`, 이전 백업 임시 파일은 다음 내보내기 때 삭제) 테스트는 Fake로 바꾼다.
-가져오기는 범위 밖 값(시급 1~9,999,999 · 남은 연차 0~99일·0.5 단위 밖·기준일 파싱 실패, 퇴근<출근)을 UI 규칙대로 거른다. 같은 OS끼리의 폰 교체는 OS 백업(iCloud·Google)으로도
+가져오기는 범위 밖 값(시급 1~9,999,999 · 남은 연차 0~99일·0.5 단위 밖·기준일 파싱 실패, 퇴근<출근, 출장 끝≤시작)을 UI 규칙대로 거른다. 같은 OS끼리의 폰 교체는 OS 백업(iCloud·Google)으로도
 따라올 수 있지만 검증하지 않았다 — 내보내기가 확실한 길이다.
 
 **Fake 구현체는 만들지 않는다.** Fake는 보통 UI를 미완성 데이터 소스에서 떼어놓기
@@ -337,8 +412,8 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
 테스트가 필요하면 `NativeDatabase.memory()` 로 실제 Drift를 인메모리 구동한다.
 
 대신 **디버그용 시드 함수**와 **디버그 시계 이동**(`DebugClockOffset` — 실제 시각에 오프셋을 더해 `clockProvider`가 돌려준다)을 둔다.
-날짜 헤더를 길게 누르면 요일·시각을 옮기고 시드를 넣을 수 있다. 시드는 옮긴 시계 기준으로 들어간다. 시드는 기록·첫 기록일만 바꾸고 사용자 설정은 두되,
-'두 달치 기록'은 올해 남은 연차 15일(기준일 1월 1일) · 시급 12,500을 함께 넣는다. 오늘 화면의 상태들, 첫 주 예외,
+날짜 헤더를 길게 누르면 요일·시각을 옮기고 시드를 넣고 알림을 시험할 수 있다(지금 보내기 · 1분 뒤 예약 — 기기에서 포그라운드·백그라운드·종료·워치 확인용). 시드는 옮긴 시계 기준으로 들어간다. 시드는 기록·첫 기록일만 바꾸고 사용자 설정은 두되,
+'두 달치 기록'은 올해 남은 연차 15일(기준일 1월 1일) · 시급 12,500을 함께 넣는다. '두 달치 기록'에는 시간 출장도 일반·반차+공제·공휴일 근무·주말 근무에 하나씩과 다음 주 예정 하나가 들어 있다. 오늘 화면의 상태들, 첫 주 예외,
 기록 누락이 있는 주 같은 상황을 손으로 만들지 않고 바로 확인하기 위한 것이다.
 릴리즈 빌드에는 포함하지 않는다.
 
@@ -351,7 +426,8 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
 - 반차·연차·공휴일·출장·시간공제가 섞인 주의 목표 계산 (미리 찍은 미래 유형·공제도 즉시 반영되는지)
 - 공휴일 근무가 실적에서 빠지고 점심 공제가 없는지, 시간공제가 오늘 몫에서 그날에만 빠지는지
 - 근무 중 진행분이 점심 창 전·중·후에 맞게 오르고 멈추는지, 창이 끝나면 퇴근 저장값과 같은지
-- v1 → v2 마이그레이션이 기존 기록·첫 기록일을 보존하는지
+- v1·v2 → v3 마이그레이션이 기존 기록·공제·첫 기록일을 보존하는지
+- 시간 출장을 붙여도 하루·주 계산이 전부 같은지, 연차·종일 출장으로 바꾸면 범위가 지워지는지, 범위만 있는 기록이 남는지
 - 기록이 없는 평일이 목표에 8h로 잡히는지
 - 주말 근무가 주간 집계에서 빠지는지
 - 첫 주 예외 판정 (월요일 시작 여부)
@@ -361,12 +437,16 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
   백업 왕복·거부·복원(첫 기록일·설정·`last_export_date` 유지, format 1 변환), 옛 연차 키 변환·새 키 우선·저장 시 삭제,
   숫자 시트 자릿수·시급 0 비활성·연차 소수점 포매터·0.5 단위 검증·0 저장·헤드라인·강조 줄·본문 스크롤, 설정 화면 빈/채운 상태(기준일 줄),
   내보내기·가져오기 흐름(Fake 파일, 취소·실패·확인), 남은 연차 시트 흐름(저장·되돌리기·미래 연차 강조 줄)
+- 퇴근 알림: 무엇을 언제(`planClockOutNotice` — 일일·주간·N2′·첫 주·없음·자정 넘김), 예약 맞추기(Fake 스케줄러 — 출근·퇴근·출근 변경·반차·지난 기록 수정,
+  이미 지난 시각은 하루 한 번, 앱 재시작·밤을 넘긴 뒤 돌아옴·껐다 켜기에서 중복 없음, 시작할 때 예약을 지우지 않음, 실패 재시도),
+  권한 묻기 흐름(첫 평일 출근만, 수락·거절·넘김), 설정 토글 세 상태, 알림 설정이 백업·복원에서 기기 값으로 남는지
 
 레이아웃도 어긋나기 쉬운 곳만 고정한다. 글꼴·간격 토큰을 바꾸면 여기서 먼저 터진다.
 
-- 주간 7행의 높이가 모두 같은지 (메모 유무로 1px씩 어긋나던 자리, 배지 둘, 폭 320·360·600)
+- 주간 7행의 높이가 모두 같은지 (메모 유무로 1px씩 어긋나던 자리, 배지 둘·셋, 폭 320·360·600)
 - 월간 캘린더 값이 잘리거나 축소되지 않는지 — 기기 폭 320~600 8종에서 그려진 폭 = 자연 폭
-- 오늘 화면 상태들의 주 버튼 Y가 같은지 — 단 평일 근무 중은 "남은 시간 공제하고 퇴근" 줄만큼 아래일 수 있다
+- 오늘 화면 상태들의 주 버튼 Y가 같은지 — 단 평일 근무 중은 "남은 시간 공제하고 퇴근" 줄만큼 아래일 수 있다. 출장 칩이 붙어도 Y는 그대로
+- 시간 출장 작은 시트·패널이 320×568에서 넘치지 않는지
 
 스모크 드라이브: `flutter drive --flavor dev --target test_driver/app.dart -d <시뮬레이터 ID>` —
 드라이버 진입점이 '두 달치 기록' 시드(올해 남은 연차 15일 · 시급 12,500 포함)를 넣고 오늘/주간/월간(카드)/시트/설정을 눌러 `docs/screenshots/`에 스크린샷을 남긴다
@@ -393,6 +473,7 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
 - **캘린더 안 스와이프로 달 이동.** 스와이프는 탭 전환 전용.
 - **공휴일 자동 가져오기.** 보류(2026-10-25) — 기기 캘린더는 권한·기기별 편차·데이터 품질 문제, 외부 API는 마지막에 다시 본다.
 - **수당 배율·급여 기간·연차 기준일 설정, 유도 줄 숨기기(×), 클라우드 동기화.**
+- **예고 알림(10분 전 등), 알림의 "퇴근하기" 버튼, 묻지 않고 허용되는 Android `USE_EXACT_ALARM`, 워치 전용 앱.** 예고 알림은 실사용 뒤 다시 본다 (2026-11-20).
 
 ---
 
@@ -412,15 +493,23 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
   `연차 1 · 반차 1 · 공휴일 1`(0은 생략, 하나도 없으면 줄 자체 생략) → 진행 바. 남은/부족/초과 문구는 없다.
   진행 바는 오늘·주간 모두 `실적 ÷ 그 주 목표`.
 - **주간 행**: 연차·공휴일은 앞의 "—" 없이 배지만. 오른쪽 ± 칸은 "+2h 56m"이 한 줄에 들어가는 너비.
+  시간 출장은 길이 배지 **"출장 3h 10m"**(출장색, 종일 출장은 시간 없는 "출장") — 순서는 유형 → 출장 → 공제.
+  **배지가 셋이면 셋째(공제)는 둘째 줄 맨 앞**으로 내려가고 행 높이는 그대로다. 범위는 주간에 쓰지 않는다 (핸드오프 6, 2026-11-20).
 - **월간 캘린더**: 셀 값은 얇은 공백(U+2009)·비례 숫자·좁은 자간으로 "+3h 52m"이 44px 칸에 원래 크기로 들어간다
   (`formatNarrowHm`, `AppTextStyles.calendarValue`). 셀 폭이나 글꼴을 바꾸면 다시 측정한다.
   날짜 숫자 뒤 **원 색이 곧 유형**(범례와 같은 색). 일반 근무일은 주말 포함 `#EFF1EC` 하나.
   배지·셀 배경 박스 없음. **오늘 표시 없음.** 앞뒤 달·설치 전은 셀 전체를 흐리게, 미래는 원 없이 원래 색 숫자
   (미리 찍은 유형만 색 원). 토·일 헤더·숫자는 적갈색 — **주말 근무 원 위에서도 적갈색 유지**(디자인 마크업은 잉크였지만 2026-10-25 사용자 결정).
   평일 근무 원 위 숫자만 잉크, 유형 원 위는 유형 글자색.
+  **시간 출장 날**: 유형이 없으면 원이 출장색(미리 넣은 미래 날짜 포함), 유형이 있으면 유형색이 먼저(반차·공휴일 근무 + 출장).
+  **출장 원 위 숫자는 주말이어도 출장 글자색** `#3F5866` — 적갈색은 출장 원 위 대비가 3.6:1이라 "주말 숫자는 원 위에서도 적갈색"의 예외다 (핸드오프 6).
 - **미래 날짜 시트**: 제목 "9월 24일" → 안내 한 줄 → 색 점·라벨·체크가 있는 전체 너비 행 4개(반차·연차·공휴일·출장) → 시간공제 행. 선택 행 배경 `#DDE8E1`,
   라벨은 선택 여부와 무관(잉크 w500) — 상태는 배경과 브랜드색 체크가 말한다.
 - **오늘 출근 전**: 보조 슬롯 라디오 "연차 · 공휴일 · 출장" ("오늘은 X" 셋은 폭 402에서도 넘쳐서 줄였다, 2026-09-27).
+  "출장" 라디오는 바로 바꾸지 않고 **"오늘 출장" 작은 시트**(종일 출장 / 시간 출장 두 행)를 띄운다 (2026-11-20).
+- **오늘 화면 출장 칩** (핸드오프 6): 근무 중 "09:12 출근" 옆에 점선 **"+ 출장"** → 시간 출장 작은 시트("저장"), 범위가 있으면 출장색 "출장 09:12–12:12"(누르면 고치기·지우기).
+  근무 중엔 주간·월간 시트가 잠겨 있어 여기가 시간 출장을 남기는 길이다. 출근 전은 범위가 있을 때만 "아직 출근 전" 옆에, 퇴근 완료는 요약 4칸 위에 보기만 하는 칩.
+  보조 슬롯·"남은 시간 공제하고 퇴근" 줄·상태 블록 높이·주 버튼 Y는 그대로다.
 - **오늘 근무 중**: 상태 블록은 "09:12 출근" + "7시간 15분째 근무중" + (평일·공휴일 아님·첫 주 아님) "☐ 남은 시간 공제하고 퇴근".
   체크하면 주 버튼이 "공제하고 퇴근하기". 상태 블록은 최소 104, 이 줄만큼 늘어난다. 보조 슬롯이 "☐ 오늘 반차 · 출근 변경 · 출근 취소" 셋.
 - **출장**: 오늘 화면은 연차와 같은 골격("오늘은 출장입니다 / 8시간 근무로 인정돼요"), 색은 청회색 `#D3DDE3`/`#3F5866`.
@@ -434,6 +523,10 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
   캘린더 요일 헤더 12.5 · 날짜 13, 범례 12.5, 시트 칩 13.5 · 휠 제목 13, 확인 다이얼로그 16/14.
   기간 네비게이터 화살표는 18(히트 영역 40), 라벨 최소 너비 140.
   **가장 작은 글자는 캘린더 값 11.5** — 칸 폭(44px) 한계라 더 키우면 잘린다.
+- **퇴근 알림 화면 (핸드오프 6, 2026-11-20)**: 권한 묻기는 기존 확인 다이얼로그 + 설명 아래 **알림 미리보기 카드**(앱 아이콘 · "소이듀티" · 예정 시각 · "퇴근할 시간이에요", 접근성에서 숨김), 버튼 "안 받을래요 / 알림 받기".
+  설정은 섹션 순서 **캘린더 · 알림 · 연차 · 수당 · 데이터 · 앱 정보**, 알림 섹션은 "퇴근 알림" 행 하나 — **앱의 첫 토글**(`SoiSwitch` 51×31, 행 어디를 눌러도 토글).
+  OS 권한이 꺼져 있으면 토글 대신 "설정 열기"(브랜드) + 붉은 보조 설명 "기기 설정에서 알림이 꺼져 있어요" → 안내 다이얼로그 → OS 설정.
+  알림 문구는 `notification/notification_texts.dart`. Android 상태바 아이콘은 로고의 원형 차트를 딴 단색 벡터(디자인 아이콘이 오면 그 파일만 교체).
 - **설정 (브리프 4, 2026-10-25)**: 진입은 알약 탭 줄 오른쪽 **톱니**(44 히트, 세 탭 공통, `ShellTabBar`). 설정은 `/settings` 전체 화면이
   오른쪽에서 밀려오고(`CupertinoPage` — iOS 가장자리 스와이프로도 닫힌다) 뒤로가기로 닫힌다. 섹션: 캘린더(시작 요일 세그먼트 월|일) · 연차(남은 연차 — 값이 있으면 보조 설명이 "10월 26일 기준") · 수당(시급) · 데이터(내보내기 · 가져오기 ·
   마지막 내보내기 줄 "마지막 내보내기 2026년 10월 24일") · 앱 정보(버전 · 개인정보 처리방침 → `https://s-yun.github.io/soi-duty/privacy.html`).
@@ -467,10 +560,13 @@ lib/
 ├─ main.dart                 ProviderScope + MaterialApp.router
 ├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치 — PageView 컨테이너, 스와이프 전환 + /settings 슬라이드), route_paths.dart
 ├─ core/presentation/        SizeConfig, format/(date_format·time_format)
-├─ core/providers/           clock(디버그 시계·매 분 now), database(기록·설정·백업 저장소, workRules), app_info(버전)
+├─ core/providers/           clock(디버그 시계·매 분 now), database(기록·설정·백업 저장소, workRules), app_info(버전),
+│                            notification(스케줄러·알림 상태 저장소·오늘의 알림 계획·권한)
 ├─ ui/                       색상·타이포·사이즈 토큰
 ├─ domain/model/             WorkRecord, WorkType, AppSettings(WeekStart), BackupSnapshot (freezed)
 ├─ domain/backup/            백업 JSON 코덱 (순수 Dart)
+├─ domain/notification/      퇴근 알림 계획 planClockOutNotice (순수 Dart)
+├─ data/notification/        LocalNotificationScheduler (flutter_local_notifications)
 ├─ data/backup/              PlatformBackupFiles (share_plus · file_picker · 임시 폴더)
 ├─ domain/rules/             WorkRules + 계산 함수 (순수 Dart, 테스트 1순위)
 ├─ domain/repository/        Repository 인터페이스
@@ -480,11 +576,14 @@ lib/
 ├─ presentation/shell/       탭 셸 (알약 탭 + 톱니 ShellTabBar + 브랜치)
 ├─ presentation/shared/      기간 네비게이터, 토스트(app_toast), 확인 다이얼로그 등 공용 위젯
 ├─ presentation/splash/      NativeSplashHold — 오늘 상태 준비까지 네이티브 스플래시 유지
-├─ presentation/record_edit/ 시간 수정 시트 (오늘·주간·월간·누락 리스트가 공유). 미래 날짜는 type_rows, 과거는 type_chips
+├─ presentation/record_edit/ 시간 수정 시트 (오늘·주간·월간·누락 리스트가 공유). 미래 날짜는 type_rows, 과거는 type_chips.
+│                            시간 출장은 widgets/trip_choice_panel(종일/시간) · trip_sheet(범위 작은 시트 — 오늘 화면도 쓴다)
+├─ presentation/notification/ 퇴근 알림 — 예약 맞추기(ClockOutNotificationSync, keepAlive) · 앱 복귀 훅(Host) · 권한 묻기 · 문구
 ├─ presentation/settings/    설정 화면(SettingsScreen/View · 컨트롤러(keepAlive, 상태 없음) · 텍스트) + widgets/(섹션·행·세그먼트)
 ├─ presentation/debug/       시드·시계 이동 시트 (kDebugMode에서만 진입)
 └─ presentation/<feature>/   @riverpod Notifier/Provider + Screen + <feature>_texts + <feature>_state(_builder)
-                             (today / week / month). 오늘 화면의 '출근 변경' 시트는 today/widgets/clock_in_edit_sheet
+                             (today / week / month). 오늘 화면의 '출근 변경' 시트는 today/widgets/clock_in_edit_sheet,
+                             출장 칩·"오늘 출장" 시트는 today/widgets/trip_chip · today_trip_sheet
 assets/images/, assets/fonts/, assets/icon/(앱 아이콘 원본), assets/splash/(네이티브 스플래시 원본 — 번들에는 안 넣는다)
 ```
 

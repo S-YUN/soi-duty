@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TodayState {
 
- DateTime get date; WorkRecord? get record; TodayPhase get phase; WorkType? get dayType; bool get isHalfDay; DateTime? get clockIn; DateTime? get clockOut;/// working일 때 now − clockIn (점심 미공제)
+ DateTime get date; WorkRecord? get record; TodayPhase get phase; WorkType? get dayType; bool get isHalfDay; DateTime? get clockIn; DateTime? get clockOut;/// working일 때 실근무 진행분 — now − clockIn − 점심 창과 겹친 분 (`ongoingMinutes`)
  int? get elapsedMinutes;/// working일 때만. 첫 주 예외·주말·연차·이미 채움이면 null
  DateTime? get expectedClockOut;/// 출근 전·근무 중일 때 오늘 몫 (남은 시간 ÷ 남은 근무일). 반차는 4h 고정. 첫 주 예외·주말·연차면 null
  int? get todayShareMinutes;/// 이번 주 남은 시간 (오늘 진행분 제외). 0 이하면 이미 채움
@@ -266,7 +266,7 @@ class _TodayState extends TodayState {
 @override final  bool isHalfDay;
 @override final  DateTime? clockIn;
 @override final  DateTime? clockOut;
-/// working일 때 now − clockIn (점심 미공제)
+/// working일 때 실근무 진행분 — now − clockIn − 점심 창과 겹친 분 (`ongoingMinutes`)
 @override final  int? elapsedMinutes;
 /// working일 때만. 첫 주 예외·주말·연차·이미 채움이면 null
 @override final  DateTime? expectedClockOut;

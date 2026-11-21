@@ -28,7 +28,7 @@ void main() {
     final text = encodeBackup(snapshot);
     final json = jsonDecode(text) as Map<String, dynamic>;
     expect(json['app'], 'soi_duty');
-    expect(json['format'], 2);
+    expect(json['format'], 3);
     expect(json['firstRecordDate'], '2026-09-14');
     expect((json['settings'] as Map)['leaveBalanceByYear'], {
       '2026': {'remainingMinutes': 4080, 'baseDate': '2026-10-26'},
@@ -43,11 +43,11 @@ void main() {
     expect(decodeBackup(encodeBackup(s)), s);
   });
 
-  test('decode 실패 — JSON 아님 / app 다름 / format 3 / records가 배열 아님 / 레코드 date 없음', () {
+  test('decode 실패 — JSON 아님 / app 다름 / format 4 / records가 배열 아님 / 레코드 date 없음', () {
     expect(() => decodeBackup('not json'), throwsA(isA<BackupFormatException>()));
     expect(() => decodeBackup('[1, 2]'), throwsA(isA<BackupFormatException>()));
     expect(() => decodeBackup(withPatch((j) => j..['app'] = 'other')), throwsA(isA<BackupFormatException>()));
-    expect(() => decodeBackup(withPatch((j) => j..['format'] = 3)), throwsA(isA<BackupFormatException>()));
+    expect(() => decodeBackup(withPatch((j) => j..['format'] = 4)), throwsA(isA<BackupFormatException>()));
     expect(() => decodeBackup(withPatch((j) => j..['records'] = 'x')), throwsA(isA<BackupFormatException>()));
     expect(
       () => decodeBackup(withPatch((j) => j..['records'] = [<String, dynamic>{'clockIn': null}])),
@@ -90,5 +90,35 @@ void main() {
         ]));
     expect(bad.records.single.clockIn, isNull);
     expect(bad.records.single.clockOut, isNull);
+  });
+
+  test('시간 출장 범위가 왕복되고, format 2 파일(범위 없음)도 읽힌다', () {
+    final s = snapshot.copyWith(records: [rec(14, inH: 9, outH: 18, tripInH: 9, tripInM: 20, tripOutH: 12, tripOutM: 30)]);
+    expect(decodeBackup(encodeBackup(s)), s);
+    final v2 = decodeBackup(withPatch((j) => j..['format'] = 2));
+    expect(v2.records, snapshot.records);
+    expect(v2.records.every((r) => r.tripStart == null && r.tripEnd == null), isTrue);
+  });
+
+  test('끝 ≤ 시작이거나 하나만 있는 출장 범위는 둘 다 버린다 — 출퇴근은 그대로', () {
+    Map<String, dynamic> record(String date, Map<String, dynamic> trip) => {
+          'date': '${date}T00:00:00.000',
+          'clockIn': '${date}T09:00:00.000',
+          'clockOut': '${date}T18:00:00.000',
+          'type': 'normal',
+          'deductionMinutes': 0,
+          ...trip,
+        };
+    final decoded = decodeBackup(withPatch((j) => j
+      ..['records'] = [
+        record('2026-09-14', {'tripStart': '2026-09-14T12:00:00.000', 'tripEnd': '2026-09-14T09:00:00.000'}),
+        record('2026-09-15', {'tripStart': '2026-09-15T09:00:00.000'}),
+      ]));
+    expect(decoded.records, hasLength(2));
+    for (final r in decoded.records) {
+      expect((r.tripStart, r.tripEnd), (null, null));
+      expect(r.clockIn, isNotNull);
+      expect(r.clockOut, isNotNull);
+    }
   });
 }

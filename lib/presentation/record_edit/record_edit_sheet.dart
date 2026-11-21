@@ -19,6 +19,8 @@ import 'widgets/calc_rows.dart';
 import 'widgets/deduction_sheet.dart';
 import 'widgets/time_row.dart';
 import 'widgets/time_wheel.dart';
+import 'widgets/trip_choice_panel.dart';
+import 'widgets/trip_sheet.dart';
 import 'widgets/type_chips.dart';
 import 'widgets/type_rows.dart';
 
@@ -47,6 +49,9 @@ class RecordEditSheet extends ConsumerStatefulWidget {
 class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   /// 기록 스트림의 첫 값으로 한 번만 만든다. 그 뒤 스트림이 다시 방출돼도 편집 중인 초안은 건드리지 않는다.
   RecordDraft? _draft;
+
+  /// 출장 칩(행) 아래 "종일 / 시간" 패널이 열려 있는지. 초안이 아니라 화면 상태다.
+  var _tripPanelOpen = false;
 
   RecordDraft _initialDraft(List<WorkRecord> records) => RecordDraft.fromRecord(
     date: widget.date,
@@ -85,6 +90,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   /// 공휴일 근무는 다시 열어 "근무한 시간 입력"으로. 반차 선택·유형 해제는 시각 입력이 이어지므로 초안만 바꾼다.
   /// 유형 전용 모드(미래·출근 전 오늘)는 저장 버튼이 없어 어느 유형이든 바로 저장.
   Future<void> _onTypeChanged(RecordDraft draft, WorkType? type) async {
+    if (_tripPanelOpen) setState(() => _tripPanelOpen = false);
     final next = draft.withType(type);
     if (!draft.isTypeOnly && !next.isOff) return _update(next);
     if (next.isOff && draft.hasAnyTime) {
@@ -98,6 +104,72 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
     }
     await _saveDraft(next);
   }
+
+  /// 패널 "종일 출장" — 예전 출장 칩과 같다(즉시 저장·닫힘, 시각이 있으면 확인). 반차인 날은 패널이 눌리지 않게 막는다.
+  Future<void> _onTripFullDay(RecordDraft draft) async {
+    if (draft.isFullDayTrip) return setState(() => _tripPanelOpen = false);
+    await _onTypeChanged(draft, WorkType.businessTrip);
+  }
+
+  /// 패널 "시간 출장"·출장 행 — 작은 시트를 겹쳐 띄운다. 시간공제와 같은 흐름:
+  /// 과거·퇴근한 오늘은 초안만 바꾸고(저장 버튼으로 마무리), 유형 전용 모드는 작은 시트의 저장이 곧 저장.
+  Future<void> _editTrip(RecordDraft draft, WorkRules rules) async {
+    final (start, end) = draft.hasTrip
+        ? (draft.tripStart!, draft.tripEnd!)
+        : defaultTripRange(draft.date, draft.showsTimeRows ? draft.clockIn : null, rules);
+    final result = await showTripSheet(
+      context,
+      start: start,
+      end: end,
+      existing: draft.hasTrip,
+      // 넣은 뒤의 초안에 저장 버튼이 있으면 "확인"(큰 시트 저장으로 마무리), 없으면 이 버튼이 곧 저장.
+      confirmLabel: draft.withTrip(start, end).showsSaveButton ? RecordEditTexts.confirm : RecordEditTexts.save,
+    );
+    if (result == null || !mounted) return;
+    final next = switch (result) {
+      TripSheetSet(:final start, :final end) => _draft!.withTrip(start, end),
+      TripSheetCleared() => _draft!.withoutTrip(),
+    };
+    await _applyTrip(next);
+  }
+
+  /// 출장 범위를 바꾼 초안을 반영한다. 큰 시트에 저장 버튼이 없으면(유형 전용 모드, 근무 시간을 펼치지 않은 지난 공휴일)
+  /// 여기서 바로 저장한다 — 초안에만 두면 저장할 길이 없어 닫는 순간 사라진다.
+  Future<void> _applyTrip(RecordDraft next) async {
+    if (!next.showsSaveButton) return _saveDraft(next);
+    setState(() {
+      _draft = next;
+      _tripPanelOpen = false;
+    });
+  }
+
+  /// 패널 "출장 빼기" — 종일이면 유형을 풀고, 시간이면 범위를 지운다.
+  Future<void> _onTripRemove(RecordDraft draft) async {
+    if (draft.isFullDayTrip) return _onTypeChanged(draft, null);
+    await _applyTrip(draft.withoutTrip());
+  }
+
+  Widget _tripPanel(RecordDraft draft, WorkRules rules) => TripChoicePanel(
+        fullDaySelected: draft.isFullDayTrip,
+        timedSelected: draft.hasTrip,
+        fullDayEnabled: draft.type != WorkType.halfDay,
+        timedRange: draft.hasTrip ? RecordEditTexts.tripRange(draft.tripStart, draft.tripEnd) : null,
+        onFullDay: () => _onTripFullDay(draft),
+        onTimed: () => _editTrip(draft, rules),
+        onRemove: draft.tripSelected ? () => _onTripRemove(draft) : null,
+      );
+
+  /// 패널을 열면 펼쳐둔 휠을 접는다 — 휠·패널·계산 내역이 같이 펼쳐지면 시트가 화면을 채워 닫히지 않는다.
+  void _toggleTripPanel() => setState(() {
+        _tripPanelOpen = !_tripPanelOpen;
+        if (_tripPanelOpen) _draft = _draft!.collapsed();
+      });
+
+  /// 출퇴근 행 탭 — 휠을 펴면 패널을 닫는다.
+  void _toggleEditing(RecordDraft draft, EditingRow row, WorkRules rules) => setState(() {
+        _draft = draft.toggleEditing(row, rules);
+        if (_draft!.editing != null) _tripPanelOpen = false;
+      });
 
   Future<void> _delete() async {
     final ok = await showConfirmDialog(
@@ -162,14 +234,30 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
               SizedBox(height: AppSizes.sheetSubtitleTop),
               _inset(Text(RecordEditTexts.futureNote, style: AppTextStyles.sheetSubtitle)),
               SizedBox(height: AppSizes.typeRowsTop),
-              _inset(TypeRows(selected: draft.type, onChanged: (t) => _onTypeChanged(draft, t))),
-            ] else if (draft.showsTypeChips)
+              _inset(
+                TypeRows(
+                  selected: draft.type,
+                  tripSelected: draft.tripSelected,
+                  tripRange: draft.hasTrip ? RecordEditTexts.tripRange(draft.tripStart, draft.tripEnd) : null,
+                  onChanged: (t) => _onTypeChanged(draft, t),
+                  onTripTap: _toggleTripPanel,
+                ),
+              ),
+              if (_tripPanelOpen) _inset(_tripPanel(draft, rules)),
+            ] else if (draft.showsTypeChips) ...[
               _inset(
                 Padding(
                   padding: AppSizes.chipsMargin,
-                  child: TypeChips(selected: draft.type, onChanged: (t) => _onTypeChanged(draft, t)),
+                  child: TypeChips(
+                    selected: draft.type,
+                    tripSelected: draft.tripSelected,
+                    onChanged: (t) => _onTypeChanged(draft, t),
+                    onTripTap: _toggleTripPanel,
+                  ),
                 ),
               ),
+              if (_tripPanelOpen) _inset(_tripPanel(draft, rules)),
+            ],
             // 공휴일은 대부분 쉬는 날 — 근무 입력은 한 번 더 눌러야 펼쳐진다.
             if (draft.showsHolidayWorkButton)
               Padding(
@@ -192,7 +280,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                         label: row == EditingRow.clockIn ? RecordEditTexts.clockIn : RecordEditTexts.clockOut,
                         value: RecordEditTexts.time(draft.timeOf(row)),
                         selected: editing == row,
-                        onTap: () => _update(draft.toggleEditing(row, rules)),
+                        onTap: () => _toggleEditing(draft, row, rules),
                       ),
                   ],
                 ),
@@ -212,6 +300,20 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                   ),
                 ),
             ],
+            // 시간 출장 — 출퇴근 행(과 휠) 아래, 시간공제 위. 계산 내역에는 넣지 않는다(계산과 무관한 기록).
+            // 휠을 펴는 동안은 숨긴다(계산 내역처럼) — 작은 기기에서 휠 + 출장 행 + 공제 행이 화면을 넘는다.
+            if (draft.showsTripRow && editing == null)
+              _inset(
+                outdent: AppSizes.timeRowOutdent,
+                TimeRow(
+                  label: RecordEditTexts.tripRowLabel,
+                  value: draft.hasTrip
+                      ? RecordEditTexts.tripRange(draft.tripStart, draft.tripEnd)
+                      : RecordEditTexts.tripNone,
+                  selected: false,
+                  onTap: () => _editTrip(draft, rules),
+                ),
+              ),
             if (draft.showsDeductionRow) ...[
               if (draft.isTypeOnly) SizedBox(height: AppSizes.typeRowsTop),
               _inset(
@@ -224,7 +326,7 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
                 ),
               ),
             ],
-            if (draft.showsCalcRows || !draft.isValid(rules))
+            if ((draft.showsCalcRows && !_tripPanelOpen) || !draft.isValid(rules))
               _inset(
                 Padding(
                   padding: EdgeInsets.only(top: AppSizes.calcTop),

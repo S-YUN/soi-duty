@@ -20,11 +20,15 @@ enum WeekDayKind {
   weekendEmpty,
 }
 
-/// 주간 행 배지. [type]이 null이면 시간공제 배지.
+/// 주간 행 배지의 종류. 순서가 곧 그리는 순서 — 유형 → 시간 출장 → 시간공제.
+enum WeekBadgeKind { type, trip, deduction }
+
+/// 주간 행 배지. [type]은 유형 배지일 때만 — 색을 고른다. 시간 출장은 출장색, 시간공제는 중립색.
 class WeekBadge {
-  const WeekBadge(this.label, {this.type});
+  const WeekBadge(this.label, this.kind, {this.type});
 
   final String label;
+  final WeekBadgeKind kind;
   final WorkType? type;
 }
 

@@ -673,4 +673,119 @@ void main() {
       expect(isValidLeaveMinutes(120, const WorkRules(leaveStepMinutes: 120)), isTrue);
     });
   });
+
+  group('시간 출장 (기록만 — 계산 불변)', () {
+    test('isValidTripRange — 둘 다 없음 OK, 끝이 시작보다 늦어야, 하나만 있으면 무효', () {
+      expect(isValidTripRange(null, null), isTrue);
+      expect(isValidTripRange(d(16, 9), d(16, 12)), isTrue);
+      expect(isValidTripRange(d(16, 12), d(16, 12)), isFalse);
+      expect(isValidTripRange(d(16, 12), d(16, 9)), isFalse);
+      expect(isValidTripRange(d(16, 9), null), isFalse);
+      expect(isValidTripRange(null, d(16, 12)), isFalse);
+    });
+
+    test('hasTrip · tripMinutes', () {
+      expect(hasTrip(null), isFalse);
+      expect(hasTrip(rec(16, inH: 9, outH: 18)), isFalse);
+      final r = rec(16, inH: 9, outH: 18, tripInH: 9, tripInM: 20, tripOutH: 12, tripOutM: 30);
+      expect(hasTrip(r), isTrue);
+      expect(tripMinutes(r), 190);
+      expect(tripMinutes(rec(16)), isNull);
+    });
+
+    test('sanitizeRecord — 연차·종일 출장이면 범위를 비운다', () {
+      for (final type in [WorkType.dayOff, WorkType.businessTrip]) {
+        final r = sanitizeRecord(rec(16, type: type, tripInH: 9, tripOutH: 12), rules);
+        expect((r.tripStart, r.tripEnd), (null, null), reason: '$type');
+      }
+    });
+
+    test('sanitizeRecord — 일반·반차·공휴일·주말은 범위를 유지한다', () {
+      for (final type in [WorkType.normal, WorkType.halfDay, WorkType.holiday]) {
+        final r = sanitizeRecord(rec(16, type: type, tripInH: 9, tripOutH: 12), rules);
+        expect((r.tripStart, r.tripEnd), (d(16, 9), d(16, 12)), reason: '$type');
+      }
+      final weekend = sanitizeRecord(rec(19, tripInH: 10, tripOutH: 12), rules);
+      expect((weekend.tripStart, weekend.tripEnd), (d(19, 10), d(19, 12)));
+    });
+
+    test('sanitizeRecord — 끝 ≤ 시작이거나 하나만 있으면 둘 다 비운다', () {
+      final reversed = sanitizeRecord(rec(16, tripInH: 12, tripOutH: 9), rules);
+      expect((reversed.tripStart, reversed.tripEnd), (null, null));
+      final same = sanitizeRecord(rec(16, tripInH: 12, tripOutH: 12), rules);
+      expect((same.tripStart, same.tripEnd), (null, null));
+      final half = sanitizeRecord(rec(16, tripInH: 9), rules);
+      expect((half.tripStart, half.tripEnd), (null, null));
+    });
+
+    test('sanitizeRecord — 다른 날짜의 시각은 그 기록 날짜의 같은 시·분으로 맞춘다', () {
+      final r = sanitizeRecord(
+        WorkRecord(date: d(16), tripStart: DateTime(2000, 1, 1, 9, 20), tripEnd: DateTime(2000, 1, 2, 12, 30)),
+        rules,
+      );
+      expect((r.tripStart, r.tripEnd), (d(16, 9, 20), d(16, 12, 30)));
+    });
+
+    test('시간 출장을 붙여도 하루·주 계산이 전부 같다', () {
+      List<WorkRecord> week({required bool trip}) => [
+            rec(14, inH: 9, outH: 19),
+            rec(15, inH: 9, outH: 18, tripInH: trip ? 9 : null, tripOutH: trip ? 12 : null),
+            rec(16, inH: 13, outH: 17, type: WorkType.halfDay, ded: 30, tripInH: trip ? 13 : null, tripOutH: trip ? 16 : null),
+            rec(17, tripInH: trip ? 9 : null, tripOutH: trip ? 12 : null), // 범위만 있는 날 (출퇴근 없음)
+            rec(19, inH: 10, outH: 14, tripInH: trip ? 10 : null, tripOutH: trip ? 12 : null),
+          ];
+      final a = week(trip: true);
+      final b = week(trip: false);
+      for (var i = 0; i < a.length; i++) {
+        expect(actualMinutes(a[i], rules), actualMinutes(b[i], rules));
+        expect(deltaMinutes(a[i], rules), deltaMinutes(b[i], rules));
+        expect(dayStandardMinutes(a[i], rules), dayStandardMinutes(b[i], rules));
+        expect(lunchMinutes(a[i], rules), lunchMinutes(b[i], rules));
+      }
+      WeekSummary summary(List<WorkRecord> rs) =>
+          weekSummary(records: rs, monday: d(14), rules: rules, now: d(18, 9), firstRecordDate: d(7));
+      expect(summary(a).copyWith(businessTripCount: 0), summary(b).copyWith(businessTripCount: 0));
+      int? share(List<WorkRecord> rs) =>
+          todayShareMinutes(records: rs, today: d(18), rules: rules, firstRecordDate: d(7));
+      expect(share(a), share(b));
+      List<DateTime> gaps(List<WorkRecord> rs) =>
+          unrecordedWeekdays(rules: rules, records: rs, today: d(18), firstRecordDate: d(7));
+      expect(gaps(a), gaps(b));
+      expect(excludedMinutes(a, d(14), rules), excludedMinutes(b, d(14), rules));
+    });
+
+    test('weekSummary 출장 수 — 종일 출장 + 시간 출장 날(월~일)을 각각 1로', () {
+      final s = weekSummary(
+        records: [
+          rec(14, type: WorkType.businessTrip),
+          rec(15, inH: 9, outH: 18, tripInH: 9, tripOutH: 12),
+          rec(16, inH: 9, outH: 18),
+          rec(19, inH: 10, outH: 14, tripInH: 10, tripOutH: 12), // 토요일
+        ],
+        monday: d(14),
+        rules: rules,
+        now: d(18, 23),
+        firstRecordDate: d(7),
+      );
+      expect(s.businessTripCount, 3);
+      expect(s.targetMinutes, 2400 - 480); // 목표는 종일 출장 하루만 빠진다
+    });
+
+    test('defaultTripRange — 시작은 출근 시각(없으면 09:00), 끝은 +3h, 23:59에서 멈춘다', () {
+      expect(defaultTripRange(d(16), d(16, 9, 12), rules), (d(16, 9, 12), d(16, 12, 12)));
+      expect(defaultTripRange(d(16), null, rules), (d(16, 9), d(16, 12)));
+      expect(defaultTripRange(d(16), d(16, 22, 30), rules), (d(16, 22, 30), d(16, 23, 59)));
+      // 출근 시각의 날짜가 달라도 그 날의 시·분으로
+      expect(defaultTripRange(d(17), d(16, 8, 5), rules), (d(17, 8, 5), d(17, 11, 5)));
+    });
+  });
+
+  test('isEmptyRecord — 시각·공제·출장 범위가 없는 일반만 비어 있다', () {
+    expect(isEmptyRecord(rec(16)), isTrue);
+    expect(isEmptyRecord(rec(16, inH: 9)), isFalse);
+    expect(isEmptyRecord(rec(16, ded: 30)), isFalse);
+    expect(isEmptyRecord(rec(16, tripInH: 9, tripOutH: 12)), isFalse);
+    expect(isEmptyRecord(rec(16, type: WorkType.holiday)), isFalse);
+    expect(isEmptyRecord(rec(16, type: WorkType.dayOff)), isFalse);
+  });
 }

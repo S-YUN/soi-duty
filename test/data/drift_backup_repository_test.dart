@@ -117,4 +117,37 @@ void main() {
     final b = DriftBackupRepository(db, rules: const WorkRules(dayOffCreditMinutes: 600));
     expect((await b.snapshot(DateTime(2026, 10, 25))).leaveBalanceByYear[2026]!.remainingMinutes, 15 * 600);
   });
+
+  test('restore — 시간 출장 범위가 유지되고, 연차 날의 범위는 sanitize로 지워진다', () async {
+    final trip = rec(14, inH: 9, outH: 18, tripInH: 9, tripOutH: 12);
+    await backup.restore(BackupSnapshot(
+      exportedAt: DateTime(2026, 11, 20),
+      weekStart: WeekStart.monday,
+      leaveBalanceByYear: const {},
+      records: [trip, rec(15, type: WorkType.dayOff, tripInH: 9, tripOutH: 12)],
+    ));
+    final all = await records.watchAll().first;
+    expect(all, contains(trip));
+    expect(all, contains(rec(15, type: WorkType.dayOff)));
+    expect((await backup.snapshot(DateTime(2026, 11, 20))).records, contains(trip));
+  });
+
+  test('restore — 퇴근 알림 설정과 알림 상태는 기기 값이라 그대로다 (백업에 없다)', () async {
+    await settings.save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
+    await db.into(db.settings).insert(SettingsCompanion.insert(key: 'notification_os_asked', value: '1'));
+    final snapshot = await backup.snapshot(DateTime(2026, 11, 20));
+    expect(encodeBackup(snapshot), isNot(contains('otification')));
+
+    await backup.restore(BackupSnapshot(
+      exportedAt: DateTime(2026, 11, 20),
+      weekStart: WeekStart.sunday,
+      leaveBalanceByYear: const {},
+      hourlyWage: 9000,
+      records: [rec(14, inH: 9, outH: 18)],
+    ));
+    final s = await settings.read();
+    expect((s.clockOutNotificationEnabled, s.notificationPrompted), (true, true));
+    expect((s.weekStart, s.hourlyWage), (WeekStart.sunday, 9000));
+    expect(await settingValue('notification_os_asked'), '1');
+  });
 }

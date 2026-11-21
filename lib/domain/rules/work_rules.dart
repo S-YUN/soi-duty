@@ -12,6 +12,8 @@ class WorkRules {
     this.defaultClockOutMinutes = 17 * 60,
     this.extraWorkPayMultiplier = 1.5,
     this.leaveStepMinutes = 240,
+    this.defaultTripStartMinutes = 9 * 60,
+    this.defaultTripMinutes = 180,
   });
 
   final int weeklyTargetMinutes;
@@ -38,6 +40,10 @@ class WorkRules {
 
   /// 남은 연차 입력 단위(0.5일). 반반차가 생기면 120으로.
   final int leaveStepMinutes;
+
+  /// 시간 출장 작은 시트의 처음 값 — 출근 시각이 없을 때의 시작(자정 기준 분)과 기본 길이. 저장값·계산과 무관.
+  final int defaultTripStartMinutes;
+  final int defaultTripMinutes;
 
   /// 평일 하루 기준시간 (8h). 연차 1일 차감량과 같다.
   int get dailyStandardMinutes => dayOffCreditMinutes;

@@ -12,6 +12,9 @@ class WorkRecords extends Table {
   DateTimeColumn get clockOut => dateTime().nullable()();
   TextColumn get type => textEnum<WorkType>()();
   IntColumn get deductionMinutes => integer().withDefault(const Constant(0))();
+  /// 시간 출장 범위 (v3). 기록만 — 계산에 쓰지 않는다.
+  DateTimeColumn get tripStart => dateTime().nullable()();
+  DateTimeColumn get tripEnd => dateTime().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {date};
@@ -31,7 +34,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -39,6 +42,11 @@ class AppDatabase extends _$AppDatabase {
           // v2: 시간공제 (2026-09-27). 기존 행은 공제 0.
           if (from < 2) {
             await m.addColumn(workRecords, workRecords.deductionMinutes);
+          }
+          // v3: 시간 출장 범위 (2026-11-20). 기존 행은 null.
+          if (from < 3) {
+            await m.addColumn(workRecords, workRecords.tripStart);
+            await m.addColumn(workRecords, workRecords.tripEnd);
           }
         },
       );

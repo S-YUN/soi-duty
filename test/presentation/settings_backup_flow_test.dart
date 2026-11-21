@@ -9,6 +9,7 @@ import 'package:soi_duty/core/presentation/size_config.dart';
 import 'package:soi_duty/core/providers/app_info_provider.dart';
 import 'package:soi_duty/core/providers/clock_provider.dart';
 import 'package:soi_duty/core/providers/database_providers.dart';
+import 'package:soi_duty/core/providers/notification_providers.dart';
 import 'package:soi_duty/data/database/app_database.dart';
 import 'package:soi_duty/data/repository/drift_app_settings_repository.dart';
 import 'package:soi_duty/data/repository/drift_work_record_repository.dart';
@@ -22,6 +23,7 @@ import 'package:soi_duty/presentation/settings/settings_screen.dart';
 import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
 
+import '../helpers/fake_notification_scheduler.dart';
 import '../helpers/fonts.dart';
 import '../helpers/records.dart';
 
@@ -79,6 +81,7 @@ void main() {
         nowProvider.overrideWith((ref) => Stream.value(now)),
         appVersionProvider.overrideWith((ref) async => '1.0.1'),
         backupFilesProvider.overrideWithValue(files),
+        notificationSchedulerProvider.overrideWithValue(FakeNotificationScheduler()),
       ],
       child: MaterialApp(theme: AppTheme.light, home: const SettingsScreen()),
     ));

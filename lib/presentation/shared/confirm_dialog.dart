@@ -12,6 +12,8 @@ Future<bool> showConfirmDialog(
   required String message,
   required String confirmLabel,
   String cancelLabel = '취소',
+  /// 설명 아래 들어가는 내용 — 권한 묻기의 알림 미리보기 카드.
+  Widget? body,
 }) async {
   final result = await showDialog<bool>(
     context: context,
@@ -31,6 +33,7 @@ Future<bool> showConfirmDialog(
             Text(title, style: AppTextStyles.dialogTitle),
             SizedBox(height: AppSizes.dialogMessageTop),
             Text(message, style: AppTextStyles.dialogMessage),
+            if (body != null) ...[SizedBox(height: AppSizes.dialogBodyTop), body],
             SizedBox(height: AppSizes.dialogButtonsTop),
             Row(
               children: [

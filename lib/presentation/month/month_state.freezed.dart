@@ -428,7 +428,8 @@ mixin _$MonthCell {
  DateTime get date; bool get isCurrentMonth; bool get isToday;/// 오늘 근무 중(출근만 찍힘) — 탭해도 시트 대신 안내만.
  bool get isTodayWorking; bool get isWeekend; bool get isFuture;/// 첫 기록 주의 월요일보다 앞 — 앱 설치 전. 흐리게만 보이고 탭해도 열리지 않는다.
  bool get isBeforeFirstWeek;/// 배지. normal이면 null
- WorkType? get type; MonthCellValue get value;
+ WorkType? get type;/// 시간 출장 범위가 있는 날 — 유형이 없으면 원이 출장색이 된다(유형이 먼저). 값에는 영향이 없다.
+ bool get hasTrip; MonthCellValue get value;
 /// Create a copy of MonthCell
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -440,20 +441,20 @@ $MonthCellCopyWith<MonthCell> get copyWith => _$MonthCellCopyWithImpl<MonthCell>
 @override
 bool operator ==(Object other) {
   final _this = this as MonthCell;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthCell&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.isCurrentMonth, _this.isCurrentMonth) || other.isCurrentMonth == _this.isCurrentMonth)&&(identical(other.isToday, _this.isToday) || other.isToday == _this.isToday)&&(identical(other.isTodayWorking, _this.isTodayWorking) || other.isTodayWorking == _this.isTodayWorking)&&(identical(other.isWeekend, _this.isWeekend) || other.isWeekend == _this.isWeekend)&&(identical(other.isFuture, _this.isFuture) || other.isFuture == _this.isFuture)&&(identical(other.isBeforeFirstWeek, _this.isBeforeFirstWeek) || other.isBeforeFirstWeek == _this.isBeforeFirstWeek)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.value, _this.value) || other.value == _this.value));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthCell&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.isCurrentMonth, _this.isCurrentMonth) || other.isCurrentMonth == _this.isCurrentMonth)&&(identical(other.isToday, _this.isToday) || other.isToday == _this.isToday)&&(identical(other.isTodayWorking, _this.isTodayWorking) || other.isTodayWorking == _this.isTodayWorking)&&(identical(other.isWeekend, _this.isWeekend) || other.isWeekend == _this.isWeekend)&&(identical(other.isFuture, _this.isFuture) || other.isFuture == _this.isFuture)&&(identical(other.isBeforeFirstWeek, _this.isBeforeFirstWeek) || other.isBeforeFirstWeek == _this.isBeforeFirstWeek)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.hasTrip, _this.hasTrip) || other.hasTrip == _this.hasTrip)&&(identical(other.value, _this.value) || other.value == _this.value));
 }
 
 
 @override
 int get hashCode {
   final _this = this as MonthCell;
-  return Object.hash(runtimeType,_this.date,_this.isCurrentMonth,_this.isToday,_this.isTodayWorking,_this.isWeekend,_this.isFuture,_this.isBeforeFirstWeek,_this.type,_this.value);
+  return Object.hash(runtimeType,_this.date,_this.isCurrentMonth,_this.isToday,_this.isTodayWorking,_this.isWeekend,_this.isFuture,_this.isBeforeFirstWeek,_this.type,_this.hasTrip,_this.value);
 }
 
 @override
 String toString() {
   final _this = this as MonthCell;
-  return 'MonthCell(date: ${_this.date}, isCurrentMonth: ${_this.isCurrentMonth}, isToday: ${_this.isToday}, isTodayWorking: ${_this.isTodayWorking}, isWeekend: ${_this.isWeekend}, isFuture: ${_this.isFuture}, isBeforeFirstWeek: ${_this.isBeforeFirstWeek}, type: ${_this.type}, value: ${_this.value})';
+  return 'MonthCell(date: ${_this.date}, isCurrentMonth: ${_this.isCurrentMonth}, isToday: ${_this.isToday}, isTodayWorking: ${_this.isTodayWorking}, isWeekend: ${_this.isWeekend}, isFuture: ${_this.isFuture}, isBeforeFirstWeek: ${_this.isBeforeFirstWeek}, type: ${_this.type}, hasTrip: ${_this.hasTrip}, value: ${_this.value})';
 }
 
 
@@ -464,7 +465,7 @@ abstract mixin class $MonthCellCopyWith<$Res>  {
   factory $MonthCellCopyWith(MonthCell value, $Res Function(MonthCell) _then) = _$MonthCellCopyWithImpl;
 @useResult
 $Res call({
- DateTime date, bool isCurrentMonth, bool isToday, bool isTodayWorking, bool isWeekend, bool isFuture, bool isBeforeFirstWeek, WorkType? type, MonthCellValue value
+ DateTime date, bool isCurrentMonth, bool isToday, bool isTodayWorking, bool isWeekend, bool isFuture, bool isBeforeFirstWeek, WorkType? type, bool hasTrip, MonthCellValue value
 });
 
 
@@ -481,7 +482,7 @@ class _$MonthCellCopyWithImpl<$Res>
 
 /// Create a copy of MonthCell
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? isCurrentMonth = null,Object? isToday = null,Object? isTodayWorking = null,Object? isWeekend = null,Object? isFuture = null,Object? isBeforeFirstWeek = null,Object? type = freezed,Object? value = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? isCurrentMonth = null,Object? isToday = null,Object? isTodayWorking = null,Object? isWeekend = null,Object? isFuture = null,Object? isBeforeFirstWeek = null,Object? type = freezed,Object? hasTrip = null,Object? value = null,}) {
   return _then(MonthCell(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,isCurrentMonth: null == isCurrentMonth ? _self.isCurrentMonth : isCurrentMonth // ignore: cast_nullable_to_non_nullable
@@ -491,7 +492,8 @@ as bool,isWeekend: null == isWeekend ? _self.isWeekend : isWeekend // ignore: ca
 as bool,isFuture: null == isFuture ? _self.isFuture : isFuture // ignore: cast_nullable_to_non_nullable
 as bool,isBeforeFirstWeek: null == isBeforeFirstWeek ? _self.isBeforeFirstWeek : isBeforeFirstWeek // ignore: cast_nullable_to_non_nullable
 as bool,type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as WorkType?,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as WorkType?,hasTrip: null == hasTrip ? _self.hasTrip : hasTrip // ignore: cast_nullable_to_non_nullable
+as bool,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as MonthCellValue,
   ));
 }
@@ -586,10 +588,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  bool isCurrentMonth,  bool isToday,  bool isTodayWorking,  bool isWeekend,  bool isFuture,  bool isBeforeFirstWeek,  WorkType? type,  MonthCellValue value)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  bool isCurrentMonth,  bool isToday,  bool isTodayWorking,  bool isWeekend,  bool isFuture,  bool isBeforeFirstWeek,  WorkType? type,  bool hasTrip,  MonthCellValue value)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MonthCell() when $default != null:
-return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorking,_that.isWeekend,_that.isFuture,_that.isBeforeFirstWeek,_that.type,_that.value);case _:
+return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorking,_that.isWeekend,_that.isFuture,_that.isBeforeFirstWeek,_that.type,_that.hasTrip,_that.value);case _:
   return orElse();
 
 }
@@ -607,10 +609,10 @@ return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorki
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  bool isCurrentMonth,  bool isToday,  bool isTodayWorking,  bool isWeekend,  bool isFuture,  bool isBeforeFirstWeek,  WorkType? type,  MonthCellValue value)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  bool isCurrentMonth,  bool isToday,  bool isTodayWorking,  bool isWeekend,  bool isFuture,  bool isBeforeFirstWeek,  WorkType? type,  bool hasTrip,  MonthCellValue value)  $default,) {final _that = this;
 switch (_that) {
 case _MonthCell():
-return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorking,_that.isWeekend,_that.isFuture,_that.isBeforeFirstWeek,_that.type,_that.value);case _:
+return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorking,_that.isWeekend,_that.isFuture,_that.isBeforeFirstWeek,_that.type,_that.hasTrip,_that.value);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -627,10 +629,10 @@ return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorki
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  bool isCurrentMonth,  bool isToday,  bool isTodayWorking,  bool isWeekend,  bool isFuture,  bool isBeforeFirstWeek,  WorkType? type,  MonthCellValue value)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  bool isCurrentMonth,  bool isToday,  bool isTodayWorking,  bool isWeekend,  bool isFuture,  bool isBeforeFirstWeek,  WorkType? type,  bool hasTrip,  MonthCellValue value)?  $default,) {final _that = this;
 switch (_that) {
 case _MonthCell() when $default != null:
-return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorking,_that.isWeekend,_that.isFuture,_that.isBeforeFirstWeek,_that.type,_that.value);case _:
+return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorking,_that.isWeekend,_that.isFuture,_that.isBeforeFirstWeek,_that.type,_that.hasTrip,_that.value);case _:
   return null;
 
 }
@@ -642,7 +644,7 @@ return $default(_that.date,_that.isCurrentMonth,_that.isToday,_that.isTodayWorki
 
 
 class _MonthCell implements MonthCell {
-  const _MonthCell({required this.date, required this.isCurrentMonth, required this.isToday, required this.isTodayWorking, required this.isWeekend, required this.isFuture, required this.isBeforeFirstWeek, this.type, required this.value});
+  const _MonthCell({required this.date, required this.isCurrentMonth, required this.isToday, required this.isTodayWorking, required this.isWeekend, required this.isFuture, required this.isBeforeFirstWeek, this.type, required this.hasTrip, required this.value});
   
 
 @override final  DateTime date;
@@ -656,6 +658,8 @@ class _MonthCell implements MonthCell {
 @override final  bool isBeforeFirstWeek;
 /// 배지. normal이면 null
 @override final  WorkType? type;
+/// 시간 출장 범위가 있는 날 — 유형이 없으면 원이 출장색이 된다(유형이 먼저). 값에는 영향이 없다.
+@override final  bool hasTrip;
 @override final  MonthCellValue value;
 
 /// Create a copy of MonthCell
@@ -668,18 +672,18 @@ _$MonthCellCopyWith<_MonthCell> get copyWith => __$MonthCellCopyWithImpl<_MonthC
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthCell&&(identical(other.date, date) || other.date == date)&&(identical(other.isCurrentMonth, isCurrentMonth) || other.isCurrentMonth == isCurrentMonth)&&(identical(other.isToday, isToday) || other.isToday == isToday)&&(identical(other.isTodayWorking, isTodayWorking) || other.isTodayWorking == isTodayWorking)&&(identical(other.isWeekend, isWeekend) || other.isWeekend == isWeekend)&&(identical(other.isFuture, isFuture) || other.isFuture == isFuture)&&(identical(other.isBeforeFirstWeek, isBeforeFirstWeek) || other.isBeforeFirstWeek == isBeforeFirstWeek)&&(identical(other.type, type) || other.type == type)&&(identical(other.value, value) || other.value == value));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthCell&&(identical(other.date, date) || other.date == date)&&(identical(other.isCurrentMonth, isCurrentMonth) || other.isCurrentMonth == isCurrentMonth)&&(identical(other.isToday, isToday) || other.isToday == isToday)&&(identical(other.isTodayWorking, isTodayWorking) || other.isTodayWorking == isTodayWorking)&&(identical(other.isWeekend, isWeekend) || other.isWeekend == isWeekend)&&(identical(other.isFuture, isFuture) || other.isFuture == isFuture)&&(identical(other.isBeforeFirstWeek, isBeforeFirstWeek) || other.isBeforeFirstWeek == isBeforeFirstWeek)&&(identical(other.type, type) || other.type == type)&&(identical(other.hasTrip, hasTrip) || other.hasTrip == hasTrip)&&(identical(other.value, value) || other.value == value));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,date,isCurrentMonth,isToday,isTodayWorking,isWeekend,isFuture,isBeforeFirstWeek,type,value);
+    return Object.hash(runtimeType,date,isCurrentMonth,isToday,isTodayWorking,isWeekend,isFuture,isBeforeFirstWeek,type,hasTrip,value);
 }
 
 @override
 String toString() {
-    return 'MonthCell(date: $date, isCurrentMonth: $isCurrentMonth, isToday: $isToday, isTodayWorking: $isTodayWorking, isWeekend: $isWeekend, isFuture: $isFuture, isBeforeFirstWeek: $isBeforeFirstWeek, type: $type, value: $value)';
+    return 'MonthCell(date: $date, isCurrentMonth: $isCurrentMonth, isToday: $isToday, isTodayWorking: $isTodayWorking, isWeekend: $isWeekend, isFuture: $isFuture, isBeforeFirstWeek: $isBeforeFirstWeek, type: $type, hasTrip: $hasTrip, value: $value)';
 }
 
 
@@ -690,7 +694,7 @@ abstract mixin class _$MonthCellCopyWith<$Res> implements $MonthCellCopyWith<$Re
   factory _$MonthCellCopyWith(_MonthCell value, $Res Function(_MonthCell) _then) = __$MonthCellCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime date, bool isCurrentMonth, bool isToday, bool isTodayWorking, bool isWeekend, bool isFuture, bool isBeforeFirstWeek, WorkType? type, MonthCellValue value
+ DateTime date, bool isCurrentMonth, bool isToday, bool isTodayWorking, bool isWeekend, bool isFuture, bool isBeforeFirstWeek, WorkType? type, bool hasTrip, MonthCellValue value
 });
 
 
@@ -707,7 +711,7 @@ class __$MonthCellCopyWithImpl<$Res>
 
 /// Create a copy of MonthCell
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? isCurrentMonth = null,Object? isToday = null,Object? isTodayWorking = null,Object? isWeekend = null,Object? isFuture = null,Object? isBeforeFirstWeek = null,Object? type = freezed,Object? value = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? isCurrentMonth = null,Object? isToday = null,Object? isTodayWorking = null,Object? isWeekend = null,Object? isFuture = null,Object? isBeforeFirstWeek = null,Object? type = freezed,Object? hasTrip = null,Object? value = null,}) {
   return _then(_MonthCell(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,isCurrentMonth: null == isCurrentMonth ? _self.isCurrentMonth : isCurrentMonth // ignore: cast_nullable_to_non_nullable
@@ -717,7 +721,8 @@ as bool,isWeekend: null == isWeekend ? _self.isWeekend : isWeekend // ignore: ca
 as bool,isFuture: null == isFuture ? _self.isFuture : isFuture // ignore: cast_nullable_to_non_nullable
 as bool,isBeforeFirstWeek: null == isBeforeFirstWeek ? _self.isBeforeFirstWeek : isBeforeFirstWeek // ignore: cast_nullable_to_non_nullable
 as bool,type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as WorkType?,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as WorkType?,hasTrip: null == hasTrip ? _self.hasTrip : hasTrip // ignore: cast_nullable_to_non_nullable
+as bool,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as MonthCellValue,
   ));
 }

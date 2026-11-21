@@ -17,7 +17,8 @@ mixin _$WeekSummary {
 
 /// 첫 주 예외면 null
  int? get targetMinutes; int get workedMinutes;/// target − worked. target이 null이면 null
- int? get remainingMinutes; int get halfDayCount; int get dayOffCount; int get holidayCount; int get businessTripCount;/// 그 주 평일 시간공제 합
+ int? get remainingMinutes; int get halfDayCount; int get dayOffCount; int get holidayCount;/// 종일 출장(평일) + 시간 출장이 있는 날(월~일)
+ int get businessTripCount;/// 그 주 평일 시간공제 합
  int get deductionMinutes; bool get isFirstWeekException;
 /// Create a copy of WeekSummary
 /// with the given fields replaced by the non-null parameter values.
@@ -234,6 +235,7 @@ class _WeekSummary implements WeekSummary {
 @override final  int halfDayCount;
 @override final  int dayOffCount;
 @override final  int holidayCount;
+/// 종일 출장(평일) + 시간 출장이 있는 날(월~일)
 @override final  int businessTripCount;
 /// 그 주 평일 시간공제 합
 @override final  int deductionMinutes;

@@ -52,6 +52,8 @@ void main() {
     test('1월 1일이 목요일이면 1월 1째주', () => expect(formatWeekTitle(DateTime(2025, 12, 29)), '1월 1째주'));
   });
   test('formatMonthTitle', () => expect(formatMonthTitle(DateTime(2026, 9)), '2026년 9월'));
+  test('formatClockSpan — 공백 없는 en dash', () =>
+      expect(formatClockSpan(DateTime(2026, 9, 8, 9, 20), DateTime(2026, 9, 8, 12, 30)), '09:20–12:30'));
   test('formatClockRange', () =>
       expect(formatClockRange(DateTime(2026, 9, 7, 9, 5), DateTime(2026, 9, 7, 18, 36)), '09:05 – 18:36'));
   test('withRo — 받침 없음·ㄹ 받침은 "로", 그 외 받침은 "으로"', () {

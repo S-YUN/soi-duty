@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../debug_tools.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'clock_provider.g.dart';
@@ -21,7 +21,7 @@ class DebugClockOffset extends _$DebugClockOffset {
 /// 액션이 시각을 찍을 때 쓰는 시계. 테스트에서 고정값으로 오버라이드한다.
 @Riverpod(keepAlive: true)
 Clock clock(Ref ref) {
-  if (!kDebugMode) return DateTime.now;
+  if (!kDebugTools) return DateTime.now;
   final offset = ref.watch(debugClockOffsetProvider);
   return () => DateTime.now().add(offset);
 }

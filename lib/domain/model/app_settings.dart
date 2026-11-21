@@ -20,6 +20,11 @@ abstract class AppSettings with _$AppSettings {
     int? hourlyWage,
     /// 마지막 내보내기 날짜(날짜만). null = 아직 내보낸 적 없음. 백업 파일에는 넣지 않는다 — 기기별 값.
     DateTime? lastExportDate,
+    /// 퇴근 알림을 켰는지. OS 권한과는 별개 — 켰어도 OS가 막고 있으면 울리지 않는다.
+    /// 백업 파일에는 넣지 않는다 — 권한이 기기마다 달라 새 폰에서는 다시 묻는다.
+    @Default(false) bool clockOutNotificationEnabled,
+    /// "퇴근할 때 알려드릴까요?"를 이미 물었는지 — 첫 평일 출근 때 한 번만 묻는다. 기기 값.
+    @Default(false) bool notificationPrompted,
   }) = _AppSettings;
 
   /// 입력 한도. 설정 시트의 자릿수와 백업 가져오기의 범위 검사가 같은 값을 본다.

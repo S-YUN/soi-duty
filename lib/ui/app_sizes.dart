@@ -47,6 +47,22 @@ abstract final class AppSizes {
   static EdgeInsets get badgePadding => EdgeInsets.symmetric(vertical: 7.w, horizontal: 14.w);
   static double get badgeBorder => 1.w;
 
+  // 출장 칩 (핸드오프 6 §4)
+  static EdgeInsets get tripChipPadding => EdgeInsets.symmetric(vertical: 3.w, horizontal: 8.w);
+  static double get tripChipRadius => 6.w;
+  static double get tripChipBorder => 1.w;
+  static double get tripChipDash => 3.w;
+  /// 누르는 자리 — 칩 좌우로 이만큼, 높이는 최소 이만큼. 왼쪽 여백이 곧 앞 글자와의 간격(7)이다.
+  static double get tripChipHitPadding => 7.w;
+  static double get tripChipHitHeight => 28.w;
+  /// 퇴근 완료: 칩과 요약 4칸 사이
+  static double get tripChipSummaryGap => 2.w;
+
+  // "오늘 출장" 시트의 행
+  static double get todayTripRowMinHeight => 64.w;
+  static EdgeInsets get todayTripRowPadding => EdgeInsets.symmetric(vertical: 10.w, horizontal: 16.w);
+  static double get todayTripRowSubTop => 2.w;
+
   // 4칸 요약
   static EdgeInsets get summaryCellPadding => EdgeInsets.symmetric(vertical: 12.w, horizontal: 4.w);
   static double get summaryValueTop => 6.w;
@@ -107,6 +123,8 @@ abstract final class AppSizes {
   static double get rowDowTop => 1.w;
   static double get rowBadgeGap => 6.w;
   static EdgeInsets get rowBadgePadding => EdgeInsets.symmetric(vertical: 2.w, horizontal: 7.w);
+  /// 둘째 줄(메모 줄, 높이 20)로 내려간 셋째 배지 — 줄 높이 16에 맞춘다.
+  static EdgeInsets get rowBadgePaddingTight => EdgeInsets.symmetric(vertical: 0.5.w, horizontal: 7.w);
   static double get rowBadgeRadius => 5.w;
   static double get rowDivider => 1.w;
 
@@ -177,6 +195,32 @@ abstract final class AppSizes {
   static double get sheetButtonGap => 9.w;
   static double get deleteLinkTop => 16.w;
 
+  // 시간 출장 작은 시트 (핸드오프 6 §3)
+  /// 시트 최대 높이 = 화면 − 이 값. 작은 기기에서 넘치면 시트 안에서 스크롤한다.
+  static double get tripSheetTopMargin => 44.w;
+  static double get tripCellsTop => 12.w;
+  static double get tripDashGap => 12.w;
+  static double get tripCellValueTop => 4.w;
+  static double get tripCellUnderlineTop => 8.w;
+  static double get tripCellUnderlineOn => 2.w;
+  static double get tripCellUnderlineOff => 1.w;
+  static double get tripResultTop => 14.w;
+  static double get tripSheetButtonTop => 12.w;
+
+  // 출장 고르기 패널 — "종일 출장 / 시간 출장" (핸드오프 6 §2)
+  static double get tripPanelTop => 8.w;
+  static double get tripPanelPadding => 12.w;
+  static double get tripPanelRadius => 14.w;
+  static double get tripPanelNoteBottom => 9.w;
+  static double get tripPanelButtonGap => 8.w;
+  static double get tripPanelButtonRadius => 12.w;
+  static double get tripPanelButtonMinHeight => 58.w;
+  static EdgeInsets get tripPanelButtonPadding => EdgeInsets.symmetric(vertical: 10.w, horizontal: 12.w);
+  static double get tripPanelSubTop => 3.w;
+  static double get tripPanelBorder => 1.5.w;
+  /// 미래 시트 출장 행 — 라벨과 범위 사이
+  static double get typeRowRangeGap => 8.w;
+
   // 설정 진입 톱니 (탭 줄 오른쪽) · 설정 화면
   static double get gearRight => 10.w;
   static double get gearSize => 44.w;
@@ -240,7 +284,24 @@ abstract final class AppSizes {
   static double get plannedLineTop => 3.w;
   static EdgeInsets get leaveDividerMargin => EdgeInsets.fromLTRB(0, 14.w, 0, 6.w);
 
+  // 알림 미리보기 카드 (권한 묻기 다이얼로그 안, 핸드오프 6 §8)
+  static EdgeInsets get notifyPreviewPadding => EdgeInsets.symmetric(vertical: 11.w, horizontal: 12.w);
+  static double get notifyPreviewRadius => 14.w;
+  static double get notifyPreviewIcon => 30.w;
+  static double get notifyPreviewIconRadius => 8.w;
+  static double get notifyPreviewGap => 10.w;
+  static double get notifyPreviewTitleTop => 2.w;
+
+  // 설정 토글 (핸드오프 6 §9)
+  static double get switchWidth => 51.w;
+  static double get switchHeight => 31.w;
+  static double get switchKnob => 27.w;
+  static double get switchPadding => 2.w;
+  static Offset get switchKnobShadowOffset => Offset(0, 1.w);
+  static double get switchKnobShadowBlur => 3.w;
+
   // 확인 다이얼로그
+  static double get dialogBodyTop => 14.w;
   static EdgeInsets get dialogPadding => EdgeInsets.all(20.w);
   static double get dialogMessageTop => 8.w;
   static double get dialogButtonsTop => 18.w;
@@ -268,6 +329,7 @@ abstract final class AppDurations {
   static const wheelItem = Duration(milliseconds: 120);
   static const pressedOpacity = Duration(milliseconds: 100);
   static const tabSwipe = Duration(milliseconds: 220);
+  static const switchSlide = Duration(milliseconds: 180);
 }
 
 abstract final class AppScales {
@@ -275,6 +337,8 @@ abstract final class AppScales {
   static const rowPressed = 0.99;
   /// 토스트가 떠오르는 거리 — 자기 높이 대비.
   static const toastSlide = 0.35;
+  /// 알림 미리보기의 앱 아이콘 — 로고 둘레 안쪽 여백(한 변 대비).
+  static const notifyPreviewIconInset = 0.11;
 }
 
 abstract final class AppCurves {

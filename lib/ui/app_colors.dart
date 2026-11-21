@@ -55,6 +55,7 @@ abstract final class AppColors {
   static const cardShadow = Color(0x0D16191A); // rgba(22,25,26,.05)
   static const tabShadow = Color(0x1716191A); // rgba(22,25,26,.09)
   static const dotGlow = Color(0x242C5A4C); // rgba(44,90,76,.14)
+  static const switchKnobShadow = Color(0x4016191A); // rgba(22,25,26,.25) — 설정 토글 노브
 
   /// 유형 배지·칩·범례의 (배경, 글자). 주간 행·캘린더·시트가 같은 매핑을 쓴다.
   static (Color, Color) typeColors(WorkType t) => switch (t) {

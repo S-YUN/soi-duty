@@ -118,4 +118,29 @@ void main() {
     expect(keys, contains('annual_leave_daysX2026'));
     expect(keys, isNot(contains('annual_leave_days_2026')));
   });
+
+  group('퇴근 알림 설정 (기기 값)', () {
+    test('기본은 꺼짐·묻지 않음, 저장한 값이 그대로 읽힌다', () async {
+      expect((await repo.read()).clockOutNotificationEnabled, isFalse);
+      expect((await repo.read()).notificationPrompted, isFalse);
+      await repo.save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
+      final s = await repo.read();
+      expect(s.clockOutNotificationEnabled, isTrue);
+      expect(s.notificationPrompted, isTrue);
+      await repo.save(s.copyWith(clockOutNotificationEnabled: false));
+      expect((await repo.read()).clockOutNotificationEnabled, isFalse);
+      expect((await repo.read()).notificationPrompted, isTrue, reason: '끈다고 다시 묻지 않는다');
+    });
+
+    test('다른 설정을 저장해도 알림 설정·알림 상태 키는 그대로다', () async {
+      await repo.save(const AppSettings(clockOutNotificationEnabled: true, notificationPrompted: true));
+      await db.into(db.settings).insert(SettingsCompanion.insert(key: 'clock_out_notice', value: '2026-09-16T17:30:00.000|daily'));
+      await db.into(db.settings).insert(SettingsCompanion.insert(key: 'notification_os_asked', value: '1'));
+      await repo.save((await repo.read()).copyWith(hourlyWage: 12500, leaveBalanceByYear: {2026: b26}));
+      final s = await repo.read();
+      expect((s.clockOutNotificationEnabled, s.notificationPrompted, s.hourlyWage), (true, true, 12500));
+      final keys = (await db.select(db.settings).get()).map((r) => r.key).toSet();
+      expect(keys, containsAll(['clock_out_notice', 'notification_os_asked']));
+    });
+  });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../domain/model/work_type.dart';
 import '../../../ui/app_colors.dart';
 import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
@@ -26,6 +27,9 @@ class _WeekDayRowState extends State<WeekDayRow> {
     final day = widget.day;
     final weekend = day.date.weekday >= DateTime.saturday;
     final badges = WeekTexts.badges(day);
+    // 배지가 셋(반차 + 출장 + 공제)이면 셋째는 둘째 줄 맨 앞으로 — 행 높이는 그대로다.
+    final mainBadges = badges.take(WeekTexts.maxBadgesOnMainLine).toList();
+    final noteBadges = badges.skip(WeekTexts.maxBadgesOnMainLine).toList();
     final main = WeekTexts.main(day);
     final delta = day.deltaMinutes;
 
@@ -85,9 +89,9 @@ class _WeekDayRowState extends State<WeekDayRow> {
                       children: [
                         // 비어 있어도 그려서 줄 높이를 유지한다 — 배지만 있는 연차·공휴일 행이 낮아지지 않게.
                         Text(main, style: mainStyle, maxLines: 1),
-                        for (var i = 0; i < badges.length; i++) ...[
+                        for (var i = 0; i < mainBadges.length; i++) ...[
                           if (i > 0 || main.isNotEmpty) SizedBox(width: AppSizes.rowBadgeGap),
-                          _badge(badges[i]),
+                          _badge(mainBadges[i]),
                         ],
                       ],
                     ),
@@ -95,14 +99,21 @@ class _WeekDayRowState extends State<WeekDayRow> {
                   SizedBox(height: AppSizes.rowNoteTop),
                   SizedBox(
                     height: AppSizes.rowNoteHeight,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        WeekTexts.note(day),
-                        style: AppTextStyles.rowNote,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    child: Row(
+                      children: [
+                        for (final badge in noteBadges) ...[
+                          _badge(badge, tight: true),
+                          SizedBox(width: AppSizes.rowBadgeGap),
+                        ],
+                        Expanded(
+                          child: Text(
+                            WeekTexts.note(day),
+                            style: AppTextStyles.rowNote,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -125,16 +136,18 @@ class _WeekDayRowState extends State<WeekDayRow> {
     );
   }
 
-  Widget _badge(WeekBadge badge) {
-    final type = badge.type;
-    final (background, foreground) = type == null
-        ? (AppColors.deductionBackground, AppColors.deductionText)
-        : AppColors.typeColors(type);
+  /// [tight]: 둘째 줄(높이 20)에 들어가는 배지 — 세로 패딩을 줄인다.
+  Widget _badge(WeekBadge badge, {bool tight = false}) {
+    final (background, foreground) = switch (badge.kind) {
+      WeekBadgeKind.type => AppColors.typeColors(badge.type!),
+      WeekBadgeKind.trip => AppColors.typeColors(WorkType.businessTrip),
+      WeekBadgeKind.deduction => (AppColors.deductionBackground, AppColors.deductionText),
+    };
     return TypeTag(
       background: background,
       foreground: foreground,
       label: badge.label,
-      padding: AppSizes.rowBadgePadding,
+      padding: tight ? AppSizes.rowBadgePaddingTight : AppSizes.rowBadgePadding,
       radius: AppSizes.rowBadgeRadius,
       style: AppTextStyles.rowBadge,
     );

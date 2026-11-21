@@ -222,4 +222,75 @@ void main() {
       expect(RecordEditTexts.deduction(30), '30분');
     });
   });
+
+  group('시간 출장', () {
+    RecordDraft draftOf(int day, {WorkRecord? record}) =>
+        RecordDraft.fromRecord(date: d(day), today: today, record: record);
+
+    test('기록의 범위를 읽고 toRecord로 돌려준다', () {
+      final r = rec(14, inH: 9, outH: 18, tripInH: 9, tripInM: 20, tripOutH: 12, tripOutM: 30);
+      final draft = draftOf(14, record: r);
+      expect(draft.hasTrip, isTrue);
+      expect(draft.tripSelected, isTrue);
+      expect(draft.isFullDayTrip, isFalse);
+      expect(draft.toRecord(), r);
+    });
+
+    test('withTrip — 연차·종일 출장이면 유형이 풀리고, 반차·공휴일은 그대로', () {
+      for (final type in [WorkType.dayOff, WorkType.businessTrip]) {
+        final next = draftOf(14, record: rec(14, type: type)).withTrip(d(14, 9), d(14, 12));
+        expect(next.type, WorkType.normal, reason: '$type');
+        expect(next.hasTrip, isTrue);
+      }
+      for (final type in [WorkType.halfDay, WorkType.holiday, WorkType.normal]) {
+        final next = draftOf(14, record: rec(14, type: type)).withTrip(d(14, 9), d(14, 12));
+        expect(next.type, type, reason: '$type');
+        expect((next.toRecord().tripStart, next.toRecord().tripEnd), (d(14, 9), d(14, 12)));
+      }
+    });
+
+    test('연차·종일 출장으로 바꾸면 저장할 기록에 범위가 없다', () {
+      final draft = draftOf(14, record: rec(14, inH: 9, outH: 18, tripInH: 9, tripOutH: 12));
+      for (final type in [WorkType.dayOff, WorkType.businessTrip]) {
+        final next = draft.withType(type);
+        expect(next.hasTrip, isFalse, reason: '$type');
+        expect((next.toRecord().tripStart, next.toRecord().tripEnd), (null, null));
+      }
+      expect(draft.withType(WorkType.businessTrip).isFullDayTrip, isTrue);
+      expect(draft.withType(WorkType.businessTrip).tripSelected, isTrue);
+    });
+
+    test('withoutTrip — 범위만 지운다', () {
+      final next = draftOf(14, record: rec(14, inH: 9, outH: 18, tripInH: 9, tripOutH: 12)).withoutTrip();
+      expect(next.hasTrip, isFalse);
+      expect(next.toRecord(), rec(14, inH: 9, outH: 18));
+    });
+
+    test('isEmptyNormal — 범위만 있는 미래 날짜는 남기고, 범위까지 없으면 지운다', () {
+      final future = draftOf(23).withTrip(d(23, 9), d(23, 12));
+      expect(future.isTypeOnly, isTrue);
+      expect(future.isEmptyNormal, isFalse);
+      expect(future.toRecord(), rec(23, tripInH: 9, tripOutH: 12));
+      expect(future.withoutTrip().isEmptyNormal, isTrue);
+    });
+
+    test('showsTripRow — 평일은 범위가 있을 때만, 주말은 늘, 유형 전용 평일은 유형 행이 대신한다', () {
+      expect(draftOf(14, record: rec(14, inH: 9, outH: 18)).showsTripRow, isFalse);
+      expect(draftOf(14, record: rec(14, inH: 9, outH: 18, tripInH: 9, tripOutH: 12)).showsTripRow, isTrue);
+      expect(draftOf(12, record: rec(12, inH: 10, outH: 14)).showsTripRow, isTrue); // 토요일, 범위 없음
+      expect(draftOf(12).showsTripRow, isTrue);
+      expect(draftOf(23).withTrip(d(23, 9), d(23, 12)).showsTripRow, isFalse); // 미래 평일
+      expect(draftOf(26).showsTripRow, isTrue); // 미래 토요일
+      // 공휴일 근무를 펼치지 않았어도 범위가 있으면 보인다
+      expect(draftOf(14, record: rec(14, type: WorkType.holiday, tripInH: 9, tripOutH: 12)).showsTripRow, isTrue);
+    });
+
+    test('계산 내역은 출장 유무와 무관하다', () {
+      final plain = draftOf(14, record: rec(14, inH: 9, outH: 18));
+      final trip = plain.withTrip(d(14, 9), d(14, 12));
+      final a = calcLines(plain, rules);
+      final b = calcLines(trip, rules);
+      expect([for (final l in b) (l.label, l.value)], [for (final l in a) (l.label, l.value)]);
+    });
+  });
 }

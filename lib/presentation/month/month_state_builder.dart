@@ -104,6 +104,7 @@ MonthCell _cell(
     isFuture: future,
     isBeforeFirstWeek: beforeFirstWeek,
     type: type,
+    hasTrip: hasTrip(r),
     value: value,
   );
 }

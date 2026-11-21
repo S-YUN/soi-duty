@@ -20,6 +20,9 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
   static const legacyAnnualLeaveDaysKeyPrefix = 'annual_leave_days_';
   static const hourlyWageKey = 'hourly_wage';
   static const lastExportDateKey = 'last_export_date';
+  /// 켜져 있으면 `on`, 꺼져 있으면 행이 없다.
+  static const clockOutNotificationKey = 'clock_out_notification';
+  static const notificationPromptedKey = 'notification_prompted';
   static const _leavePrefixes = [leaveMinutesKeyPrefix, leaveBaseDateKeyPrefix, legacyAnnualLeaveDaysKeyPrefix];
 
   final AppDatabase _db;
@@ -29,6 +32,7 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
   Stream<AppSettings> watch() => _db.select(_db.settings).watch().map(fromRows);
 
   /// 일회성 읽기. 스트림의 `.first`는 위젯 테스트의 가짜 시간에서 값을 내지 않아 쓰지 않는다.
+  @override
   Future<AppSettings> read() async => fromRows(await _db.select(_db.settings).get());
 
   @override
@@ -36,6 +40,8 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
         await _put(weekStartKey, s.weekStart.name);
         await _put(hourlyWageKey, s.hourlyWage?.toString());
         await _put(lastExportDateKey, s.lastExportDate == null ? null : dateKey(s.lastExportDate!));
+        await _put(clockOutNotificationKey, s.clockOutNotificationEnabled ? 'on' : null);
+        await _put(notificationPromptedKey, s.notificationPrompted ? '1' : null);
         // LIKE의 '_'는 한 글자 와일드카드라 비슷한 키가 휩쓸린다 — Dart에서 접두사로 고른다.
         final leaveKeys = (await _db.select(_db.settings).get())
             .map((r) => r.key)
@@ -66,6 +72,10 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
           s = s.copyWith(hourlyWage: int.tryParse(row.value));
         case lastExportDateKey:
           s = s.copyWith(lastExportDate: _tryParseDate(row.value));
+        case clockOutNotificationKey:
+          s = s.copyWith(clockOutNotificationEnabled: row.value == 'on');
+        case notificationPromptedKey:
+          s = s.copyWith(notificationPrompted: true);
         default:
           _collectYearKey(row, leaveMinutesKeyPrefix, (y) => minutesByYear[y] = int.parse(row.value));
           _collectYearKey(row, leaveBaseDateKeyPrefix, (y) {

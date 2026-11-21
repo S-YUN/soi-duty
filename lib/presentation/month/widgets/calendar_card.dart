@@ -84,9 +84,14 @@ class _Cell extends StatefulWidget {
 class _CellState extends State<_Cell> {
   var _pressed = false;
 
-  /// 원 색. 유형이 있으면 그 색, 일반 근무일(주말 포함)은 하나로, 나머지는 없음.
+  /// 유형 없는 날의 시간 출장 — 원이 출장색. 유형이 먼저다(반차·공휴일 근무 + 시간 출장은 그 유형색).
+  /// 미리 넣어둔 미래 날짜도 미리 찍은 유형처럼 색 원으로 보인다.
+  bool _tripCircle(MonthCell cell) => cell.type == null && cell.hasTrip;
+
+  /// 원 색. 유형이 있으면 그 색, 시간 출장이 있으면 출장색, 일반 근무일(주말 포함)은 하나로, 나머지는 없음.
   Color? _circleColor(MonthCell cell) {
     if (cell.type != null) return AppColors.typeColors(cell.type!).$1;
+    if (_tripCircle(cell)) return AppColors.tripBackground;
     return switch (cell.value) {
       MonthCellDelta() || MonthCellWeekendActual() || MonthCellWorking() => AppColors.calendarWorked,
       MonthCellNone() || MonthCellUnrecorded() => null,
@@ -98,6 +103,8 @@ class _CellState extends State<_Cell> {
   /// 평일은 원 위에서 잉크, 아니면 subtle. 미래도 같은 색 — 원 유무로 충분히 구분된다. (다른 달·설치 전은 셀 전체 투명도)
   Color _numColor(MonthCell cell, {required bool onCircle}) {
     if (onCircle && cell.type != null) return AppColors.typeColors(cell.type!).$2;
+    // 출장 원 위에서는 주말도 출장 글자색 — 주말 적갈색(#9C5F50)은 출장 원 위 대비가 3.6:1로 기준(4.5:1)에 못 미친다 (핸드오프 6 §6).
+    if (_tripCircle(cell)) return AppColors.tripText;
     if (cell.isWeekend) return AppColors.calendarWeekendNum;
     return onCircle ? AppColors.ink : AppColors.subtle;
   }

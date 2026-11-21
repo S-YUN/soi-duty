@@ -98,9 +98,9 @@ void main() {
 
     test('배지: 반차 + 공제, 공휴일 근무는 공휴일만', () {
       final s = build([rec(15, inH: 13, outH: 17, type: WorkType.halfDay, ded: 150), rec(14, inH: 10, outH: 15, type: WorkType.holiday)]);
-      expect(WeekTexts.badges(dayOf(s, 15)).map((b) => (b.type, b.label)).toList(), [
-        (WorkType.halfDay, '반차'),
-        (null, '2h 30m 공제'),
+      expect(WeekTexts.badges(dayOf(s, 15)).map((b) => (b.kind, b.type, b.label)).toList(), [
+        (WeekBadgeKind.type, WorkType.halfDay, '반차'),
+        (WeekBadgeKind.deduction, null, '2h 30m 공제'),
       ]);
       expect(WeekTexts.badges(dayOf(s, 14)).map((b) => b.label).toList(), ['공휴일']);
     });
@@ -111,6 +111,30 @@ void main() {
       expect(WeekTexts.main(day), '5h');
       expect(WeekTexts.note(day), '주 40시간 제외 · 10:00 – 15:00');
       expect(WeekTexts.value(day), '');
+    });
+
+    test('시간 출장 배지: 유형 → 출장(길이) → 공제 순, 종일 출장은 "출장" 하나', () {
+      final s = build([
+        rec(14, inH: 13, outH: 17, type: WorkType.halfDay, ded: 30, tripInH: 13, tripInM: 40, tripOutH: 16),
+        rec(15, inH: 9, outH: 18, tripInH: 9, tripInM: 20, tripOutH: 12, tripOutM: 30),
+        rec(16, type: WorkType.businessTrip),
+        rec(19, inH: 10, outH: 14, tripInH: 10, tripOutH: 12),
+      ]);
+      expect(WeekTexts.badges(dayOf(s, 14)).map((b) => (b.kind, b.label)).toList(), [
+        (WeekBadgeKind.type, '반차'),
+        (WeekBadgeKind.trip, '출장 2h 20m'),
+        (WeekBadgeKind.deduction, '30m 공제'),
+      ]);
+      expect(WeekTexts.badges(dayOf(s, 15)).map((b) => (b.kind, b.label)).toList(), [(WeekBadgeKind.trip, '출장 3h 10m')]);
+      expect(WeekTexts.badges(dayOf(s, 16)).map((b) => (b.kind, b.label)).toList(), [(WeekBadgeKind.type, '출장')]);
+      expect(WeekTexts.badges(dayOf(s, 19)).map((b) => b.label).toList(), ['출장 2h']);
+      // 요약 줄: 종일 1 + 시간 출장 3일(주말 포함)
+      expect(WeekTexts.summaryDetail(s), contains('출장 4'));
+      // 시간 출장은 행의 값·메모·±를 바꾸지 않는다
+      final plain = build([rec(15, inH: 9, outH: 18)]);
+      expect(WeekTexts.main(dayOf(s, 15)), WeekTexts.main(dayOf(plain, 15)));
+      expect(WeekTexts.note(dayOf(s, 15)), WeekTexts.note(dayOf(plain, 15)));
+      expect(WeekTexts.value(dayOf(s, 15)), WeekTexts.value(dayOf(plain, 15)));
     });
 
     test('잠금 토스트는 한 문구', () => expect(WeekTexts.todayInProgressToast, '오늘 기록은 퇴근한 뒤에 수정할 수 있어요'));

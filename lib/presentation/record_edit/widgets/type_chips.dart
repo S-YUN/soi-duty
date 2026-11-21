@@ -6,12 +6,24 @@ import '../../../ui/app_sizes.dart';
 import '../../../ui/app_text_styles.dart';
 import '../record_edit_texts.dart';
 
-/// 반차 / 연차 / 공휴일 / 출장 4열. 상호배타, 같은 칩 재탭이면 null.
+/// 반차 / 연차 / 공휴일 / 출장 4열. 반차·연차·공휴일은 상호배타, 같은 칩 재탭이면 null.
+/// 출장 칩은 유형을 바로 바꾸지 않는다 — 누르면 "종일 / 시간" 패널이 열린다([onTripTap]).
+/// 시간 출장은 유형이 아니라 그날에 붙는 범위라 반차·공휴일과 함께 칠해질 수 있다([tripSelected]).
 class TypeChips extends StatelessWidget {
-  const TypeChips({super.key, required this.selected, required this.onChanged});
+  const TypeChips({
+    super.key,
+    required this.selected,
+    required this.tripSelected,
+    required this.onChanged,
+    required this.onTripTap,
+  });
 
   final WorkType selected;
+
+  /// 종일 출장이거나 시간 출장 범위가 있음
+  final bool tripSelected;
   final ValueChanged<WorkType?> onChanged;
+  final VoidCallback onTripTap;
 
   static const _types = [WorkType.halfDay, WorkType.dayOff, WorkType.holiday, WorkType.businessTrip];
 
@@ -24,8 +36,10 @@ class TypeChips extends StatelessWidget {
           Expanded(
             child: _Chip(
               type: _types[i],
-              selected: selected == _types[i],
-              onTap: () => onChanged(selected == _types[i] ? null : _types[i]),
+              selected: _types[i] == WorkType.businessTrip ? tripSelected : selected == _types[i],
+              onTap: _types[i] == WorkType.businessTrip
+                  ? onTripTap
+                  : () => onChanged(selected == _types[i] ? null : _types[i]),
             ),
           ),
         ],
