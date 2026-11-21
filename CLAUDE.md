@@ -199,12 +199,15 @@ T주간 ≤ T기준                                     → 주간(N2′) @ T주
   남은 시간의 75%, 상한 1시간까지 늦춘다 — 실기기(Galaxy A16 · Android 16)에서 5분 뒤 예약이 3분 45초 늦었고 2시간 뒤 예약은 허용 오차가 1시간으로 잡혔다.
   권한을 켜면 앱 프로세스가 죽은 상태에서도 0.5초 안에 울렸다. 그래서 **늘 정시 방식(`exactAllowWhileIdle`)으로만 걸고, 권한이 없으면 예약하지 않는다.**
   Android 14+는 이 권한이 기본 꺼짐이고 **시스템 설정에서 사용자가 직접 켠다**(12~13은 기본 허용, iOS는 해당 없음) —
-  알림을 켠 직후 안내 다이얼로그("하나만 더 허용해 주세요" → 설정 열기 / 나중에)를 띄우고, 안 켠 동안은 설정 토글 아래에
-  **"알람 및 리마인더 · 허용해야 퇴근 알림이 와요 · 설정 열기"** 행이 보인다. 넘기거나 허용하지 않고 돌아오면 토스트로 "허용해야 알림이 와요".
+  알림을 켠 직후 안내 다이얼로그(P6 "하나만 더 허용해 주세요" → 설정 열기 / 나중에)를 띄우고, 안 켠 동안은 설정 토글 아래에
+  **"알람 및 리마인더 · 허용해야 퇴근 알림이 와요 · 설정 열기"** 행(P8)이 보인다. 다이얼로그를 넘기거나 허용하지 않고 돌아오면 토스트(P7) "설정에서 언제든 허용할 수 있어요",
+  허용하고 돌아오면 아무것도 띄우지 않는다. **둘째 행은 다이얼로그 없이 바로 시스템 화면**을 열고 허용하지 않고 돌아와도 토스트가 없다(행이 남아 있는 걸로 충분).
   권한이 회수되면 OS가 걸어둔 알람을 지울 수 있어 앱으로 돌아올 때 `resync()`로 강제로 다시 맞춘다.
   묻지 않고 허용되는 `USE_EXACT_ALARM`은 Play 정책이 알람·캘린더 앱으로 제한해 쓰지 않는다.
-  이 화면·문구는 핸드오프 6에 없어 임시다 — 디자인 확인이 필요하다.
+  화면·문구는 디자인 확정(핸드오프 6 §8 · §9-1 · P6~P8, 2026-11-20).
 - 디버그 시계를 옮겨도 실제 시각에 울린다(계획 − 오프셋). 디버그 시트에 "알림 지금 보내기 · 1분 뒤 알림 예약".
+  시험 알림이 울릴 때까지는 예약 맞추기를 쉰다(`ClockOutNotificationSync.debugTestUntil`) — 계획이 없는 날(주말)에 앱으로 돌아오면
+  `resync()`가 시험 예약까지 치워서, iPhone에서 앱을 띄운 채 잠그면 시험 알림이 오지 않았다 (2026-11-21).
 - 스펙: `docs/specs/2026-11-10-clock-out-notification.md` §8, 문구·화면 `design-handoff-6-partial-trip-notification.md` §7~§10,
   **기기에서 확인할 것** `docs/specs/2026-11-20-notification-device-checklist.md`(자동 테스트는 "무엇을 언제 예약하는지"까지만 본다).
 
@@ -415,7 +418,10 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
 날짜 헤더를 길게 누르면 요일·시각을 옮기고 시드를 넣고 알림을 시험할 수 있다(지금 보내기 · 1분 뒤 예약 — 기기에서 포그라운드·백그라운드·종료·워치 확인용). 시드는 옮긴 시계 기준으로 들어간다. 시드는 기록·첫 기록일만 바꾸고 사용자 설정은 두되,
 '두 달치 기록'은 올해 남은 연차 15일(기준일 1월 1일) · 시급 12,500을 함께 넣는다. '두 달치 기록'에는 시간 출장도 일반·반차+공제·공휴일 근무·주말 근무에 하나씩과 다음 주 예정 하나가 들어 있다. 오늘 화면의 상태들, 첫 주 예외,
 기록 누락이 있는 주 같은 상황을 손으로 만들지 않고 바로 확인하기 위한 것이다.
-릴리즈 빌드에는 포함하지 않는다.
+릴리즈 빌드에는 포함하지 않는다 — 가드는 `kDebugTools`(`lib/core/debug_tools.dart`) 하나다. 디버그 빌드는 늘 켜지고,
+릴리즈 빌드는 `--dart-define=SOI_DEBUG_TOOLS=true`를 줄 때만 켜진다(`scripts/release.sh`는 주지 않는다).
+**iOS 실기기 디버그 빌드는 화면을 잠그면 연결이 끊기고 홈 화면에서 다시 열 수 없어**, 잠금 화면·앱 종료 상태의 알림은
+`flutter run --release --flavor dev --dart-define=SOI_DEBUG_TOOLS=true -d <기기>`로 본다 (2026-11-21).
 
 ### 테스트
 
@@ -526,7 +532,7 @@ Repository 인터페이스(Port)는 둔다. `WorkRecordRepository` · `AppSettin
 - **퇴근 알림 화면 (핸드오프 6, 2026-11-20)**: 권한 묻기는 기존 확인 다이얼로그 + 설명 아래 **알림 미리보기 카드**(앱 아이콘 · "소이듀티" · 예정 시각 · "퇴근할 시간이에요", 접근성에서 숨김), 버튼 "안 받을래요 / 알림 받기".
   설정은 섹션 순서 **캘린더 · 알림 · 연차 · 수당 · 데이터 · 앱 정보**, 알림 섹션은 "퇴근 알림" 행 하나 — **앱의 첫 토글**(`SoiSwitch` 51×31, 행 어디를 눌러도 토글).
   OS 권한이 꺼져 있으면 토글 대신 "설정 열기"(브랜드) + 붉은 보조 설명 "기기 설정에서 알림이 꺼져 있어요" → 안내 다이얼로그 → OS 설정.
-  알림 문구는 `notification/notification_texts.dart`. Android 상태바 아이콘은 로고의 원형 차트를 딴 단색 벡터(디자인 아이콘이 오면 그 파일만 교체).
+  알림 문구는 `notification/notification_texts.dart`. Android 상태바 아이콘은 디자인 확정본 `ic_stat_soiduty.xml`(카드 + 원, 핸드오프 6 §9-2), 알림 색은 브랜드.
 - **설정 (브리프 4, 2026-10-25)**: 진입은 알약 탭 줄 오른쪽 **톱니**(44 히트, 세 탭 공통, `ShellTabBar`). 설정은 `/settings` 전체 화면이
   오른쪽에서 밀려오고(`CupertinoPage` — iOS 가장자리 스와이프로도 닫힌다) 뒤로가기로 닫힌다. 섹션: 캘린더(시작 요일 세그먼트 월|일) · 연차(남은 연차 — 값이 있으면 보조 설명이 "10월 26일 기준") · 수당(시급) · 데이터(내보내기 · 가져오기 ·
   마지막 내보내기 줄 "마지막 내보내기 2026년 10월 24일") · 앱 정보(버전 · 개인정보 처리방침 → `https://s-yun.github.io/soi-duty/privacy.html`).
@@ -558,6 +564,7 @@ Clean Architecture, 단일 패키지. DI는 Riverpod 프로바이더가 겸한�
 ```
 lib/
 ├─ main.dart                 ProviderScope + MaterialApp.router
+├─ core/debug_tools.dart     kDebugTools — 디버그 도구를 켤지 (디버그 빌드 또는 --dart-define=SOI_DEBUG_TOOLS=true)
 ├─ core/routing/             router.dart(@riverpod GoRouter, StatefulShellRoute 3 브랜치 — PageView 컨테이너, 스와이프 전환 + /settings 슬라이드), route_paths.dart
 ├─ core/presentation/        SizeConfig, format/(date_format·time_format)
 ├─ core/providers/           clock(디버그 시계·매 분 now), database(기록·설정·백업 저장소, workRules), app_info(버전),
@@ -572,7 +579,7 @@ lib/
 ├─ domain/repository/        Repository 인터페이스
 ├─ data/database/            Drift 테이블·AppDatabase
 ├─ data/repository/          Drift 구현체
-├─ data/seed/                디버그 시드 (kDebugMode 가드)
+├─ data/seed/                디버그 시드 (kDebugTools 가드)
 ├─ presentation/shell/       탭 셸 (알약 탭 + 톱니 ShellTabBar + 브랜치)
 ├─ presentation/shared/      기간 네비게이터, 토스트(app_toast), 확인 다이얼로그 등 공용 위젯
 ├─ presentation/splash/      NativeSplashHold — 오늘 상태 준비까지 네이티브 스플래시 유지
@@ -580,7 +587,7 @@ lib/
 │                            시간 출장은 widgets/trip_choice_panel(종일/시간) · trip_sheet(범위 작은 시트 — 오늘 화면도 쓴다)
 ├─ presentation/notification/ 퇴근 알림 — 예약 맞추기(ClockOutNotificationSync, keepAlive) · 앱 복귀 훅(Host) · 권한 묻기 · 문구
 ├─ presentation/settings/    설정 화면(SettingsScreen/View · 컨트롤러(keepAlive, 상태 없음) · 텍스트) + widgets/(섹션·행·세그먼트)
-├─ presentation/debug/       시드·시계 이동 시트 (kDebugMode에서만 진입)
+├─ presentation/debug/       시드·시계 이동·알림 시험 시트 (kDebugTools에서만 진입)
 └─ presentation/<feature>/   @riverpod Notifier/Provider + Screen + <feature>_texts + <feature>_state(_builder)
                              (today / week / month). 오늘 화면의 '출근 변경' 시트는 today/widgets/clock_in_edit_sheet,
                              출장 칩·"오늘 출장" 시트는 today/widgets/trip_chip · today_trip_sheet
