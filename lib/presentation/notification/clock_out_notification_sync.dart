@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/debug_tools.dart';
 import '../../core/providers/clock_provider.dart';
 import '../../core/providers/database_providers.dart';
 import '../../core/providers/notification_providers.dart';
@@ -62,7 +63,7 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
       sync();
     });
     // 디버그 시계를 옮기면 "실제로 언제 울릴지"가 바뀐다.
-    if (kDebugMode) ref.listen(debugClockOffsetProvider, (_, _) => sync());
+    if (kDebugTools) ref.listen(debugClockOffsetProvider, (_, _) => sync());
     sync();
   }
 
@@ -161,5 +162,5 @@ class ClockOutNotificationSync extends _$ClockOutNotificationSync {
     _verified = true;
   }
 
-  Duration get _debugOffset => kDebugMode ? ref.read(debugClockOffsetProvider) : Duration.zero;
+  Duration get _debugOffset => kDebugTools ? ref.read(debugClockOffsetProvider) : Duration.zero;
 }

@@ -33,7 +33,9 @@ dev 빌드(`--flavor dev`)로 확인한다 — 디버그 시트가 필요하다.
 결과는 ✅ / ❌ 와 메모(기종 · OS 버전 · 늦은 시간)로 적는다.
 
 **iOS 실기기 디버그 빌드는 화면을 잠그면 `flutter run` 연결이 끊긴다**(2026-11-21, iPhone 11). 끊긴 디버그 앱은 홈 화면에서 다시 열 수 없다 —
-잠금 화면·앱 종료 항목(2-3·2-4·3절)은 예약해 두고 잠그면 OS가 띄우는 것까지는 볼 수 있고, 그 뒤엔 맥에서 다시 실행한다.
+잠금 화면·앱 종료 항목(2-3·2-4·3절)은 **디버그 도구를 켠 릴리즈 빌드**로 본다:
+`flutter run --release --flavor dev --dart-define=SOI_DEBUG_TOOLS=true -d <기기>` — 릴리즈인데 날짜 제목 길게 누르기가 된다(`lib/core/debug_tools.dart`).
+설치만 되면 케이블·맥 없이 홈 화면에서 다시 열 수 있다. 스토어 빌드(`scripts/release.sh`)에는 이 값이 없어 디버그 도구가 들어가지 않는다.
 
 **에뮬레이터로 돌리는 법 (2026-11-20, Pixel 8 API 34).** adb로 전부 조작할 수 있다. 시계는 `adb shell settings put global auto_time 0` 뒤
 `adb shell cmd alarm set-time <epoch ms>`로 옮긴다(루트 불필요) — 출근을 찍고 알림 시각 10초 전으로 옮기면 실제 울림까지 바로 본다.

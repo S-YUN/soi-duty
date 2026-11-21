@@ -8,7 +8,7 @@ import '../repository/drift_app_settings_repository.dart';
 import '../repository/drift_work_record_repository.dart';
 
 /// 오늘 화면의 상태들과 주간·월간 탭을 손으로 만들지 않고 바로 확인하기 위한 시드.
-/// 릴리즈 빌드에서는 호출 경로 자체가 없다 (kDebugMode 가드는 호출부 책임).
+/// 릴리즈 빌드에서는 호출 경로 자체가 없다 (`kDebugTools` 가드는 호출부 책임).
 enum SeedScenario {
   empty('비우기'),
   beforeWork('출근 전'),

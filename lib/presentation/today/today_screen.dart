@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../../core/debug_tools.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -57,7 +57,7 @@ class TodayScreen extends ConsumerWidget {
           onUnrecordedTap: (date) => showRecordEditSheet(context, date),
           onTripTap: () => _editTrip(context, ref, state, rules),
           onTripRadioTap: () => _chooseTrip(context, ref, state, rules),
-          onDateLongPress: kDebugMode ? () => showSeedPicker(context, ref) : null,
+          onDateLongPress: kDebugTools ? () => showSeedPicker(context, ref) : null,
         ),
       ),
     );
