@@ -21,7 +21,9 @@ mixin _$AppSettings {
  DateTime? get lastExportDate;/// 퇴근 알림을 켰는지. OS 권한과는 별개 — 켰어도 OS가 막고 있으면 울리지 않는다.
 /// 백업 파일에는 넣지 않는다 — 권한이 기기마다 달라 새 폰에서는 다시 묻는다.
  bool get clockOutNotificationEnabled;/// "퇴근할 때 알려드릴까요?"를 이미 물었는지 — 첫 평일 출근 때 한 번만 묻는다. 기기 값.
- bool get notificationPrompted;
+ bool get notificationPrompted;/// 기록 시트에서 빈 출근·퇴근 행을 열 때 휠의 처음 값(자정 기준 분, 핸드오프 7). 둘 다 있거나 둘 다 없다 —
+/// 없으면 [WorkRules]의 기본값(08:00 · 17:00). 읽을 때는 [defaultClockTimes]로.
+ int? get defaultClockInMinutes; int? get defaultClockOutMinutes;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -33,20 +35,20 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 @override
 bool operator ==(Object other) {
   final _this = this as AppSettings;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.weekStart, _this.weekStart) || other.weekStart == _this.weekStart)&&const DeepCollectionEquality().equals(other.leaveBalanceByYear, _this.leaveBalanceByYear)&&(identical(other.hourlyWage, _this.hourlyWage) || other.hourlyWage == _this.hourlyWage)&&(identical(other.lastExportDate, _this.lastExportDate) || other.lastExportDate == _this.lastExportDate)&&(identical(other.clockOutNotificationEnabled, _this.clockOutNotificationEnabled) || other.clockOutNotificationEnabled == _this.clockOutNotificationEnabled)&&(identical(other.notificationPrompted, _this.notificationPrompted) || other.notificationPrompted == _this.notificationPrompted));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.weekStart, _this.weekStart) || other.weekStart == _this.weekStart)&&const DeepCollectionEquality().equals(other.leaveBalanceByYear, _this.leaveBalanceByYear)&&(identical(other.hourlyWage, _this.hourlyWage) || other.hourlyWage == _this.hourlyWage)&&(identical(other.lastExportDate, _this.lastExportDate) || other.lastExportDate == _this.lastExportDate)&&(identical(other.clockOutNotificationEnabled, _this.clockOutNotificationEnabled) || other.clockOutNotificationEnabled == _this.clockOutNotificationEnabled)&&(identical(other.notificationPrompted, _this.notificationPrompted) || other.notificationPrompted == _this.notificationPrompted)&&(identical(other.defaultClockInMinutes, _this.defaultClockInMinutes) || other.defaultClockInMinutes == _this.defaultClockInMinutes)&&(identical(other.defaultClockOutMinutes, _this.defaultClockOutMinutes) || other.defaultClockOutMinutes == _this.defaultClockOutMinutes));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppSettings;
-  return Object.hash(runtimeType,_this.weekStart,const DeepCollectionEquality().hash(_this.leaveBalanceByYear),_this.hourlyWage,_this.lastExportDate,_this.clockOutNotificationEnabled,_this.notificationPrompted);
+  return Object.hash(runtimeType,_this.weekStart,const DeepCollectionEquality().hash(_this.leaveBalanceByYear),_this.hourlyWage,_this.lastExportDate,_this.clockOutNotificationEnabled,_this.notificationPrompted,_this.defaultClockInMinutes,_this.defaultClockOutMinutes);
 }
 
 @override
 String toString() {
   final _this = this as AppSettings;
-  return 'AppSettings(weekStart: ${_this.weekStart}, leaveBalanceByYear: ${_this.leaveBalanceByYear}, hourlyWage: ${_this.hourlyWage}, lastExportDate: ${_this.lastExportDate}, clockOutNotificationEnabled: ${_this.clockOutNotificationEnabled}, notificationPrompted: ${_this.notificationPrompted})';
+  return 'AppSettings(weekStart: ${_this.weekStart}, leaveBalanceByYear: ${_this.leaveBalanceByYear}, hourlyWage: ${_this.hourlyWage}, lastExportDate: ${_this.lastExportDate}, clockOutNotificationEnabled: ${_this.clockOutNotificationEnabled}, notificationPrompted: ${_this.notificationPrompted}, defaultClockInMinutes: ${_this.defaultClockInMinutes}, defaultClockOutMinutes: ${_this.defaultClockOutMinutes})';
 }
 
 
@@ -57,7 +59,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- WeekStart weekStart, Map<int, LeaveBalance> leaveBalanceByYear, int? hourlyWage, DateTime? lastExportDate, bool clockOutNotificationEnabled, bool notificationPrompted
+ WeekStart weekStart, Map<int, LeaveBalance> leaveBalanceByYear, int? hourlyWage, DateTime? lastExportDate, bool clockOutNotificationEnabled, bool notificationPrompted, int? defaultClockInMinutes, int? defaultClockOutMinutes
 });
 
 
@@ -74,7 +76,7 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? weekStart = null,Object? leaveBalanceByYear = null,Object? hourlyWage = freezed,Object? lastExportDate = freezed,Object? clockOutNotificationEnabled = null,Object? notificationPrompted = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? weekStart = null,Object? leaveBalanceByYear = null,Object? hourlyWage = freezed,Object? lastExportDate = freezed,Object? clockOutNotificationEnabled = null,Object? notificationPrompted = null,Object? defaultClockInMinutes = freezed,Object? defaultClockOutMinutes = freezed,}) {
   return _then(AppSettings(
 weekStart: null == weekStart ? _self.weekStart : weekStart // ignore: cast_nullable_to_non_nullable
 as WeekStart,leaveBalanceByYear: null == leaveBalanceByYear ? _self.leaveBalanceByYear : leaveBalanceByYear // ignore: cast_nullable_to_non_nullable
@@ -82,7 +84,9 @@ as Map<int, LeaveBalance>,hourlyWage: freezed == hourlyWage ? _self.hourlyWage :
 as int?,lastExportDate: freezed == lastExportDate ? _self.lastExportDate : lastExportDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,clockOutNotificationEnabled: null == clockOutNotificationEnabled ? _self.clockOutNotificationEnabled : clockOutNotificationEnabled // ignore: cast_nullable_to_non_nullable
 as bool,notificationPrompted: null == notificationPrompted ? _self.notificationPrompted : notificationPrompted // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,defaultClockInMinutes: freezed == defaultClockInMinutes ? _self.defaultClockInMinutes : defaultClockInMinutes // ignore: cast_nullable_to_non_nullable
+as int?,defaultClockOutMinutes: freezed == defaultClockOutMinutes ? _self.defaultClockOutMinutes : defaultClockOutMinutes // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -167,10 +171,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WeekStart weekStart,  Map<int, LeaveBalance> leaveBalanceByYear,  int? hourlyWage,  DateTime? lastExportDate,  bool clockOutNotificationEnabled,  bool notificationPrompted)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WeekStart weekStart,  Map<int, LeaveBalance> leaveBalanceByYear,  int? hourlyWage,  DateTime? lastExportDate,  bool clockOutNotificationEnabled,  bool notificationPrompted,  int? defaultClockInMinutes,  int? defaultClockOutMinutes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.lastExportDate,_that.clockOutNotificationEnabled,_that.notificationPrompted);case _:
+return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.lastExportDate,_that.clockOutNotificationEnabled,_that.notificationPrompted,_that.defaultClockInMinutes,_that.defaultClockOutMinutes);case _:
   return orElse();
 
 }
@@ -188,10 +192,10 @@ return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WeekStart weekStart,  Map<int, LeaveBalance> leaveBalanceByYear,  int? hourlyWage,  DateTime? lastExportDate,  bool clockOutNotificationEnabled,  bool notificationPrompted)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WeekStart weekStart,  Map<int, LeaveBalance> leaveBalanceByYear,  int? hourlyWage,  DateTime? lastExportDate,  bool clockOutNotificationEnabled,  bool notificationPrompted,  int? defaultClockInMinutes,  int? defaultClockOutMinutes)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.lastExportDate,_that.clockOutNotificationEnabled,_that.notificationPrompted);case _:
+return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.lastExportDate,_that.clockOutNotificationEnabled,_that.notificationPrompted,_that.defaultClockInMinutes,_that.defaultClockOutMinutes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +212,10 @@ return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WeekStart weekStart,  Map<int, LeaveBalance> leaveBalanceByYear,  int? hourlyWage,  DateTime? lastExportDate,  bool clockOutNotificationEnabled,  bool notificationPrompted)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WeekStart weekStart,  Map<int, LeaveBalance> leaveBalanceByYear,  int? hourlyWage,  DateTime? lastExportDate,  bool clockOutNotificationEnabled,  bool notificationPrompted,  int? defaultClockInMinutes,  int? defaultClockOutMinutes)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.lastExportDate,_that.clockOutNotificationEnabled,_that.notificationPrompted);case _:
+return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.lastExportDate,_that.clockOutNotificationEnabled,_that.notificationPrompted,_that.defaultClockInMinutes,_that.defaultClockOutMinutes);case _:
   return null;
 
 }
@@ -223,7 +227,7 @@ return $default(_that.weekStart,_that.leaveBalanceByYear,_that.hourlyWage,_that.
 
 
 class _AppSettings extends AppSettings {
-  const _AppSettings({this.weekStart = WeekStart.monday,  Map<int, LeaveBalance> leaveBalanceByYear = const {}, this.hourlyWage, this.lastExportDate, this.clockOutNotificationEnabled = false, this.notificationPrompted = false}): _leaveBalanceByYear = leaveBalanceByYear,super._();
+  const _AppSettings({this.weekStart = WeekStart.monday,  Map<int, LeaveBalance> leaveBalanceByYear = const {}, this.hourlyWage, this.lastExportDate, this.clockOutNotificationEnabled = false, this.notificationPrompted = false, this.defaultClockInMinutes, this.defaultClockOutMinutes}): _leaveBalanceByYear = leaveBalanceByYear,super._();
   
 
 @override@JsonKey() final  WeekStart weekStart;
@@ -245,6 +249,10 @@ class _AppSettings extends AppSettings {
 @override@JsonKey() final  bool clockOutNotificationEnabled;
 /// "퇴근할 때 알려드릴까요?"를 이미 물었는지 — 첫 평일 출근 때 한 번만 묻는다. 기기 값.
 @override@JsonKey() final  bool notificationPrompted;
+/// 기록 시트에서 빈 출근·퇴근 행을 열 때 휠의 처음 값(자정 기준 분, 핸드오프 7). 둘 다 있거나 둘 다 없다 —
+/// 없으면 [WorkRules]의 기본값(08:00 · 17:00). 읽을 때는 [defaultClockTimes]로.
+@override final  int? defaultClockInMinutes;
+@override final  int? defaultClockOutMinutes;
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -256,18 +264,18 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.weekStart, weekStart) || other.weekStart == weekStart)&&const DeepCollectionEquality().equals(other.leaveBalanceByYear, _leaveBalanceByYear)&&(identical(other.hourlyWage, hourlyWage) || other.hourlyWage == hourlyWage)&&(identical(other.lastExportDate, lastExportDate) || other.lastExportDate == lastExportDate)&&(identical(other.clockOutNotificationEnabled, clockOutNotificationEnabled) || other.clockOutNotificationEnabled == clockOutNotificationEnabled)&&(identical(other.notificationPrompted, notificationPrompted) || other.notificationPrompted == notificationPrompted));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.weekStart, weekStart) || other.weekStart == weekStart)&&const DeepCollectionEquality().equals(other.leaveBalanceByYear, _leaveBalanceByYear)&&(identical(other.hourlyWage, hourlyWage) || other.hourlyWage == hourlyWage)&&(identical(other.lastExportDate, lastExportDate) || other.lastExportDate == lastExportDate)&&(identical(other.clockOutNotificationEnabled, clockOutNotificationEnabled) || other.clockOutNotificationEnabled == clockOutNotificationEnabled)&&(identical(other.notificationPrompted, notificationPrompted) || other.notificationPrompted == notificationPrompted)&&(identical(other.defaultClockInMinutes, defaultClockInMinutes) || other.defaultClockInMinutes == defaultClockInMinutes)&&(identical(other.defaultClockOutMinutes, defaultClockOutMinutes) || other.defaultClockOutMinutes == defaultClockOutMinutes));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,weekStart,const DeepCollectionEquality().hash(_leaveBalanceByYear),hourlyWage,lastExportDate,clockOutNotificationEnabled,notificationPrompted);
+    return Object.hash(runtimeType,weekStart,const DeepCollectionEquality().hash(_leaveBalanceByYear),hourlyWage,lastExportDate,clockOutNotificationEnabled,notificationPrompted,defaultClockInMinutes,defaultClockOutMinutes);
 }
 
 @override
 String toString() {
-    return 'AppSettings(weekStart: $weekStart, leaveBalanceByYear: $leaveBalanceByYear, hourlyWage: $hourlyWage, lastExportDate: $lastExportDate, clockOutNotificationEnabled: $clockOutNotificationEnabled, notificationPrompted: $notificationPrompted)';
+    return 'AppSettings(weekStart: $weekStart, leaveBalanceByYear: $leaveBalanceByYear, hourlyWage: $hourlyWage, lastExportDate: $lastExportDate, clockOutNotificationEnabled: $clockOutNotificationEnabled, notificationPrompted: $notificationPrompted, defaultClockInMinutes: $defaultClockInMinutes, defaultClockOutMinutes: $defaultClockOutMinutes)';
 }
 
 
@@ -278,7 +286,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- WeekStart weekStart, Map<int, LeaveBalance> leaveBalanceByYear, int? hourlyWage, DateTime? lastExportDate, bool clockOutNotificationEnabled, bool notificationPrompted
+ WeekStart weekStart, Map<int, LeaveBalance> leaveBalanceByYear, int? hourlyWage, DateTime? lastExportDate, bool clockOutNotificationEnabled, bool notificationPrompted, int? defaultClockInMinutes, int? defaultClockOutMinutes
 });
 
 
@@ -295,7 +303,7 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? weekStart = null,Object? leaveBalanceByYear = null,Object? hourlyWage = freezed,Object? lastExportDate = freezed,Object? clockOutNotificationEnabled = null,Object? notificationPrompted = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? weekStart = null,Object? leaveBalanceByYear = null,Object? hourlyWage = freezed,Object? lastExportDate = freezed,Object? clockOutNotificationEnabled = null,Object? notificationPrompted = null,Object? defaultClockInMinutes = freezed,Object? defaultClockOutMinutes = freezed,}) {
   return _then(_AppSettings(
 weekStart: null == weekStart ? _self.weekStart : weekStart // ignore: cast_nullable_to_non_nullable
 as WeekStart,leaveBalanceByYear: null == leaveBalanceByYear ? _self._leaveBalanceByYear : leaveBalanceByYear // ignore: cast_nullable_to_non_nullable
@@ -303,7 +311,9 @@ as Map<int, LeaveBalance>,hourlyWage: freezed == hourlyWage ? _self.hourlyWage :
 as int?,lastExportDate: freezed == lastExportDate ? _self.lastExportDate : lastExportDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,clockOutNotificationEnabled: null == clockOutNotificationEnabled ? _self.clockOutNotificationEnabled : clockOutNotificationEnabled // ignore: cast_nullable_to_non_nullable
 as bool,notificationPrompted: null == notificationPrompted ? _self.notificationPrompted : notificationPrompted // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,defaultClockInMinutes: freezed == defaultClockInMinutes ? _self.defaultClockInMinutes : defaultClockInMinutes // ignore: cast_nullable_to_non_nullable
+as int?,defaultClockOutMinutes: freezed == defaultClockOutMinutes ? _self.defaultClockOutMinutes : defaultClockOutMinutes // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

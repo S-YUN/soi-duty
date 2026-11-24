@@ -24,6 +24,10 @@ class SettingsController extends _$SettingsController {
 
   Future<void> setHourlyWage(int? won) => _update((s) => s.copyWith(hourlyWage: won));
 
+  /// 기록 시트에서 빈 출근·퇴근 행을 열 때 휠의 처음 값(자정 기준 분). 이미 넣은 기록은 바뀌지 않는다.
+  Future<void> setDefaultClockTimes(int clockInMinutes, int clockOutMinutes) =>
+      _update((s) => s.withDefaultClockTimes(clockInMinutes, clockOutMinutes));
+
   /// 퇴근 알림 켜기/끄기. 예약은 `ClockOutNotificationSync`가 이 값을 보고 다시 맞춘다.
   Future<void> setClockOutNotification(bool on) => _update((s) => s.copyWith(clockOutNotificationEnabled: on));
 

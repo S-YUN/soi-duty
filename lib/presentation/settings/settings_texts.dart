@@ -15,6 +15,19 @@ abstract final class SettingsTexts {
   static String weekStartChanged(WeekStart w) =>
       switch (w) { WeekStart.monday => '월간 캘린더가 월요일부터 시작해요', WeekStart.sunday => '월간 캘린더가 일요일부터 시작해요' };
 
+  // 기본 출퇴근 시각 (핸드오프 7, 2026-11-24)
+  static const sectionRecord = '기록';
+  static const defaultTimesLabel = '기본 출퇴근 시각';
+  static const defaultTimesNote = '기록이 없는 날에 시각을 넣을 때 처음 보이는 값이에요';
+  static const defaultTimesHelp = '$defaultTimesNote.';
+  static const defaultTimesClockIn = '출근';
+  static const defaultTimesClockOut = '퇴근';
+  static const defaultTimesKeptNote = '이미 넣은 기록은 바뀌지 않아요';
+  static const defaultTimesInvalid = '퇴근이 출근보다 늦어야 해요';
+  /// "08:00–17:00" — 시간 출장 칩과 같은 en dash, 띄어쓰기 없음.
+  static String defaultTimesValue(int clockInMinutes, int clockOutMinutes) =>
+      '${AppSettings.formatClockMinutes(clockInMinutes)}–${AppSettings.formatClockMinutes(clockOutMinutes)}';
+
   static const sectionLeave = '연차';
   // 남은 연차 + 기준일 (2026-10-27, 브리프 5)
   static const annualLabel = '남은 연차';

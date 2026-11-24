@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/clock_provider.dart';
 import '../../core/providers/database_providers.dart';
+import '../../domain/model/app_settings.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart';
@@ -166,8 +167,10 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
       });
 
   /// 출퇴근 행 탭 — 휠을 펴면 패널을 닫는다.
+  /// 빈 행이면 휠이 설정의 기본 출퇴근 시각에서 시작한다. 설정이 아직 안 읽혔으면 [WorkRules]의 기본값.
   void _toggleEditing(RecordDraft draft, EditingRow row, WorkRules rules) => setState(() {
-        _draft = draft.toggleEditing(row, rules);
+        final settings = ref.read(appSettingsProvider).value ?? const AppSettings();
+        _draft = draft.toggleEditing(row, rules, settings: settings);
         if (_draft!.editing != null) _tripPanelOpen = false;
       });
 
@@ -192,6 +195,8 @@ class _RecordEditSheetState extends ConsumerState<RecordEditSheet> {
   @override
   Widget build(BuildContext context) {
     final rules = ref.watch(workRulesProvider);
+    // 시트가 떠 있는 동안 설정 스트림을 붙잡아 둔다 — 행을 누르는 순간 값이 이미 와 있게.
+    ref.watch(appSettingsProvider);
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     final records = ref.watch(allRecordsProvider).value;
     if (records == null && _draft == null) return const SizedBox.shrink();

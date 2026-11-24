@@ -19,6 +19,7 @@ import 'package:soi_duty/domain/model/backup_snapshot.dart';
 import 'package:soi_duty/domain/model/leave_balance.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/repository/backup_files.dart';
+import 'package:soi_duty/presentation/record_edit/widgets/time_wheel.dart';
 import 'package:soi_duty/presentation/settings/settings_screen.dart';
 import 'package:soi_duty/ui/app_sizes.dart';
 import 'package:soi_duty/ui/app_theme.dart';
@@ -103,6 +104,34 @@ void main() {
     await tester.tap(find.text(label));
     await tester.pumpAndSettle();
   }
+
+  testWidgets('기본 출퇴근 시각 — 행 → 시트 → 저장하면 행 값이 바뀌고 DB에 남는다, 다시 열면 그 값에 출근 칸 선택 (핸드오프 7)', (tester) async {
+    await pumpSettings(tester);
+    expect(find.text('08:00–17:00'), findsOneWidget);
+    await tapRow(tester, '기본 출퇴근 시각');
+    TimeWheel wheel() => tester.widget<TimeWheel>(find.byType(TimeWheel));
+    expect((wheel().hour, wheel().minute), (8, 0));
+    wheel().onChanged(9, 30);
+    await tester.pump();
+    await tester.tap(find.text('퇴근'));
+    await tester.pumpAndSettle();
+    wheel().onChanged(18, 30);
+    await tester.pump();
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TimeWheel), findsNothing);
+    expect(find.text('09:30–18:30'), findsOneWidget);
+    final rows = (await db.select(db.settings).get()).map((r) => '${r.key}=${r.value}');
+    expect(rows, containsAll(['default_clock_in=09:30', 'default_clock_out=18:30']));
+
+    await tapRow(tester, '기본 출퇴근 시각');
+    expect((wheel().hour, wheel().minute), (9, 30));
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(find.text('09:30–18:30'), findsOneWidget);
+    await finish(tester);
+  });
 
   testWidgets('내보내기 — 공유 성공이면 토스트와 "마지막 내보내기 2026년 9월 16일", 파일 내용은 백업 JSON', (tester) async {
     await db.into(db.workRecords).insert(WorkRecordsCompanion.insert(date: '2026-09-14', type: WorkType.dayOff));

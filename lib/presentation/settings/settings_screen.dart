@@ -18,6 +18,7 @@ import '../shared/app_toast.dart';
 import '../shared/confirm_dialog.dart';
 import '../shared/number_input_sheet.dart';
 import '../shared/stroke_icons.dart';
+import 'default_times_sheet.dart';
 import 'leave_sheet.dart';
 import 'settings_controller.dart';
 import 'settings_texts.dart';
@@ -30,6 +31,7 @@ class SettingsCallbacks {
   const SettingsCallbacks({
     required this.onBack,
     required this.onWeekStart,
+    required this.onTapDefaultTimes,
     required this.onTapAnnual,
     required this.onTapWage,
     required this.onExport,
@@ -42,6 +44,8 @@ class SettingsCallbacks {
 
   final VoidCallback onBack;
   final ValueChanged<WeekStart> onWeekStart;
+  /// "기본 출퇴근 시각" 행 — 시트를 연다.
+  final VoidCallback onTapDefaultTimes;
   final VoidCallback onTapAnnual;
   final VoidCallback onTapWage;
   final VoidCallback onExport;
@@ -82,6 +86,15 @@ class SettingsScreen extends ConsumerWidget {
       callbacks: SettingsCallbacks(
         onBack: () => context.pop(),
         onWeekStart: (w) => _changeWeekStart(context, ref, settings.weekStart, w),
+        onTapDefaultTimes: () {
+          final (clockIn, clockOut) = settings.defaultClockTimes(rules);
+          showDefaultTimesSheet(
+            context,
+            clockInMinutes: clockIn,
+            clockOutMinutes: clockOut,
+            onSave: controller.setDefaultClockTimes,
+          );
+        },
         onTapAnnual: () => showLeaveBalanceSheet(
           context,
           year: year,
@@ -179,8 +192,8 @@ Future<void> _openPrivacy(BuildContext context) async {
   if (!opened && context.mounted) showAppToast(context, SettingsTexts.linkFailed);
 }
 
-/// 설정 화면의 순수 UI. 헤더(뒤로 · 제목) → 섹션 여섯 개 (캘린더 · 알림 · 연차 · 수당 · 데이터 · 앱 정보 —
-/// 앱 동작 설정 → 값 입력 → 데이터·정보 순, 핸드오프 6 §9).
+/// 설정 화면의 순수 UI. 헤더(뒤로 · 제목) → 섹션 일곱 개 (캘린더 · 알림 · 기록 · 연차 · 수당 · 데이터 · 앱 정보 —
+/// 앱 동작 설정 → 값 입력 → 데이터·정보 순, 핸드오프 6 §9 · 핸드오프 7 §3).
 class SettingsView extends StatelessWidget {
   const SettingsView({
     super.key,
@@ -211,6 +224,7 @@ class SettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final annual = settings.leaveBalanceOf(year);
+    final (defaultClockIn, defaultClockOut) = settings.defaultClockTimes(rules);
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       body: SafeArea(
@@ -290,6 +304,21 @@ class SettingsView extends StatelessWidget {
                             chevronColor: AppColors.brand,
                             onTap: callbacks.onExactAlarm,
                           ),
+                      ],
+                    ),
+                    SizedBox(height: AppSizes.settingsSectionGap),
+                    // 늘 값이 있다 — "사용 안 함"이 없는 행 (핸드오프 7 §3).
+                    SettingsSection(
+                      label: SettingsTexts.sectionRecord,
+                      note: SettingsTexts.defaultTimesNote,
+                      rows: [
+                        SettingsRow(
+                          label: SettingsTexts.defaultTimesLabel,
+                          value: SettingsTexts.defaultTimesValue(defaultClockIn, defaultClockOut),
+                          valueSet: true,
+                          chevron: true,
+                          onTap: callbacks.onTapDefaultTimes,
+                        ),
                       ],
                     ),
                     SizedBox(height: AppSizes.settingsSectionGap),

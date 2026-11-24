@@ -51,6 +51,41 @@ void main() {
     expect((await db.select(db.settings).get()).map((r) => r.key), ['week_start']);
   });
 
+  group('기본 출퇴근 시각 (핸드오프 7)', () {
+    Future<void> put(String key, String value) =>
+        db.into(db.settings).insertOnConflictUpdate(SettingsCompanion.insert(key: key, value: value));
+
+    test('없으면 null — 읽는 쪽이 WorkRules 기본값(08:00 · 17:00)을 쓴다', () async {
+      final s = await repo.read();
+      expect((s.defaultClockInMinutes, s.defaultClockOutMinutes), (null, null));
+      expect(s.defaultClockTimes(const WorkRules()), (8 * 60, 17 * 60));
+    });
+
+    test('HH:mm 두 키로 저장되고 그대로 읽힌다, 다른 설정을 저장해도 남는다', () async {
+      await repo.save(const AppSettings().withDefaultClockTimes(9 * 60 + 30, 18 * 60 + 30));
+      final rows = (await db.select(db.settings).get()).map((r) => '${r.key}=${r.value}');
+      expect(rows, containsAll(['default_clock_in=09:30', 'default_clock_out=18:30']));
+      await repo.save((await repo.read()).copyWith(hourlyWage: 12500));
+      expect((await repo.read()).defaultClockTimes(const WorkRules()), (9 * 60 + 30, 18 * 60 + 30));
+    });
+
+    test('하나만 있거나 · 못 읽거나 · 퇴근 ≤ 출근이면 둘 다 없는 것으로 읽는다', () async {
+      await put('default_clock_in', '09:30');
+      expect((await repo.read()).defaultClockInMinutes, isNull);
+      for (final out in ['nope', '25:00', '9:30', '09:30', '08:00']) {
+        await put('default_clock_out', out);
+        final s = await repo.read();
+        expect((s.defaultClockInMinutes, s.defaultClockOutMinutes), (null, null), reason: out);
+      }
+    });
+
+    test('못 쓰는 쌍을 저장하면 행을 남기지 않는다', () async {
+      await repo.save(const AppSettings().withDefaultClockTimes(9 * 60, 18 * 60));
+      await repo.save(const AppSettings(defaultClockInMinutes: 18 * 60, defaultClockOutMinutes: 9 * 60));
+      expect((await db.select(db.settings).get()).map((r) => r.key), isNot(contains(startsWith('default_clock'))));
+    });
+  });
+
   test('옛 키 annual_leave_days_<year>는 일 × 480 · 기준일 1/1로 읽는다', () async {
     await db.into(db.settings).insert(SettingsCompanion.insert(key: 'annual_leave_days_2026', value: '15'));
     expect((await repo.read()).leaveBalanceOf(2026), LeaveBalance(remainingMinutes: 7200, baseDate: DateTime(2026, 1, 1)));

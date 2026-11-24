@@ -206,6 +206,8 @@ abstract final class AppSizes {
   static double get tripCellUnderlineOff => 1.w;
   static double get tripResultTop => 14.w;
   static double get tripSheetButtonTop => 12.w;
+  /// 기본 출퇴근 시각 시트의 안내 줄 최소 높이 (핸드오프 7 §4) — 정상·오류 문구가 바뀌어도 버튼이 움직이지 않게.
+  static double get rangeSheetNoteMinHeight => 22.w;
 
   // 출장 고르기 패널 — "종일 출장 / 시간 출장" (핸드오프 6 §2)
   static double get tripPanelTop => 8.w;

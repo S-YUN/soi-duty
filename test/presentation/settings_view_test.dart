@@ -47,6 +47,7 @@ void main() {
         callbacks: SettingsCallbacks(
           onBack: () => taps.add('back'),
           onWeekStart: (w) => pickedWeekStart = w,
+          onTapDefaultTimes: () => taps.add('default-times'),
           onTapAnnual: () => taps.add('annual'),
           onTapWage: () => taps.add('wage'),
           onExport: () => taps.add('export'),
@@ -94,6 +95,23 @@ void main() {
     expect(find.text('알려주시면 월간 탭에서 잔여 연차를 볼 수 있어요'), findsNothing);
   });
 
+  testWidgets('기록 묶음 — 값이 없어도 "08:00–17:00", 정하면 그 값, 행을 누르면 콜백 (핸드오프 7)', (tester) async {
+    await pump(tester, const AppSettings());
+    expect(find.text('기록'), findsOneWidget);
+    expect(find.text('기본 출퇴근 시각'), findsOneWidget);
+    expect(find.text('08:00–17:00'), findsOneWidget);
+    expect(find.text('기록이 없는 날에 시각을 넣을 때 처음 보이는 값이에요'), findsOneWidget);
+    // 묶음 순서: 캘린더 → 알림 → 기록 → 연차
+    final y = [for (final t in ['캘린더', '알림', '기록', '연차']) tester.getTopLeft(find.text(t)).dy];
+    expect(y, orderedEquals([...y]..sort()));
+    await tester.tap(find.text('기본 출퇴근 시각'));
+    expect(taps, ['default-times']);
+
+    await pump(tester, const AppSettings(defaultClockInMinutes: 9 * 60 + 30, defaultClockOutMinutes: 18 * 60 + 30));
+    expect(find.text('09:30–18:30'), findsOneWidget);
+    expect(tester.widget<Text>(find.text('09:30–18:30')).style?.color, AppColors.brand);
+  });
+
   testWidgets('행 탭 → 콜백, 세그먼트 "일" 탭 → onWeekStart(sunday)', (tester) async {
     await pump(tester, const AppSettings());
     await tester.tap(find.text('일'));
@@ -101,6 +119,9 @@ void main() {
     await tester.tap(find.text('남은 연차'));
     await tester.tap(find.text('시급'));
     await tester.tap(find.text('내보내기'));
+    // 기록 묶음이 생긴 뒤로 874 높이에서 "가져오기"가 화면 아래로 내려간다 — 스크롤해서 누른다.
+    await tester.ensureVisible(find.text('가져오기'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('가져오기'));
     await tester.ensureVisible(find.text('개인정보 처리방침'));
     await tester.pumpAndSettle();

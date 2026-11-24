@@ -28,6 +28,8 @@ class DriftBackupRepository implements BackupRepository {
       weekStart: settings.weekStart,
       leaveBalanceByYear: settings.leaveBalanceByYear,
       hourlyWage: settings.hourlyWage,
+      defaultClockInMinutes: settings.defaultClockInMinutes,
+      defaultClockOutMinutes: settings.defaultClockOutMinutes,
       records: rows.map(DriftWorkRecordRepository.toDomain).toList(),
     );
   }
@@ -50,11 +52,10 @@ class DriftBackupRepository implements BackupRepository {
           await _db.into(_db.settings).insertOnConflictUpdate(SettingsCompanion.insert(key: firstKey, value: dateKey(first)));
         }
         final current = await _settings.read();
-        await _settings.save(current.copyWith(
-          weekStart: s.weekStart,
-          leaveBalanceByYear: s.leaveBalanceByYear,
-          hourlyWage: s.hourlyWage,
-        ));
+        // 기본 출퇴근 시각이 없는 파일(예전 파일)은 기본값으로 돌아간다 — 다른 설정처럼 파일 내용이 이긴다.
+        await _settings.save(current
+            .copyWith(weekStart: s.weekStart, leaveBalanceByYear: s.leaveBalanceByYear, hourlyWage: s.hourlyWage)
+            .withDefaultClockTimes(s.defaultClockInMinutes, s.defaultClockOutMinutes));
       });
 
   @override
