@@ -132,9 +132,11 @@ abstract final class AppTextStyles {
   static TextStyle get deleteLink => _style(13.5, FontWeight.w400, color: AppColors.subtle);
 
   // 시간 출장 (핸드오프 6)
-  static TextStyle get tripDash => _style(18, FontWeight.w400, color: AppColors.wheelUnselected);
+  static TextStyle get rangeDash => _style(18, FontWeight.w400, color: AppColors.wheelUnselected);
   static TextStyle get tripResult => _style(14.5, FontWeight.w500);
-  static TextStyle get tripInvalid => _style(13.5, FontWeight.w500, color: AppColors.minus);
+  static TextStyle get rangeInvalid => _style(13.5, FontWeight.w500, color: AppColors.minus);
+  /// 기본 출퇴근 시각 시트의 휠 아래 안내 줄 (핸드오프 7 §4)
+  static TextStyle get rangeSheetNote => _style(13.5, FontWeight.w400, color: AppColors.subtle);
   /// 패널 버튼 제목. 고른 쪽은 브랜드색, 못 고르는 쪽(반차 날의 종일)은 흐리게.
   static TextStyle tripPanelTitle({required bool selected, required bool enabled}) => _style(
         15,

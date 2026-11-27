@@ -20,11 +20,20 @@ void main() {
   String monthTitle(DateTime m) => '${m.year}년 ${m.month}월';
   final thisMonth = DateTime(today.year, today.month);
   final prevMonth = DateTime(today.year, today.month - 1);
-  /// 이번 달의 지난 평일 하나 (기록이 있는 날 — 시드가 두 달치를 채운다).
+  /// 이번 달의 지난 평일 하나 — 출퇴근이 다 찍힌 **일반 근무일**이어야 한다(시트에 저장 버튼 · 출근 행 · 연차 확인이 다 나온다).
+  /// 시드('두 달치 기록', debug_seed.dart)는 날짜 숫자로 누락(11의 배수) · 연차(13) · 공휴일(17) · 반차(7)를 만들고
+  /// 지난 주 월(반차) · 화(종일 출장)를 덮어쓴다 — 그런 날을 고르면 저장 버튼을 기다리다 멈춘다(2026-11-27, 26일이 연차였다).
   final pastWeekday = () {
+    // 날짜 차이는 UTC로 센다 — 로컬 시각 차이는 서머타임이 있는 곳에서 하루가 24시간이 아니다.
+    final thisMonday = DateTime.utc(today.year, today.month, today.day - (today.weekday - 1));
+    bool isPlain(DateTime d) {
+      if ([7, 11, 13, 17].any((k) => d.day % k == 0)) return false;
+      final daysBeforeMonday = thisMonday.difference(DateTime.utc(d.year, d.month, d.day)).inDays;
+      return daysBeforeMonday != 7 && daysBeforeMonday != 6; // 지난 주 월 · 화
+    }
     for (var day = today.day - 1; day >= 1; day--) {
       final d = DateTime(today.year, today.month, day);
-      if (isWeekday(d)) return d;
+      if (isWeekday(d) && isPlain(d)) return d;
     }
     return DateTime(today.year, today.month, today.day);
   }();
@@ -125,6 +134,12 @@ void main() {
     await shot('settings-wage-sheet');
     await driver.tap(find.text('저장'));
     await driver.waitForAbsent(find.text('이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.'));
+    // 기본 출퇴근 시각 시트(핸드오프 7) — 값을 안 바꾸고 저장하면 그대로 닫힌다.
+    await driver.tap(find.text('기본 출퇴근 시각'));
+    await driver.waitFor(find.text('이미 넣은 기록은 바뀌지 않아요'));
+    await shot('settings-default-times-sheet');
+    await driver.tap(find.text('저장'));
+    await driver.waitForAbsent(find.text('이미 넣은 기록은 바뀌지 않아요'));
     await driver.tap(find.bySemanticsLabel('뒤로'));
     await driver.waitFor(find.text('퇴근하기'));
   });

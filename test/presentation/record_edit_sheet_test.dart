@@ -187,6 +187,22 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('설정에 기본 출퇴근 시각이 있으면 빈 행의 휠이 그 값(09:30 · 18:30)으로 열린다', (tester) async {
+    for (final (key, value) in const [('default_clock_in', '09:30'), ('default_clock_out', '18:30')]) {
+      await db.into(db.settings).insert(SettingsCompanion.insert(key: key, value: value));
+    }
+    await pumpSheet(tester, d(14));
+    await tester.tap(find.text('출근'));
+    await tester.pumpAndSettle();
+    expect(find.text('09:30'), findsOneWidget);
+    final wheel = tester.widget<TimeWheel>(find.byType(TimeWheel));
+    expect((wheel.hour, wheel.minute), (9, 30));
+    await tester.tap(find.text('퇴근'));
+    await tester.pumpAndSettle();
+    expect(find.text('18:30'), findsOneWidget);
+    await unmount(tester);
+  });
+
   testWidgets('13:30은 휠에서 오후 1:30, 휠을 돌리면 24시간 값으로 저장된다', (tester) async {
     await insert(14, inH: 13, inM: 30, outH: 18);
     await pumpSheet(tester, d(14));

@@ -10,6 +10,8 @@ import '../rules/work_rules.dart';
 /// 백업 파일 형식 버전. 읽을 수 있는 최대 버전이기도 하다 — 더 큰 값은 새 앱이 쓴 파일이라 거부한다.
 /// 1: `settings.annualLeaveDaysByYear`(총 연차, 정수 일) · 2: `settings.leaveBalanceByYear`(남은 연차 분 + 기준일, 2026-10-27) ·
 /// 3: 기록에 `tripStart`·`tripEnd`(시간 출장 범위, 2026-11-20) — 1·2 파일은 범위 없음으로 읽힌다.
+/// `settings.defaultClockIn`·`defaultClockOut`(기본 출퇴근 시각 `HH:mm`, 2026-11-24)은 버전을 올리지 않고 더했다 —
+/// 없으면 기본값이고, 올리면 업데이트 안 한 앱이 새 파일을 통째로 거부한다(옛 앱은 이 두 키만 무시한다).
 const backupFormatVersion = 3;
 const _appId = 'soi_duty';
 
@@ -35,9 +37,13 @@ String encodeBackup(BackupSnapshot s) => const JsonEncoder.withIndent('  ').conv
             '${e.key}': {'remainingMinutes': e.value.remainingMinutes, 'baseDate': _dateKey(e.value.baseDate)},
         },
         'hourlyWage': s.hourlyWage,
+        'defaultClockIn': _hasClockTimes(s) ? AppSettings.formatClockMinutes(s.defaultClockInMinutes!) : null,
+        'defaultClockOut': _hasClockTimes(s) ? AppSettings.formatClockMinutes(s.defaultClockOutMinutes!) : null,
       },
       'records': [for (final r in s.records) r.toJson()],
     });
+
+bool _hasClockTimes(BackupSnapshot s) => AppSettings.isValidDefaultClockTimes(s.defaultClockInMinutes, s.defaultClockOutMinutes);
 
 /// 내보낸 파일이 아니거나 읽을 수 없으면 [BackupFormatException].
 BackupSnapshot decodeBackup(String text, {WorkRules rules = const WorkRules()}) {
@@ -59,6 +65,10 @@ BackupSnapshot decodeBackup(String text, {WorkRules rules = const WorkRules()}) 
   final settingsMap = settings is Map<String, dynamic> ? settings : const <String, dynamic>{};
   try {
     final wage = (settingsMap['hourlyWage'] as num?)?.toInt();
+    // 기본 출퇴근 시각은 한 쌍 — 없거나(예전 파일) 하나만 있거나 퇴근 ≤ 출근이면 둘 다 버린다(기본값으로).
+    final clockIn = AppSettings.parseClockMinutes(settingsMap['defaultClockIn']);
+    final clockOut = AppSettings.parseClockMinutes(settingsMap['defaultClockOut']);
+    final hasClockTimes = AppSettings.isValidDefaultClockTimes(clockIn, clockOut);
     // 손으로 고친 파일의 범위 밖 값은 UI가 허용하는 범위로 거른다 — 시급 0이 "설정됨"으로 보이지 않게.
     return BackupSnapshot(
       exportedAt: DateTime.parse(root['exportedAt'] as String),
@@ -66,6 +76,8 @@ BackupSnapshot decodeBackup(String text, {WorkRules rules = const WorkRules()}) 
       weekStart: WeekStart.values.asNameMap()[settingsMap['weekStart']] ?? WeekStart.monday,
       leaveBalanceByYear: format == 1 ? _legacyLeave(settingsMap['annualLeaveDaysByYear'], rules) : _leave(settingsMap['leaveBalanceByYear'], rules),
       hourlyWage: wage != null && AppSettings.isValidHourlyWage(wage) ? wage : null,
+      defaultClockInMinutes: hasClockTimes ? clockIn : null,
+      defaultClockOutMinutes: hasClockTimes ? clockOut : null,
       records: [for (final r in records) _dropInvalidRange(WorkRecord.fromJson(r as Map<String, dynamic>))],
     );
   } on BackupFormatException {

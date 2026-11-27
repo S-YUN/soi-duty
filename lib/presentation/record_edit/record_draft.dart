@@ -1,3 +1,4 @@
+import '../../domain/model/app_settings.dart';
 import '../../domain/model/work_record.dart';
 import '../../domain/model/work_type.dart';
 import '../../domain/rules/work_calculator.dart' as calc;
@@ -140,10 +141,12 @@ class RecordDraft {
   RecordDraft withoutTrip() => _copy(tripStart: null, tripEnd: null);
   RecordDraft expandHolidayWork() => _copy(showsHolidayWork: true);
 
-  /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 시각 행을 펼 때 값이 없으면 [WorkRules]의 기본 시각(출근 08:00 · 퇴근 17:00).
-  RecordDraft toggleEditing(EditingRow row, WorkRules rules) {
+  /// 행 탭. 같은 행이면 접고, 다른 행이면 편다. 시각 행을 펼 때 값이 없으면 기본 출퇴근 시각 —
+  /// 설정에서 정한 값, 없으면 [WorkRules]의 기본 시각(출근 08:00 · 퇴근 17:00). 값이 있는 행은 그 값 그대로.
+  RecordDraft toggleEditing(EditingRow row, WorkRules rules, {AppSettings settings = const AppSettings()}) {
     if (editing == row) return _copy(editing: null);
-    final defaultMinutes = row == EditingRow.clockIn ? rules.defaultClockInMinutes : rules.defaultClockOutMinutes;
+    final (defaultIn, defaultOut) = settings.defaultClockTimes(rules);
+    final defaultMinutes = row == EditingRow.clockIn ? defaultIn : defaultOut;
     final current = timeOf(row) ?? DateTime(date.year, date.month, date.day, 0, defaultMinutes);
     return _copy(
       editing: row,

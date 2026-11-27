@@ -23,6 +23,9 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
   /// 켜져 있으면 `on`, 꺼져 있으면 행이 없다.
   static const clockOutNotificationKey = 'clock_out_notification';
   static const notificationPromptedKey = 'notification_prompted';
+  /// 기본 출퇴근 시각 `HH:mm` (핸드오프 7). 한 쌍 — 하나만 있거나 못 읽거나 퇴근 ≤ 출근이면 둘 다 없는 것으로 읽는다.
+  static const defaultClockInKey = 'default_clock_in';
+  static const defaultClockOutKey = 'default_clock_out';
   static const _leavePrefixes = [leaveMinutesKeyPrefix, leaveBaseDateKeyPrefix, legacyAnnualLeaveDaysKeyPrefix];
 
   final AppDatabase _db;
@@ -42,6 +45,9 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
         await _put(lastExportDateKey, s.lastExportDate == null ? null : dateKey(s.lastExportDate!));
         await _put(clockOutNotificationKey, s.clockOutNotificationEnabled ? 'on' : null);
         await _put(notificationPromptedKey, s.notificationPrompted ? '1' : null);
+        final hasClockTimes = AppSettings.isValidDefaultClockTimes(s.defaultClockInMinutes, s.defaultClockOutMinutes);
+        await _put(defaultClockInKey, hasClockTimes ? AppSettings.formatClockMinutes(s.defaultClockInMinutes!) : null);
+        await _put(defaultClockOutKey, hasClockTimes ? AppSettings.formatClockMinutes(s.defaultClockOutMinutes!) : null);
         // LIKE의 '_'는 한 글자 와일드카드라 비슷한 키가 휩쓸린다 — Dart에서 접두사로 고른다.
         final leaveKeys = (await _db.select(_db.settings).get())
             .map((r) => r.key)
@@ -64,6 +70,8 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
     final minutesByYear = <int, int>{};
     final baseByYear = <int, DateTime>{};
     final legacyDaysByYear = <int, int>{};
+    int? clockIn;
+    int? clockOut;
     for (final row in rows) {
       switch (row.key) {
         case weekStartKey:
@@ -76,6 +84,10 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
           s = s.copyWith(clockOutNotificationEnabled: row.value == 'on');
         case notificationPromptedKey:
           s = s.copyWith(notificationPrompted: true);
+        case defaultClockInKey:
+          clockIn = AppSettings.parseClockMinutes(row.value);
+        case defaultClockOutKey:
+          clockOut = AppSettings.parseClockMinutes(row.value);
         default:
           _collectYearKey(row, leaveMinutesKeyPrefix, (y) => minutesByYear[y] = int.parse(row.value));
           _collectYearKey(row, leaveBaseDateKeyPrefix, (y) {
@@ -91,7 +103,7 @@ class DriftAppSettingsRepository implements AppSettingsRepository {
       for (final e in minutesByYear.entries)
         if (baseByYear[e.key] != null) e.key: LeaveBalance(remainingMinutes: e.value, baseDate: baseByYear[e.key]!),
     };
-    return s.copyWith(leaveBalanceByYear: byYear);
+    return s.copyWith(leaveBalanceByYear: byYear).withDefaultClockTimes(clockIn, clockOut);
   }
 
   /// `<prefix><year>` 꼴이고 값이 정수로 읽히면 [put]. 아니면 무시.

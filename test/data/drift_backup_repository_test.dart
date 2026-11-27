@@ -60,6 +60,20 @@ void main() {
     expect(await backup.recordCount(), 2);
   });
 
+  test('기본 출퇴근 시각 — snapshot에 담기고, restore는 파일 값으로 덮어쓰며 값이 없는 파일이면 기본값으로 돌아간다', () async {
+    await settings.save(const AppSettings().withDefaultClockTimes(9 * 60 + 30, 18 * 60 + 30));
+    final snap = await backup.snapshot(DateTime(2026, 11, 24));
+    expect((snap.defaultClockInMinutes, snap.defaultClockOutMinutes), (9 * 60 + 30, 18 * 60 + 30));
+
+    await backup.restore(snap.copyWith(defaultClockInMinutes: 10 * 60, defaultClockOutMinutes: 19 * 60));
+    expect((await settings.read()).defaultClockTimes(const WorkRules()), (10 * 60, 19 * 60));
+
+    await backup.restore(snap.copyWith(defaultClockInMinutes: null, defaultClockOutMinutes: null));
+    final after = await settings.read();
+    expect((after.defaultClockInMinutes, after.defaultClockOutMinutes), (null, null));
+    expect(after.defaultClockTimes(const WorkRules()), (8 * 60, 17 * 60));
+  });
+
   test('restore — firstRecordDate null이면 최소 날짜, 기록 0건이면 first_record_date 행 삭제', () async {
     await records.save(rec(7, inH: 9, outH: 18));
     await backup.restore(BackupSnapshot(

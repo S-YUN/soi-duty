@@ -63,6 +63,49 @@ void main() {
     expect(s.hourlyWage, isNull);
   });
 
+  group('기본 출퇴근 시각 (핸드오프 7) — format 3 그대로', () {
+    final withTimes = snapshot.copyWith(defaultClockInMinutes: 9 * 60 + 30, defaultClockOutMinutes: 18 * 60 + 30);
+    String patched(Object? clockIn, Object? clockOut) => jsonEncode(
+          (jsonDecode(encodeBackup(withTimes)) as Map<String, dynamic>)
+            ..['settings'] = {
+              ...(jsonDecode(encodeBackup(withTimes)) as Map<String, dynamic>)['settings'] as Map<String, dynamic>,
+              'defaultClockIn': clockIn,
+              'defaultClockOut': clockOut,
+            },
+        );
+
+    test('HH:mm으로 쓰고 왕복 동일, 형식 버전은 올리지 않는다', () {
+      final json = jsonDecode(encodeBackup(withTimes)) as Map<String, dynamic>;
+      expect(json['format'], 3);
+      expect((json['settings'] as Map)['defaultClockIn'], '09:30');
+      expect((json['settings'] as Map)['defaultClockOut'], '18:30');
+      expect(decodeBackup(encodeBackup(withTimes)), withTimes);
+    });
+
+    test('값이 없는 파일(예전 파일)은 null — 가져오면 08:00 · 17:00', () {
+      final settings = (jsonDecode(encodeBackup(snapshot)) as Map<String, dynamic>)['settings'] as Map;
+      expect((settings['defaultClockIn'], settings['defaultClockOut']), (null, null));
+      final old = decodeBackup(withPatch((j) => j..['settings'] = {'weekStart': 'sunday', 'hourlyWage': 12500}));
+      expect((old.defaultClockInMinutes, old.defaultClockOutMinutes), (null, null));
+    });
+
+    test('하나만 있음 · 형식 틀림 · 하루 밖 · 퇴근 ≤ 출근은 둘 다 버린다', () {
+      for (final (clockIn, clockOut) in <(Object?, Object?)>[
+        ('09:30', null),
+        (null, '18:30'),
+        ('9:30', '18:30'),
+        ('09:30', '24:00'),
+        ('09:30', '18:60'),
+        (570, 1110),
+        ('18:30', '09:30'),
+        ('09:30', '09:30'),
+      ]) {
+        final s = decodeBackup(patched(clockIn, clockOut));
+        expect((s.defaultClockInMinutes, s.defaultClockOutMinutes), (null, null), reason: '$clockIn–$clockOut');
+      }
+    });
+  });
+
   test('format 1 파일의 annualLeaveDaysByYear는 일 × 480 · 기준일 1/1로 받는다 (범위 밖은 그 해 제거)', () {
     final s = decodeBackup(withPatch((j) => j
       ..['format'] = 1

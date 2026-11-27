@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soi_duty/domain/model/work_record.dart';
+import 'package:soi_duty/domain/model/app_settings.dart';
 import 'package:soi_duty/domain/model/work_type.dart';
 import 'package:soi_duty/domain/rules/work_rules.dart';
 import 'package:soi_duty/presentation/record_edit/record_draft.dart';
@@ -73,6 +74,34 @@ void main() {
   test('값이 있으면 기본 시각 대신 그 값으로 연다', () {
     final draft = RecordDraft.fromRecord(date: d(14), today: today, record: rec(14, inH: 9, inM: 12, outH: 18));
     expect(draft.toggleEditing(EditingRow.clockIn, rules).clockIn, d(14, 9, 12));
+  });
+
+  group('설정의 기본 출퇴근 시각 (핸드오프 7)', () {
+    const custom = AppSettings(defaultClockInMinutes: 9 * 60 + 30, defaultClockOutMinutes: 18 * 60 + 30);
+
+    test('빈 행은 설정 값(09:30 · 18:30)에서 열린다', () {
+      final draft = RecordDraft.fromRecord(date: d(14), today: today, record: null);
+      expect(draft.toggleEditing(EditingRow.clockIn, rules, settings: custom).clockIn, d(14, 9, 30));
+      expect(draft.toggleEditing(EditingRow.clockOut, rules, settings: custom).clockOut, d(14, 18, 30));
+    });
+
+    test('값이 있는 행은 설정과 무관하게 그 값', () {
+      final draft = RecordDraft.fromRecord(date: d(14), today: today, record: rec(14, inH: 9, inM: 12, outH: 18));
+      expect(draft.toggleEditing(EditingRow.clockIn, rules, settings: custom).clockIn, d(14, 9, 12));
+      expect(draft.toggleEditing(EditingRow.clockOut, rules, settings: custom).clockOut, d(14, 18));
+    });
+
+    test('못 쓰는 쌍(하나만 있음 · 퇴근 ≤ 출근)은 WorkRules 기본값으로', () {
+      final draft = RecordDraft.fromRecord(date: d(14), today: today, record: null);
+      for (final bad in const [
+        AppSettings(defaultClockInMinutes: 9 * 60),
+        AppSettings(defaultClockInMinutes: 18 * 60, defaultClockOutMinutes: 9 * 60),
+        AppSettings(defaultClockInMinutes: 9 * 60, defaultClockOutMinutes: 9 * 60),
+      ]) {
+        expect(draft.toggleEditing(EditingRow.clockIn, rules, settings: bad).clockIn, d(14, 8));
+        expect(draft.toggleEditing(EditingRow.clockOut, rules, settings: bad).clockOut, d(14, 17));
+      }
+    });
   });
 
   test('withTime은 날짜를 유지하고 시분만 바꾼다', () {
