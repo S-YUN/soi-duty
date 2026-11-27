@@ -195,17 +195,17 @@ abstract final class AppSizes {
   static double get sheetButtonGap => 9.w;
   static double get deleteLinkTop => 16.w;
 
-  // 시간 출장 작은 시트 (핸드오프 6 §3)
+  // 시각 범위 작은 시트 TimeRangeSheet — 시간 출장(핸드오프 6 §3) · 기본 출퇴근 시각(핸드오프 7 §4) 공용
   /// 시트 최대 높이 = 화면 − 이 값. 작은 기기에서 넘치면 시트 안에서 스크롤한다.
-  static double get tripSheetTopMargin => 44.w;
-  static double get tripCellsTop => 12.w;
-  static double get tripDashGap => 12.w;
-  static double get tripCellValueTop => 4.w;
-  static double get tripCellUnderlineTop => 8.w;
-  static double get tripCellUnderlineOn => 2.w;
-  static double get tripCellUnderlineOff => 1.w;
-  static double get tripResultTop => 14.w;
-  static double get tripSheetButtonTop => 12.w;
+  static double get rangeSheetTopMargin => 44.w;
+  static double get rangeCellsTop => 12.w;
+  static double get rangeDashGap => 12.w;
+  static double get rangeCellValueTop => 4.w;
+  static double get rangeCellUnderlineTop => 8.w;
+  static double get rangeCellUnderlineOn => 2.w;
+  static double get rangeCellUnderlineOff => 1.w;
+  static double get rangeNoteTop => 14.w;
+  static double get rangeSheetButtonTop => 12.w;
   /// 기본 출퇴근 시각 시트의 안내 줄 최소 높이 (핸드오프 7 §4) — 정상·오류 문구가 바뀌어도 버튼이 움직이지 않게.
   static double get rangeSheetNoteMinHeight => 22.w;
 

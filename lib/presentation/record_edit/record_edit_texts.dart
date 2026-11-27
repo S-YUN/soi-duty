@@ -51,7 +51,7 @@ abstract final class RecordEditTexts {
   static const tripSheetHelp = '몇 시부터 몇 시까지 출장이었는지 기록으로 남겨요.';
   static const tripStart = '시작';
   static const tripEnd = '끝';
-  static const tripDash = '–';
+  static const rangeDash = '–';
   static const tripInvalid = '끝이 시작보다 늦어야 해요';
   static const tripClear = '출장 지우기';
   static const tripPanelNote = '출장을 어떻게 넣을까요?';

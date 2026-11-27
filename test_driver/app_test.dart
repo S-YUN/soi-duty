@@ -125,6 +125,12 @@ void main() {
     await shot('settings-wage-sheet');
     await driver.tap(find.text('저장'));
     await driver.waitForAbsent(find.text('이 기기에만 저장돼요. 누구도 해당 내용을 알 수 없어요.'));
+    // 기본 출퇴근 시각 시트(핸드오프 7) — 값을 안 바꾸고 저장하면 그대로 닫힌다.
+    await driver.tap(find.text('기본 출퇴근 시각'));
+    await driver.waitFor(find.text('이미 넣은 기록은 바뀌지 않아요'));
+    await shot('settings-default-times-sheet');
+    await driver.tap(find.text('저장'));
+    await driver.waitForAbsent(find.text('이미 넣은 기록은 바뀌지 않아요'));
     await driver.tap(find.bySemanticsLabel('뒤로'));
     await driver.waitFor(find.text('퇴근하기'));
   });

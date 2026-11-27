@@ -64,7 +64,7 @@ class _TimeRangeSheetState extends State<TimeRangeSheet> {
   /// 휠이 고치는 칸. 처음엔 앞 칸.
   var _editingEnd = false;
 
-  bool get _valid => isValidTripRange(_start, _end);
+  bool get _valid => minuteOnly(_end).isAfter(minuteOnly(_start));
   DateTime get _editing => _editingEnd ? _end : _start;
 
   void _onWheel(int hour, int minute) {
@@ -80,7 +80,7 @@ class _TimeRangeSheetState extends State<TimeRangeSheet> {
 
     return ConstrainedBox(
       // 작은 기기(SE 320×568)에서 화면을 넘지 않게 — 넘치면 시트 안에서 스크롤한다.
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height - AppSizes.tripSheetTopMargin),
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height - AppSizes.rangeSheetTopMargin),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.card,
@@ -119,7 +119,7 @@ class _TimeRangeSheetState extends State<TimeRangeSheet> {
                 padding: inset,
                 child: Text(widget.help, style: AppTextStyles.sheetSubtitle),
               ),
-              SizedBox(height: AppSizes.tripCellsTop),
+              SizedBox(height: AppSizes.rangeCellsTop),
               Padding(
                 padding: inset,
                 child: Row(
@@ -135,12 +135,12 @@ class _TimeRangeSheetState extends State<TimeRangeSheet> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        AppSizes.tripDashGap,
+                        AppSizes.rangeDashGap,
                         0,
-                        AppSizes.tripDashGap,
-                        AppSizes.tripCellUnderlineTop,
+                        AppSizes.rangeDashGap,
+                        AppSizes.rangeCellUnderlineTop,
                       ),
-                      child: Text(RecordEditTexts.tripDash, style: AppTextStyles.tripDash),
+                      child: Text(RecordEditTexts.rangeDash, style: AppTextStyles.rangeDash),
                     ),
                     Expanded(
                       child: _Cell(
@@ -171,7 +171,7 @@ class _TimeRangeSheetState extends State<TimeRangeSheet> {
                   ),
                 ),
               ),
-              SizedBox(height: AppSizes.tripResultTop),
+              SizedBox(height: AppSizes.rangeNoteTop),
               Padding(
                 padding: inset,
                 child: ConstrainedBox(
@@ -180,11 +180,11 @@ class _TimeRangeSheetState extends State<TimeRangeSheet> {
                     heightFactor: 1,
                     child: _valid
                         ? Text(widget.validNote(_start, _end), style: widget.validNoteStyle, textAlign: TextAlign.center)
-                        : Text(widget.invalidNote, style: AppTextStyles.tripInvalid, textAlign: TextAlign.center),
+                        : Text(widget.invalidNote, style: AppTextStyles.rangeInvalid, textAlign: TextAlign.center),
                   ),
                 ),
               ),
-              SizedBox(height: AppSizes.tripSheetButtonTop),
+              SizedBox(height: AppSizes.rangeSheetButtonTop),
               Padding(
                 padding: inset,
                 child: SheetButton(
@@ -239,15 +239,15 @@ class _Cell extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: AppTextStyles.timeLabel),
-            SizedBox(height: AppSizes.tripCellValueTop),
+            SizedBox(height: AppSizes.rangeCellValueTop),
             Text(value, style: AppTextStyles.timeValue(selected: selected)),
             // 밑줄 두께가 달라도 칸 높이는 같게 — 값이 위아래로 흔들리지 않는다.
             Container(
-              height: AppSizes.tripCellUnderlineOn,
-              margin: EdgeInsets.only(top: AppSizes.tripCellUnderlineTop),
+              height: AppSizes.rangeCellUnderlineOn,
+              margin: EdgeInsets.only(top: AppSizes.rangeCellUnderlineTop),
               alignment: Alignment.bottomCenter,
               child: Container(
-                height: selected ? AppSizes.tripCellUnderlineOn : AppSizes.tripCellUnderlineOff,
+                height: selected ? AppSizes.rangeCellUnderlineOn : AppSizes.rangeCellUnderlineOff,
                 color: selected ? AppColors.brand : AppColors.rowDivider,
               ),
             ),
